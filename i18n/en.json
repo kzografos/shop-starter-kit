@@ -1,0 +1,160 @@
+{
+  "header": {
+    "login": "Sign In",
+    "locale": "ΕΛ",
+    "search_placeholder": "Search products..."
+  },
+  "nav": {
+    "products": "Products",
+    "account": "Account",
+    "cart": "Cart",
+    "logout": "Sign Out"
+  },
+  "home": {
+    "hero_title": "Everything your pet needs",
+    "hero_subtitle": "Food, accessories and grooming for dogs, cats, birds and rodents",
+    "shop_now": "Shop Now",
+    "categories": "Categories",
+    "featured": "Featured Products"
+  },
+  "products": {
+    "title": "All Products",
+    "search": "Search...",
+    "no_results": "No products found",
+    "loading": "Loading..."
+  },
+  "product": {
+    "add_to_cart": "Add to Cart",
+    "out_of_stock": "Out of Stock",
+    "in_stock": "In Stock",
+    "quantity": "Quantity",
+    "description": "Description",
+    "brand": "Brand",
+    "added": "Added to cart!"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "subtotal": "Subtotal",
+    "checkout": "Checkout",
+    "continue_shopping": "Continue Shopping",
+    "remove": "Remove"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "shipping": "Shipping Details",
+    "pickup": "Store Pickup",
+    "payment": "Payment Method",
+    "order_summary": "Order Summary",
+    "place_order": "Place Order",
+    "shipping_cost": "Shipping",
+    "free_shipping": "Free",
+    "loyalty_discount": "Points Discount",
+    "total": "Total",
+    "full_name": "Full Name",
+    "address": "Address",
+    "city": "City",
+    "postal_code": "Postal Code",
+    "phone": "Phone",
+    "notes": "Notes (optional)",
+    "payment_online": "Pay Online (Stripe)",
+    "payment_cash": "Cash on Pickup",
+    "payment_card": "Card on Pickup",
+    "use_points": "Use Points",
+    "success_title": "Order placed successfully!",
+    "success_message": "We'll keep you updated on your order status."
+  },
+  "filters": {
+    "title": "Filters",
+    "animal": "Animal",
+    "price": "Price",
+    "brand": "Brand",
+    "animal_age": "Animal Age",
+    "package_size": "Package Size",
+    "all": "All",
+    "reset": "Reset Filters",
+    "apply": "Apply Filters"
+  },
+  "age": {
+    "all": "All Ages",
+    "puppy": "Puppy",
+    "kitten": "Kitten",
+    "adult": "Adult",
+    "senior": "Senior"
+  },
+  "loyalty": {
+    "points": "Points",
+    "your_points": "Your Points",
+    "earn_info": "Earn 100 points for every €1 spent",
+    "redeem_info": "100 points = €1 discount",
+    "history": "Points History",
+    "earned": "Earned",
+    "redeemed": "Redeemed"
+  },
+  "account": {
+    "title": "My Account",
+    "orders": "Orders",
+    "loyalty": "Reward Points",
+    "profile": "Profile",
+    "no_orders": "You have no orders yet"
+  },
+  "orders": {
+    "title": "Orders",
+    "order_number": "Order #",
+    "date": "Date",
+    "status": "Status",
+    "total": "Total",
+    "repeat": "Repeat Order",
+    "status_pending": "Pending",
+    "status_confirmed": "Confirmed",
+    "status_processing": "Processing",
+    "status_ready": "Ready",
+    "status_completed": "Completed",
+    "status_cancelled": "Cancelled"
+  },
+  "auth": {
+    "login_title": "Sign In",
+    "register_title": "Register",
+    "email": "Email",
+    "password": "Password",
+    "login_btn": "Sign In",
+    "register_btn": "Register",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "magic_link": "Sign in with Magic Link",
+    "magic_link_sent": "Check your email for the sign in link"
+  },
+  "footer": {
+    "description": "Your favourite pet shop in Cyprus. Food, accessories and grooming for every pet.",
+    "links": "Links",
+    "contact": "Info",
+    "shipping_info": "Shipping €5 | Free from €50 | Cyprus only"
+  },
+  "whatsapp": {
+    "chat": "Chat on WhatsApp"
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "orders": "Orders",
+    "add_product": "Add Product",
+    "import_csv": "Import CSV",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "stock": "Stock",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete"
+  }
+}
