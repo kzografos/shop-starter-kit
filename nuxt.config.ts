@@ -1,7 +1,7 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
-  modules: ["@nuxt/ui", "@nuxtjs/supabase", "@nuxtjs/i18n", "@pinia/nuxt"],
+  modules: ["@nuxt/ui", "@nuxtjs/supabase", "@nuxtjs/i18n", "@pinia/nuxt", "pinia-plugin-persistedstate/nuxt"],
 
   css: ["~/assets/css/main.css"],
 
@@ -21,9 +21,7 @@ export default defineNuxtConfig({
     defaultLocale: "el",
     langDir: ".",
     strategy: "prefix_except_default",
-    bundle: {
-      optimizeTranslationDirective: false,
-    },
+    detectBrowserLanguage: false,
   },
 
   runtimeConfig: {
