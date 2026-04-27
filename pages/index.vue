@@ -41,6 +41,9 @@
       </div>
     </section>
 
+    <!-- Brands marquee -->
+    <BrandsMarquee />
+
     <!-- Shipping info banner -->
     <section class="bg-primary-50 border-y border-primary-100">
       <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
