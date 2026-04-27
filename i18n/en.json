@@ -64,8 +64,11 @@
     "payment_cash": "Cash on Pickup",
     "payment_card": "Card on Pickup",
     "use_points": "Use Points",
-    "success_title": "Order placed successfully!",
-    "success_message": "We'll keep you updated on your order status."
+    "success_title": "Order confirmed!",
+    "success_message": "We'll keep you updated on your order status.",
+    "cancel_title": "Payment cancelled",
+    "cancel_message": "You were not charged. You can try again or continue shopping.",
+    "retry_payment": "Try Payment Again"
   },
   "filters": {
     "title": "Filters",
@@ -128,6 +131,19 @@
     "no_account": "Don't have an account?",
     "have_account": "Already have an account?",
     "register_success": "Check your email to confirm your account.",
+    "forgot_link": "Forgot password?",
+    "forgot_title": "Reset Password",
+    "forgot_desc": "Enter your email and we'll send you a reset link.",
+    "forgot_btn": "Send reset link",
+    "forgot_sent": "Check your email for the password reset link.",
+    "back_to_login": "Back to sign in",
+    "reset_title": "Set New Password",
+    "reset_desc": "Enter your new password below.",
+    "reset_btn": "Save new password",
+    "reset_success": "Password updated successfully! Redirecting...",
+    "reset_invalid": "This link has expired or is invalid. Request a new one.",
+    "new_password": "New Password",
+    "confirm_password": "Confirm Password",
     "magic_link": "Sign in with Magic Link",
     "magic_link_sent": "Check your email for the sign in link"
   },

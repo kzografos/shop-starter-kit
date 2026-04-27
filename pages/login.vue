@@ -63,6 +63,16 @@
             />
           </UFormField>
 
+          <!-- Forgot password (login only) -->
+          <div v-if="isLogin" class="flex justify-end -mt-2">
+            <NuxtLink
+              :to="localePath('/forgot-password')"
+              class="text-xs text-gray-400 hover:text-primary-500 transition-colors"
+            >
+              {{ $t('auth.forgot_link') }}
+            </NuxtLink>
+          </div>
+
           <!-- Remember me (login only) -->
           <div v-if="isLogin" class="flex items-center gap-2">
             <UCheckbox v-model="form.rememberMe" :label="$t('auth.remember_me')" name="remember" />

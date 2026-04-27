@@ -1,0 +1,110 @@
+<template>
+  <div class="min-h-screen flex items-center justify-center px-4 bg-gray-50">
+    <div class="w-full max-w-sm">
+      <div class="text-center mb-8">
+        <NuxtLink :to="localePath('/')">
+          <img src="/logo.svg" alt="PetShop CY" class="h-14 w-auto mx-auto mb-4" />
+        </NuxtLink>
+      </div>
+
+      <UCard class="p-2">
+        <div class="text-center mb-6">
+          <h1 class="text-2xl font-bold text-gray-900">{{ $t('auth.reset_title') }}</h1>
+          <p class="text-sm text-gray-500 mt-1">{{ $t('auth.reset_desc') }}</p>
+        </div>
+
+        <!-- No valid session from email link -->
+        <div v-if="!ready" class="text-center py-4">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-10 h-10 text-yellow-500 mx-auto mb-3" />
+          <p class="text-sm text-gray-500">{{ $t('auth.reset_invalid') }}</p>
+          <UButton
+            :to="localePath('/forgot-password')"
+            variant="ghost"
+            :label="$t('auth.forgot_btn')"
+            class="mt-4"
+          />
+        </div>
+
+        <!-- Password form -->
+        <form v-else class="space-y-4" @submit.prevent="onSubmit">
+          <UFormField :label="$t('auth.new_password')" required>
+            <UInput
+              v-model="password"
+              type="password"
+              placeholder="••••••••"
+              autocomplete="new-password"
+              required
+              class="w-full"
+            />
+          </UFormField>
+
+          <UFormField :label="$t('auth.confirm_password')" required>
+            <UInput
+              v-model="confirm"
+              type="password"
+              placeholder="••••••••"
+              autocomplete="new-password"
+              required
+              class="w-full"
+            />
+          </UFormField>
+
+          <UAlert v-if="error" color="error" variant="soft" :description="error" />
+          <UAlert v-if="success" color="success" variant="soft" :description="$t('auth.reset_success')" />
+
+          <UButton
+            type="submit"
+            block
+            :loading="loading"
+            :disabled="success"
+            :label="$t('auth.reset_btn')"
+          />
+        </form>
+      </UCard>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({ layout: false })
+
+const supabase = useSupabaseClient()
+const localePath = useLocalePath()
+const user = useSupabaseUser()
+
+const password = ref('')
+const confirm = ref('')
+const loading = ref(false)
+const error = ref('')
+const success = ref(false)
+
+// ready = Supabase exchanged the recovery token and user session is active
+const ready = computed(() => !!user.value)
+
+async function onSubmit() {
+  error.value = ''
+  if (password.value.length < 6) {
+    error.value = 'Password must be at least 6 characters'
+    return
+  }
+  if (password.value !== confirm.value) {
+    error.value = 'Passwords do not match'
+    return
+  }
+
+  loading.value = true
+  try {
+    const { error: err } = await supabase.auth.updateUser({ password: password.value })
+    if (err) throw err
+    success.value = true
+    // Redirect to home after short delay
+    setTimeout(() => navigateTo(localePath('/')), 2000)
+  } catch (err: any) {
+    error.value = err.message
+  } finally {
+    loading.value = false
+  }
+}
+
+useSeoMeta({ title: 'Set New Password | PetShop CY' })
+</script>

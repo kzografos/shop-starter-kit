@@ -12,20 +12,21 @@ export default defineEventHandler(async (event) => {
 
   let stripeEvent: Stripe.Event
   try {
-    stripeEvent = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+    stripeEvent = stripe.webhooks.constructEvent(body, sig, config.stripeWebhookSecret as string)
   } catch {
     throw createError({ statusCode: 400, message: 'Invalid signature' })
   }
 
-  if (stripeEvent.type === 'payment_intent.succeeded') {
-    const intent = stripeEvent.data.object as Stripe.PaymentIntent
-    const { order_id, user_id } = intent.metadata
+  if (stripeEvent.type === 'checkout.session.completed') {
+    const session = stripeEvent.data.object as Stripe.Checkout.Session
+    const { order_id, user_id } = session.metadata ?? {}
 
-    // Use service role to bypass RLS for webhook operations
+    if (!order_id || !user_id) return { received: true }
+
     const supabase = serverSupabaseServiceRole(event)
 
     const { data: settings } = await supabase.from('settings').select('key, value')
-    const cfg = Object.fromEntries((settings ?? []).map(s => [s.key, s.value]))
+    const cfg = Object.fromEntries((settings ?? []).map((s: any) => [s.key, s.value]))
     const earnRate = parseInt(cfg.loyalty_earn_rate ?? '100')
 
     const { data: order } = await supabase
@@ -40,7 +41,7 @@ export default defineEventHandler(async (event) => {
         supabase.from('orders').update({
           payment_status: 'paid',
           status: 'confirmed',
-          stripe_payment_intent_id: intent.id,
+          stripe_payment_intent_id: session.payment_intent as string,
         }).eq('id', order_id),
         pointsEarned > 0 && supabase.from('loyalty_transactions').insert({
           user_id,

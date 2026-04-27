@@ -1,5 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import type { CreateOrderPayload } from '~/types'
+import { sendOrderConfirmation } from '~/server/utils/mailer'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -111,6 +112,32 @@ export default defineEventHandler(async (event) => {
       ])
     }
   }
+
+  // Send order confirmation email (fire-and-forget — don't fail order if email fails)
+  ;(async () => {
+    const productIds = items.map((i) => i.product_id)
+    const { data: products } = await supabase
+      .from('products')
+      .select('id, name_el')
+      .in('id', productIds)
+    const nameMap = new Map((products ?? []).map((p: any) => [p.id, p.name_el]))
+
+    await sendOrderConfirmation({
+      orderId: order.id,
+      customerEmail: user.email!,
+      items: items.map((i) => ({
+        name: nameMap.get(i.product_id) ?? `#${i.product_id.slice(0, 6)}`,
+        quantity: i.quantity,
+        unitPrice: i.unit_price,
+      })),
+      subtotal,
+      shippingCost: shipping,
+      loyaltyDiscount,
+      total,
+      fulfillmentType: fulfillment_type,
+      shippingAddress: shipping_address ?? null,
+    })
+  })().catch(console.error)
 
   return order
 })

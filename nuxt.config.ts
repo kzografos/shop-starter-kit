@@ -25,6 +25,9 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,
+    stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    resendApiKey: process.env.RESEND_API_KEY,
+    emailFrom: process.env.EMAIL_FROM || 'PetShop CY <orders@petshopcyprus.com>',
     public: {
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
       whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || "35799000000",

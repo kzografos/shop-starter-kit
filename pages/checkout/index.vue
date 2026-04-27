@@ -2,16 +2,16 @@
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-2xl font-bold text-gray-900 mb-8">{{ $t('checkout.title') }}</h1>
 
-    <div v-if="cartStore.items.length === 0" class="text-center py-20">
-      <p class="text-gray-500 mb-4">{{ $t('cart.empty') }}</p>
-      <UButton :label="$t('cart.continue_shopping')" :to="localePath('/products')" />
-    </div>
-
-    <div v-else-if="success" class="text-center py-20">
+    <div v-if="success" class="text-center py-20">
       <UIcon name="i-heroicons-check-circle" class="w-20 h-20 text-green-500 mx-auto mb-4" />
       <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ $t('checkout.success_title') }}</h2>
       <p class="text-gray-600 mb-8">{{ $t('checkout.success_message') }}</p>
       <UButton :label="$t('nav.account')" :to="localePath('/account/orders')" />
+    </div>
+
+    <div v-else-if="cartStore.items.length === 0" class="text-center py-20">
+      <p class="text-gray-500 mb-4">{{ $t('cart.empty') }}</p>
+      <UButton :label="$t('cart.continue_shopping')" :to="localePath('/products')" />
     </div>
 
     <div v-else class="grid lg:grid-cols-5 gap-8">
@@ -121,6 +121,7 @@
           </div>
 
           <template #footer>
+            <UAlert v-if="orderError" color="error" variant="soft" :description="orderError" class="mb-3" />
             <UButton
               :label="$t('checkout.place_order')"
               block
@@ -146,6 +147,7 @@ const localePath = useLocalePath()
 const loading = ref(false)
 const success = ref(false)
 const usePoints = ref(false)
+const orderError = ref('')
 
 const form = reactive({
   fulfillment_type: 'shipping' as 'shipping' | 'pickup',
@@ -194,6 +196,7 @@ const total = computed(() =>
 
 async function placeOrder() {
   loading.value = true
+  orderError.value = ''
   try {
     const payload: CreateOrderPayload = {
       items: cartStore.items.map(i => ({
@@ -208,13 +211,23 @@ async function placeOrder() {
       notes: form.notes || undefined,
     }
 
-    await $fetch('/api/orders', { method: 'POST', body: payload })
+    const order = await $fetch<{ id: string }>('/api/orders', { method: 'POST', body: payload })
 
-    cartStore.clear()
-    await authStore.fetchProfile()
-    success.value = true
-  } catch (e) {
-    console.error(e)
+    if (form.payment_method === 'stripe') {
+      // Redirect to Stripe hosted checkout — do NOT clear cart yet
+      const { url } = await $fetch<{ url: string }>('/api/payments/create-checkout', {
+        method: 'POST',
+        body: { order_id: order.id },
+      })
+      window.location.href = url
+    } else {
+      // Pickup: cash or card — complete immediately
+      cartStore.clear()
+      await authStore.fetchProfile()
+      success.value = true
+    }
+  } catch (e: any) {
+    orderError.value = e?.data?.message || e?.message || 'Something went wrong'
   } finally {
     loading.value = false
   }
