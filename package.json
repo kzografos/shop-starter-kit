@@ -15,19 +15,20 @@
     "@nuxtjs/supabase": "^1.4.6",
     "@pinia/nuxt": "^0.9.0",
     "@stripe/stripe-js": "^5.8.0",
-    "nuxt": "^3.16.2",
+    "nuxt": "^4.4.2",
     "pinia": "^2.3.1",
     "pinia-plugin-persistedstate": "^3.2.1",
     "resend": "^6.12.2",
     "stripe": "^17.7.0",
-    "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
+    "vue": "^3.5.33",
+    "vue-router": "^5.0.3"
   },
   "devDependencies": {
     "@iconify-json/heroicons": "^1.2.3",
     "@iconify-json/simple-icons": "^1.2.80",
     "@nuxt/devtools": "latest",
     "@types/node": "^22.0.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vite": "^7.3.1"
   }
 }
