@@ -14,7 +14,7 @@
             <UInput v-model="form.slug" placeholder="dog-food-royal-canin" class="w-full" />
           </UFormField>
           <UFormField :label="$t('admin.active')">
-            <UToggle v-model="form.is_active" />
+            <USwitch v-model="form.is_active" />
           </UFormField>
           <UFormField label="Όνομα (Ελληνικά)" required>
             <UInput v-model="form.name_el" class="w-full" />
