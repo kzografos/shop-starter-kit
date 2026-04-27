@@ -3,17 +3,20 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16 gap-4">
         <!-- Logo -->
-        <NuxtLink :to="localePath('/')" class="flex-shrink-0">
+        <NuxtLink :to="localePath('/')" class="shrink-0">
           <img src="/logo.svg" alt="PetShop CY" class="h-10 w-auto" />
         </NuxtLink>
 
         <!-- Desktop nav -->
         <nav class="hidden md:flex items-center gap-6">
           <NuxtLink
-            :to="localePath('/products')"
+            v-for="link in navLinks"
+            :key="link.to"
+            :to="link.to"
             class="text-sm font-medium text-gray-700 hover:text-primary-500 transition-colors"
+            active-class="text-primary-500"
           >
-            {{ $t('nav.products') }}
+            {{ link.label }}
           </NuxtLink>
         </nav>
 
@@ -40,15 +43,17 @@
             @click="toggleLocale"
           />
 
-          <!-- Account -->
-          <UButton
-            v-if="user"
-            icon="i-heroicons-user"
-            variant="ghost"
-            color="neutral"
-            size="sm"
-            :to="localePath('/account')"
-          />
+          <!-- Account dropdown (logged in) -->
+          <UDropdownMenu v-if="user" :items="userMenuItems">
+            <UButton
+              icon="i-heroicons-user-circle"
+              variant="ghost"
+              color="neutral"
+              size="sm"
+            />
+          </UDropdownMenu>
+
+          <!-- Login button (logged out) -->
           <UButton
             v-else
             :label="$t('header.login')"
@@ -74,9 +79,16 @@
 </template>
 
 <script setup lang="ts">
-const { locale, setLocale } = useI18n()
+const { locale, setLocale, t } = useI18n()
+
+const navLinks = computed(() => [
+  { to: localePath('/products'), label: t('nav.products') },
+  { to: localePath('/about'), label: t('nav.about') },
+  { to: localePath('/contact'), label: t('nav.contact') },
+])
 const localePath = useLocalePath()
 const user = useSupabaseUser()
+const authStore = useAuthStore()
 const cartStore = useCartStore()
 const cartOpen = useState('cart-open', () => false)
 const router = useRouter()
@@ -93,4 +105,32 @@ function goToSearch() {
   filtersStore.search = searchQuery.value.trim()
   router.push(localePath('/products'))
 }
+
+async function handleLogout() {
+  await authStore.signOut()
+  await navigateTo(localePath('/'))
+}
+
+const userMenuItems = computed(() => {
+  const items: any[][] = [
+    [
+      {
+        label: t('nav.account'),
+        icon: 'i-heroicons-user',
+        to: localePath('/account'),
+      },
+      ...(authStore.isAdmin
+        ? [{ label: t('nav.admin'), icon: 'i-heroicons-cog-6-tooth', to: localePath('/admin') }]
+        : []),
+    ],
+    [
+      {
+        label: t('nav.logout'),
+        icon: 'i-heroicons-arrow-right-on-rectangle',
+        onSelect: handleLogout,
+      },
+    ],
+  ]
+  return items
+})
 </script>
