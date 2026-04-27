@@ -29,5 +29,16 @@
     "@nuxt/devtools": "latest",
     "@types/node": "^22.0.0",
     "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": [
+        "win32",
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ]
+    }
   }
 }
