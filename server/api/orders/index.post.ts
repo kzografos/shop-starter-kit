@@ -1,6 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import type { CreateOrderPayload } from '~/types'
-import { sendOrderConfirmation } from '~/server/utils/mailer'
+import type { CreateOrderPayload } from '../../../types'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)

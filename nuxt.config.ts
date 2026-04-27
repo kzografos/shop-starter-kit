@@ -1,4 +1,8 @@
 export default defineNuxtConfig({
+  future: {
+    compatibilityVersion: 4,
+  },
+
   devtools: { enabled: true },
 
   modules: ["@nuxt/ui", "@nuxtjs/supabase", "@nuxtjs/i18n", "@pinia/nuxt"],
@@ -21,6 +25,9 @@ export default defineNuxtConfig({
     defaultLocale: "el",
     langDir: ".",
     strategy: "prefix_except_default",
+    bundle: {
+      optimizeTranslationDirective: false,
+    },
   },
 
   runtimeConfig: {
