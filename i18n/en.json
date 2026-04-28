@@ -9,6 +9,7 @@
     "about": "About",
     "contact": "Contact",
     "account": "My Account",
+    "brands": "Brands",
     "admin": "Admin Panel",
     "cart": "Cart",
     "logout": "Sign Out"
@@ -200,6 +201,13 @@
     "cats": "Cats",
     "birds": "Birds",
     "loyalty": "Loyalty Points"
+  },
+  "brands": {
+    "eyebrow": "Our partners",
+    "title": "Our Brands",
+    "subtitle": "Select a brand to browse all its available products.",
+    "products": "products",
+    "empty": "No brands found."
   },
   "newsletter": {
     "eyebrow": "Stay in the loop",

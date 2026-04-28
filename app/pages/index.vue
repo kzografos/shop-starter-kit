@@ -20,7 +20,7 @@
               {{ $t('home.shop_now') }}
             </NuxtLink>
             <NuxtLink
-              :to="localePath('/products')"
+              :to="localePath('/brands')"
               class="inline-flex items-center px-8 py-3.5 rounded-full border border-sage/40 text-cream font-semibold text-base hover:border-sage transition-colors"
             >
               {{ $t('home.explore_brands') }}

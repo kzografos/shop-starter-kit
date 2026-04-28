@@ -7,8 +7,24 @@
 
   --color-cream: #FBF6EC;
   --color-cream-pale: #F5EFE2;
-  --color-terracotta: #C97B5A;
-  --color-terracotta-dark: #9C5435;
+
+  /* Terracotta scale — used by NuxtUI primary color system */
+  --color-terracotta-50:  #fef6f2;
+  --color-terracotta-100: #fce8dc;
+  --color-terracotta-200: #f8ccb5;
+  --color-terracotta-300: #f1a887;
+  --color-terracotta-400: #e08e6a;
+  --color-terracotta-500: #C97B5A;
+  --color-terracotta-600: #b5613f;
+  --color-terracotta-700: #964d34;
+  --color-terracotta-800: #7c3f2b;
+  --color-terracotta-900: #653426;
+  --color-terracotta-950: #381a12;
+
+  /* Convenience aliases */
+  --color-terracotta: var(--color-terracotta-500);
+  --color-terracotta-dark: var(--color-terracotta-600);
+
   --color-sage: #A8B89A;
   --color-sage-dark: #6E8163;
   --color-forest: #475C3F;
@@ -40,4 +56,6 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
   }
+
+
 }

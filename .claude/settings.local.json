@@ -10,7 +10,10 @@
       "Bash(\"/c/Program Files/nodejs/npm.cmd\" show @pinia/nuxt@latest version)",
       "Bash(git checkout *)",
       "Bash(\"/c/Program Files/nodejs/npm.cmd\" run dev)",
-      "Bash(\"/c/Program Files/nodejs/node.exe\" ./node_modules/.bin/nuxt dev)"
+      "Bash(\"/c/Program Files/nodejs/node.exe\" ./node_modules/.bin/nuxt dev)",
+      "PowerShell(npm show \"@nuxt/ui@3.3.7\" peerDependencies --json 2>$null)",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\konsz\\\\Documents\\\\Projects\\\\PetShopCY\\\\node_modules\" -Recurse -Filter \"vite\" -Directory | Select-Object -First 10 | ForEach-Object { $_.FullName })",
+      "PowerShell(npm list @nuxt/ui @tailwindcss/vite vite --depth=1 2>$null)"
     ]
   }
 }

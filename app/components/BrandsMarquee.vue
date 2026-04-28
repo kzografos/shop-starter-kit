@@ -5,21 +5,32 @@
     </p>
 
     <UMarquee pause-on-hover :repeat="3" class="mask-[linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
-      <div
+      <button
         v-for="brand in brands"
         :key="brand.name"
-        class="inline-flex items-center gap-2.5 px-10 cursor-default group"
+        class="inline-flex items-center gap-2.5 px-10 cursor-pointer group"
+        @click="goToBrand(brand.name)"
       >
-        <UIcon :name="brand.icon" class="w-6 h-6 text-orange-400 group-hover:text-orange-500 transition-colors shrink-0" />
-        <span class="text-[15px] font-semibold text-gray-500 group-hover:text-orange-500 transition-colors whitespace-nowrap">
+        <UIcon :name="brand.icon" class="w-6 h-6 text-bark-light group-hover:text-terracotta transition-colors shrink-0" />
+        <span class="text-[15px] font-semibold text-bark-light group-hover:text-terracotta transition-colors whitespace-nowrap">
           {{ brand.name }}
         </span>
-      </div>
+      </button>
     </UMarquee>
   </section>
 </template>
 
 <script setup lang="ts">
+const localePath = useLocalePath()
+const filtersStore = useFiltersStore()
+const router = useRouter()
+
+function goToBrand(name: string) {
+  filtersStore.reset()
+  filtersStore.selectedBrands = [name]
+  router.push(localePath('/products'))
+}
+
 const brands = [
   { name: 'Royal Canin',         icon: 'i-heroicons-star' },
   { name: 'Purina Pro Plan',     icon: 'i-heroicons-heart' },

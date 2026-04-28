@@ -25,8 +25,8 @@
           </NuxtLink>
         </nav>
 
-        <!-- Search (desktop) -->
-        <div class="hidden md:flex flex-1 max-w-xs">
+        <!-- Search (desktop) — hidden on /products where page has its own search -->
+        <div v-if="!route.path.includes('/products')" class="hidden md:flex flex-1 max-w-xs">
           <UInput
             v-model="searchQuery"
             :placeholder="$t('header.search_placeholder')"
@@ -91,6 +91,7 @@ const cartStore = useCartStore()
 const cartOpen = useState('cart-open', () => false)
 const router = useRouter()
 
+const route = useRoute()
 const searchQuery = ref('')
 const scrolled = ref(false)
 const cartBouncing = ref(false)
@@ -102,6 +103,7 @@ watch(() => cartStore.itemCount, () => {
 
 const navLinks = computed(() => [
   { to: localePath('/products'), label: t('nav.products') },
+  { to: localePath('/brands'), label: t('nav.brands') },
   { to: localePath('/about'), label: t('nav.about') },
   { to: localePath('/contact'), label: t('nav.contact') },
 ])

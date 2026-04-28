@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-2xl p-6 space-y-7">
+  <div class="bg-cream rounded-2xl p-6 space-y-7">
 
     <!-- Animal -->
     <div>
@@ -15,8 +15,8 @@
             <div
               class="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors duration-150"
               :class="localAnimals.includes(animal.slug)
-                ? 'bg-orange-500 border-orange-500'
-                : 'border-gray-300 group-hover:border-orange-300'"
+                ? 'bg-terracotta border-terracotta'
+                : 'border-gray-300 group-hover:border-terracotta/50'"
             >
               <svg v-if="localAnimals.includes(animal.slug)" class="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
                 <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -40,7 +40,7 @@
         <!-- Track -->
         <div class="relative h-1.5 bg-gray-200 rounded-full mx-2">
           <div
-            class="absolute h-1.5 bg-orange-500 rounded-full"
+            class="absolute h-1.5 bg-terracotta rounded-full"
             :style="{
               left: `${((localPriceMin - PRICE_ABS_MIN) / (PRICE_ABS_MAX - PRICE_ABS_MIN)) * 100}%`,
               right: `${100 - ((localPriceMax - PRICE_ABS_MIN) / (PRICE_ABS_MAX - PRICE_ABS_MIN)) * 100}%`,
@@ -90,8 +90,8 @@
             <div
               class="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors duration-150"
               :class="localBrands.includes(brand.name)
-                ? 'bg-orange-500 border-orange-500'
-                : 'border-gray-300 group-hover:border-orange-300'"
+                ? 'bg-terracotta border-terracotta'
+                : 'border-gray-300 group-hover:border-terracotta/50'"
             >
               <svg v-if="localBrands.includes(brand.name)" class="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
                 <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -106,8 +106,7 @@
 
     <!-- Apply button -->
     <button
-      class="w-full py-4 rounded-2xl font-semibold text-white text-sm tracking-wide transition-opacity hover:opacity-90 active:opacity-80"
-      style="background: linear-gradient(135deg, #fb923c 0%, #ef4444 100%)"
+      class="w-full py-4 rounded-2xl font-semibold text-white text-sm tracking-wide bg-terracotta hover:bg-terracotta-dark transition-colors active:opacity-80"
       @click="applyFilters"
     >
       ✓ {{ $t('filters.apply') }}
@@ -239,7 +238,7 @@ onMounted(async () => {
   height: 20px;
   border-radius: 50%;
   background: white;
-  border: 2px solid #f97316;
+  border: 2px solid #C97B5A;
   box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   cursor: grab;
   -webkit-appearance: none;
@@ -251,7 +250,7 @@ onMounted(async () => {
   height: 18px;
   border-radius: 50%;
   background: white;
-  border: 2px solid #f97316;
+  border: 2px solid #C97B5A;
   box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   cursor: grab;
 }
