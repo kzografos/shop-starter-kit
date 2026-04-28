@@ -64,9 +64,9 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
   <div style="max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,0.08);">
 
     <!-- Header -->
-    <div style="background:linear-gradient(135deg,#fb923c 0%,#ef4444 100%);padding:32px 32px 24px;">
-      <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;">PetShop CY</h1>
-      <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Παραγγελία #${shortId} επιβεβαιώθηκε ✓</p>
+    <div style="background:#475C3F;padding:32px 32px 24px;">
+      <h1 style="margin:0;color:#FBF6EC;font-size:22px;font-weight:700;">PetShop CY</h1>
+      <p style="margin:8px 0 0;color:#A8B89A;font-size:14px;">Παραγγελία #${shortId} επιβεβαιώθηκε ✓</p>
     </div>
 
     <!-- Body -->
@@ -108,7 +108,7 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
         </div>` : ''}
         <div style="display:flex;justify-content:space-between;border-top:1px solid #e5e7eb;padding-top:10px;margin-top:10px;">
           <span style="color:#111827;font-size:16px;font-weight:700;">Σύνολο</span>
-          <span style="color:#f97316;font-size:16px;font-weight:700;">€${data.total.toFixed(2)}</span>
+          <span style="color:#C97B5A;font-size:16px;font-weight:700;">€${data.total.toFixed(2)}</span>
         </div>
       </div>
 
@@ -122,8 +122,8 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
     </div>
 
     <!-- Footer -->
-    <div style="padding:20px 32px;background:#f9fafb;border-top:1px solid #f3f4f6;text-align:center;">
-      <p style="margin:0;font-size:12px;color:#9ca3af;">PetShop CY &bull; Cyprus &bull; info@petshopcyprus.com</p>
+    <div style="padding:20px 32px;background:#F5EFE2;border-top:1px solid #EDE5D5;text-align:center;">
+      <p style="margin:0;font-size:12px;color:#A8A99A;">PetShop CY &bull; Cyprus &bull; info@petshopcyprus.com</p>
     </div>
   </div>
 </body>
