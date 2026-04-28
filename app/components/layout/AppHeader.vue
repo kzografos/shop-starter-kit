@@ -1,9 +1,9 @@
 <template>
   <header
-    class="sticky top-0 z-50 transition-all duration-300"
+    class="sticky top-0 z-50 transition-all duration-300 border-b border-[#EDE5D5]"
     :class="scrolled
-      ? 'bg-cream/95 backdrop-blur-md shadow-sm border-b border-cream-pale'
-      : 'bg-cream border-b border-cream-pale/60'"
+      ? 'bg-cream/95 backdrop-blur-md shadow-[0_1px_12px_rgba(58,58,46,0.08)]'
+      : 'bg-cream'"
   >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16 gap-4">
@@ -32,16 +32,17 @@
             :placeholder="$t('header.search_placeholder')"
             icon="i-heroicons-magnifying-glass"
             size="sm"
-            class="w-full"
+            class="w-full [&_input]:rounded-full [&_input]:bg-[#EFE7D6] [&_input]:border [&_input]:border-[#D8D4C2] [&_input]:placeholder-[#A8A99A] [&_input]:focus:border-terracotta [&_input]:text-bark [&_input]:text-sm"
+            :ui="{ base: 'rounded-full' }"
             @keyup.enter="goToSearch"
           />
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center gap-1">
-          <!-- Locale toggle -->
+        <div class="flex items-center gap-3">
+          <!-- Locale toggle — pill matching icon visual weight -->
           <button
-            class="px-2.5 py-1 rounded-lg text-xs font-semibold text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
+            class="h-8 px-2.5 rounded-full text-xs font-semibold text-bark-light hover:text-bark hover:bg-cream-pale border border-transparent hover:border-[#D8D4C2] transition-all"
             @click="toggleLocale"
           >
             {{ $t('header.locale') }}
@@ -49,7 +50,7 @@
 
           <!-- Account dropdown (logged in) -->
           <UDropdownMenu v-if="user" :items="userMenuItems">
-            <button class="p-2 rounded-lg text-bark-light hover:text-bark hover:bg-cream-pale transition-all">
+            <button class="h-8 w-8 flex items-center justify-center rounded-full text-bark-light hover:text-bark hover:bg-cream-pale transition-all">
               <UIcon name="i-heroicons-user-circle" class="w-5 h-5" />
             </button>
           </UDropdownMenu>
@@ -58,14 +59,14 @@
           <NuxtLink
             v-else
             :to="localePath('/login')"
-            class="px-3 py-1.5 rounded-lg text-sm font-medium text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
+            class="h-8 px-3 flex items-center rounded-full text-sm font-medium text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
           >
             {{ $t('header.login') }}
           </NuxtLink>
 
           <!-- Cart -->
           <button
-            class="relative p-2 rounded-lg text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
+            class="relative h-8 w-8 flex items-center justify-center rounded-full text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
             @click="cartOpen = true"
           >
             <UIcon name="i-heroicons-shopping-bag" class="w-5 h-5" :class="cartBouncing ? 'cart-bounce' : ''" />

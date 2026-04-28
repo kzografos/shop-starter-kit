@@ -66,9 +66,17 @@
             v-for="cat in categories"
             :key="cat.id"
             :to="localePath(`/products?category=${cat.slug}`)"
-            class="group flex flex-col items-center justify-center p-6 bg-cream rounded-2xl border border-cream-pale hover:border-terracotta hover:shadow-md transition-all text-center"
+            class="group flex flex-col items-center justify-center p-6 pt-8 pb-6 bg-cream rounded-2xl border border-cream-pale hover:border-terracotta hover:shadow-md transition-all text-center overflow-hidden"
           >
-            <span class="text-4xl mb-3">{{ catEmoji(cat.slug) }}</span>
+            <!-- Real image if available, emoji fallback -->
+            <img
+              v-if="catImage(cat.slug)"
+              :src="catImage(cat.slug)"
+              :alt="cat.slug"
+              class="h-24 w-auto object-contain mb-4 group-hover:scale-105 transition-transform duration-300"
+            />
+            <span v-else class="text-5xl mb-4 block">🐾</span>
+
             <span class="font-semibold text-bark group-hover:text-terracotta transition-colors">
               {{ locale === 'el' ? cat.name_el : cat.name_en }}
             </span>
@@ -122,14 +130,15 @@ const { data: categories, pending } = await useAsyncData('root-categories', asyn
   return data
 })
 
-function catEmoji(slug: string) {
-  const map: Record<string, string> = {
-    dogs: '🐕',
-    cats: '🐈',
-    birds: '🦜',
-    rodents: '🐹',
-  }
-  return map[slug] ?? '🐾'
+const catImages: Record<string, string> = {
+  dogs: '/categories/dog.png',
+  cats: '/categories/cat.png',
+  birds: '/categories/bird.png',
+  rodents: '/categories/rodent.png',
+}
+
+function catImage(slug: string): string | null {
+  return catImages[slug] ?? null
 }
 
 useSeoMeta({
