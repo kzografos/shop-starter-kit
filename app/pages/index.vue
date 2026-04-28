@@ -1,9 +1,22 @@
 <template>
   <div>
     <!-- Hero -->
-    <section class="relative overflow-hidden bg-forest py-24 md:py-36">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="max-w-2xl">
+    <section class="relative overflow-hidden bg-forest min-h-150 lg:min-h-170">
+
+      <!-- Right: hero image — absolutely fills right half, full height -->
+      <div class="hidden lg:block absolute right-0 top-0 w-[62%] h-full">
+        <img
+          src="/hero-image.png"
+          alt="PetShop CY"
+          class="w-full h-full object-cover object-center"
+        />
+        <!-- Gradient blend into forest on the left edge -->
+        <div class="absolute inset-y-0 left-0 w-40 bg-linear-to-r from-forest to-transparent pointer-events-none" />
+      </div>
+
+      <!-- Left: text + CTAs + badges -->
+      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:w-[52%] flex flex-col justify-center py-24 md:py-32 min-h-150 lg:min-h-170">
           <p class="text-sage text-sm font-medium tracking-widest uppercase mb-4">{{ $t('home.hero_label') }}</p>
           <h1 class="font-display text-5xl md:text-7xl font-bold text-cream leading-[1.05] mb-6">
             {{ $t('home.hero_title') }}
@@ -12,7 +25,7 @@
           <p class="text-sage text-lg md:text-xl mb-10 max-w-lg leading-relaxed">
             {{ $t('home.hero_subtitle') }}
           </p>
-          <div class="flex flex-wrap gap-4">
+          <div class="flex flex-wrap gap-4 mb-12">
             <NuxtLink
               :to="localePath('/products')"
               class="inline-flex items-center px-8 py-3.5 rounded-full bg-terracotta text-white font-semibold text-base hover:bg-terracotta-dark transition-colors"
@@ -26,16 +39,17 @@
               {{ $t('home.explore_brands') }}
             </NuxtLink>
           </div>
-        </div>
 
-        <!-- Trust badges -->
-        <div class="mt-16 flex flex-wrap gap-6">
-          <div v-for="badge in trustBadges" :key="badge.label" class="flex items-center gap-2 text-sage text-sm">
-            <UIcon :name="badge.icon" class="w-4 h-4 text-gold shrink-0" />
-            {{ badge.label }}
+          <!-- Trust badges -->
+          <div class="flex flex-wrap gap-6">
+            <div v-for="badge in trustBadges" :key="badge.label" class="flex items-center gap-2 text-sage text-sm">
+              <UIcon :name="badge.icon" class="w-4 h-4 text-gold shrink-0" />
+              {{ badge.label }}
+            </div>
           </div>
         </div>
       </div>
+
     </section>
 
     <!-- Top-level categories -->
