@@ -1,6 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import type { CreateOrderPayload } from '~/types'
-import { sendOrderConfirmation } from '~/server/utils/mailer'
+import type { CreateOrderPayload } from '../../../types'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -39,7 +38,7 @@ export default defineEventHandler(async (event) => {
     const { data: profile } = await supabase
       .from('profiles')
       .select('loyalty_points')
-      .eq('id', user.id)
+      .eq('id', user.sub)
       .single()
     if ((profile?.loyalty_points ?? 0) < loyalty_points_to_redeem) {
       throw createError({ statusCode: 400, message: 'Insufficient loyalty points' })
@@ -50,7 +49,7 @@ export default defineEventHandler(async (event) => {
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
-      user_id: user.id,
+      user_id: user.sub,
       fulfillment_type,
       payment_method,
       shipping_address: shipping_address ?? null,
@@ -80,13 +79,13 @@ export default defineEventHandler(async (event) => {
   if (loyalty_points_to_redeem > 0) {
     await Promise.all([
       supabase.from('loyalty_transactions').insert({
-        user_id: user.id,
+        user_id: user.sub,
         order_id: order.id,
         points_delta: -loyalty_points_to_redeem,
         type: 'redeem',
       }),
       supabase.rpc('adjust_loyalty_points', {
-        p_user_id: user.id,
+        p_user_id: user.sub,
         p_delta: -loyalty_points_to_redeem,
       }),
     ])
@@ -99,13 +98,13 @@ export default defineEventHandler(async (event) => {
     if (pointsEarned > 0) {
       await Promise.all([
         supabase.from('loyalty_transactions').insert({
-          user_id: user.id,
+          user_id: user.sub,
           order_id: order.id,
           points_delta: pointsEarned,
           type: 'earn',
         }),
         supabase.rpc('adjust_loyalty_points', {
-          p_user_id: user.id,
+          p_user_id: user.sub,
           p_delta: pointsEarned,
         }),
         supabase.from('orders').update({ status: 'confirmed' }).eq('id', order.id),

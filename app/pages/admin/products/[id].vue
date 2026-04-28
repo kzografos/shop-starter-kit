@@ -14,7 +14,7 @@
             <UInput v-model="form.slug" placeholder="dog-food-royal-canin" class="w-full" />
           </UFormField>
           <UFormField :label="$t('admin.active')">
-            <UToggle v-model="form.is_active" />
+            <USwitch v-model="form.is_active" />
           </UFormField>
           <UFormField label="Όνομα (Ελληνικά)" required>
             <UInput v-model="form.name_el" class="w-full" />
@@ -110,7 +110,7 @@ const ageOptions = [
   { label: t('age.senior'), value: 'senior' },
 ]
 
-const { data: categories } = await useAsyncData('admin-categories', async () => {
+const { data: categories } = useAsyncData('admin-categories', async () => {
   const { data } = await supabase.from('categories').select('*').order('name_el')
   return data
 })
@@ -121,16 +121,13 @@ const categoryOptions = computed(() =>
 
 // Load existing product
 if (!isNew.value) {
-  const { data } = await useAsyncData(`admin-product-${route.params.id}`, async () => {
+  const { data: productData } = useAsyncData(`admin-product-${route.params.id}`, async () => {
     const { data } = await supabase.from('products').select('*').eq('id', route.params.id).single()
     return data
   })
-  if (data.value) {
-    Object.assign(form, {
-      ...data.value,
-      images: data.value.images ?? [],
-    })
-  }
+  watch(productData, (val) => {
+    if (val) Object.assign(form, { ...val, images: val.images ?? [] })
+  }, { immediate: true })
 }
 
 async function save() {

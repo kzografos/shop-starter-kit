@@ -106,7 +106,7 @@
             <div v-if="authStore.isLoggedIn && authStore.loyaltyPoints >= 500" class="border-t pt-2">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-gray-600">{{ $t('checkout.use_points') }}</span>
-                <UToggle v-model="usePoints" />
+                <USwitch v-model="usePoints" />
               </div>
               <div v-if="usePoints" class="flex justify-between text-green-600">
                 <span>{{ $t('checkout.loyalty_discount') }} ({{ pointsToRedeem }} pts)</span>

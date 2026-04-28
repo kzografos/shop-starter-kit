@@ -7,34 +7,34 @@
         <USkeleton v-for="n in 5" :key="n" class="h-12 rounded" />
       </div>
 
-      <UTable v-else :rows="orders ?? []" :columns="columns">
-        <template #status-data="{ row }">
+      <UTable v-else :data="orders ?? []" :columns="columns">
+        <template #status-cell="{ row }">
           <USelect
-            :model-value="row.status"
+            :model-value="row.original.status"
             :items="statusOptions"
             size="xs"
-            @update:model-value="updateStatus(row.id, $event)"
+            @update:model-value="updateStatus(row.original.id, $event)"
           />
         </template>
-        <template #payment_status-data="{ row }">
+        <template #payment_status-cell="{ row }">
           <UBadge
-            :label="row.payment_status"
-            :color="row.payment_status === 'paid' ? 'success' : 'warning'"
+            :label="row.original.payment_status"
+            :color="row.original.payment_status === 'paid' ? 'success' : 'warning'"
             variant="subtle"
           />
         </template>
-        <template #total-data="{ row }">
-          <span class="font-medium">€{{ Number(row.total).toFixed(2) }}</span>
+        <template #total-cell="{ row }">
+          <span class="font-medium">€{{ Number(row.original.total).toFixed(2) }}</span>
         </template>
-        <template #created_at-data="{ row }">
+        <template #created_at-cell="{ row }">
           <span class="text-sm text-gray-500">
-            {{ new Date(row.created_at).toLocaleDateString('el-GR') }}
+            {{ new Date(row.original.created_at).toLocaleDateString('el-GR') }}
           </span>
         </template>
-        <template #fulfillment_type-data="{ row }">
+        <template #fulfillment_type-cell="{ row }">
           <UBadge
-            :label="row.fulfillment_type"
-            :color="row.fulfillment_type === 'pickup' ? 'info' : 'neutral'"
+            :label="row.original.fulfillment_type"
+            :color="row.original.fulfillment_type === 'pickup' ? 'info' : 'neutral'"
             variant="subtle"
           />
         </template>
@@ -50,12 +50,12 @@ const supabase = useSupabaseClient()
 const { t } = useI18n()
 
 const columns = [
-  { key: 'id', label: 'ID', formatter: (v: string) => v.slice(0, 8).toUpperCase() },
-  { key: 'created_at', label: t('orders.date') },
-  { key: 'fulfillment_type', label: 'Τύπος' },
-  { key: 'payment_status', label: 'Πληρωμή' },
-  { key: 'total', label: t('orders.total') },
-  { key: 'status', label: t('orders.status') },
+  { accessorKey: 'id', header: 'ID', cell: ({ row }: any) => row.original.id.slice(0, 8).toUpperCase() },
+  { accessorKey: 'created_at', header: t('orders.date') },
+  { accessorKey: 'fulfillment_type', header: 'Τύπος' },
+  { accessorKey: 'payment_status', header: 'Πληρωμή' },
+  { accessorKey: 'total', header: t('orders.total') },
+  { accessorKey: 'status', header: t('orders.status') },
 ]
 
 const statusOptions = [
@@ -67,7 +67,7 @@ const statusOptions = [
   { label: t('orders.status_cancelled'), value: 'cancelled' },
 ]
 
-const { data: orders, pending, refresh } = await useAsyncData('admin-orders', async () => {
+const { data: orders, pending, refresh } = useAsyncData('admin-orders', async () => {
   const { data } = await supabase
     .from('orders')
     .select('*')

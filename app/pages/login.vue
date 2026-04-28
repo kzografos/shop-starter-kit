@@ -37,7 +37,7 @@
           Google
         </UButton>
 
-        <UDivider :label="$t('common.or')" class="mb-4" />
+        <USeparator :label="$t('common.or')" class="mb-4" />
 
         <!-- Email + password form -->
         <form class="space-y-4" @submit.prevent="onSubmit">

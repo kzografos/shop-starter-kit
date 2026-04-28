@@ -1,7 +1,7 @@
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: false },
 
-  modules: ["@nuxt/ui", "@nuxtjs/supabase", "@nuxtjs/i18n", "@pinia/nuxt"],
+  modules: ["@nuxt/ui", "@nuxtjs/supabase", "@nuxtjs/i18n", "@pinia/nuxt", "pinia-plugin-persistedstate/nuxt", "nuxt-charts"],
 
   css: ["~/assets/css/main.css"],
 
@@ -11,6 +11,7 @@ export default defineNuxtConfig({
 
   supabase: {
     redirect: false,
+    useSsrCookies: true,
   },
 
   i18n: {
@@ -21,6 +22,7 @@ export default defineNuxtConfig({
     defaultLocale: "el",
     langDir: ".",
     strategy: "prefix_except_default",
+    detectBrowserLanguage: false,
   },
 
   runtimeConfig: {
@@ -31,6 +33,16 @@ export default defineNuxtConfig({
     public: {
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
       whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || "35799000000",
+    },
+  },
+
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@vue/devtools-kit',
+        '@vue/devtools-core',
+        '@stripe/stripe-js',
+      ],
     },
   },
 

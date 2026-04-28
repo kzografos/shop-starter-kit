@@ -3,7 +3,14 @@
     "allow": [
       "Bash(gh auth *)",
       "Bash(git --version)",
-      "Bash(git -C c:/Users/konsz/Documents/Projects/PetShopCY status)"
+      "Bash(git -C c:/Users/konsz/Documents/Projects/PetShopCY status)",
+      "Bash(\"/c/Program Files/nodejs/npm.cmd\" show nuxt@latest version)",
+      "Bash(\"/c/Program Files/nodejs/npm.cmd\" show @nuxtjs/supabase@latest version)",
+      "Bash(\"/c/Program Files/nodejs/npm.cmd\" show @nuxtjs/i18n@latest version)",
+      "Bash(\"/c/Program Files/nodejs/npm.cmd\" show @pinia/nuxt@latest version)",
+      "Bash(git checkout *)",
+      "Bash(\"/c/Program Files/nodejs/npm.cmd\" run dev)",
+      "Bash(\"/c/Program Files/nodejs/node.exe\" ./node_modules/.bin/nuxt dev)"
     ]
   }
 }

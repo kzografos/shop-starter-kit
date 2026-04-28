@@ -17,7 +17,6 @@
       </div>
     </div>
 
-    <!-- Search -->
     <div class="mb-6">
       <UInput
         v-model="search"
@@ -27,51 +26,45 @@
       />
     </div>
 
-    <!-- Table -->
     <UCard>
       <div v-if="pending" class="space-y-3">
         <USkeleton v-for="n in 5" :key="n" class="h-12 rounded" />
       </div>
 
-      <UTable
-        v-else
-        :rows="filteredProducts"
-        :columns="columns"
-      >
-        <template #is_active-data="{ row }">
+      <UTable v-else :data="filteredProducts" :columns="columns">
+        <template #is_active-cell="{ row }">
           <UBadge
-            :label="row.is_active ? $t('admin.active') : $t('admin.inactive')"
-            :color="row.is_active ? 'success' : 'neutral'"
+            :label="row.original.is_active ? $t('admin.active') : $t('admin.inactive')"
+            :color="row.original.is_active ? 'success' : 'neutral'"
             variant="subtle"
           />
         </template>
-        <template #stock-data="{ row }">
-          <span :class="row.stock < 5 ? 'text-red-600 font-semibold' : ''">{{ row.stock }}</span>
+        <template #stock-cell="{ row }">
+          <span :class="row.original.stock < 5 ? 'text-red-600 font-semibold' : ''">{{ row.original.stock }}</span>
         </template>
-        <template #price-data="{ row }">
-          <span>€{{ Number(row.price).toFixed(2) }}</span>
+        <template #price-cell="{ row }">
+          <span>€{{ Number(row.original.price).toFixed(2) }}</span>
         </template>
-        <template #actions-data="{ row }">
+        <template #actions-cell="{ row }">
           <div class="flex gap-2">
             <UButton
               icon="i-heroicons-pencil"
               variant="ghost"
               size="xs"
-              :to="localePath(`/admin/products/${row.id}`)"
+              :to="localePath(`/admin/products/${row.original.id}`)"
             />
             <UButton
               icon="i-heroicons-trash"
               variant="ghost"
               color="error"
               size="xs"
-              @click="confirmDelete(row)"
+              @click="confirmDelete(row.original)"
             />
           </div>
         </template>
       </UTable>
     </UCard>
 
-    <!-- CSV upload modal -->
     <UModal v-model:open="showCsvUpload">
       <template #content>
         <div class="p-6">
@@ -95,20 +88,21 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const supabase = useSupabaseClient()
 const localePath = useLocalePath()
+const { t } = useI18n()
 const search = ref('')
 const showCsvUpload = ref(false)
 const csvFile = ref<File | null>(null)
 
 const columns = [
-  { key: 'name_el', label: 'Όνομα' },
-  { key: 'brand', label: 'Μάρκα' },
-  { key: 'price', label: 'Τιμή' },
-  { key: 'stock', label: $t('admin.stock') },
-  { key: 'is_active', label: 'Κατάσταση' },
-  { key: 'actions', label: '' },
+  { accessorKey: 'name_el', header: 'Όνομα' },
+  { accessorKey: 'brand', header: 'Μάρκα' },
+  { accessorKey: 'price', header: 'Τιμή' },
+  { accessorKey: 'stock', header: t('admin.stock') },
+  { accessorKey: 'is_active', header: 'Κατάσταση' },
+  { accessorKey: 'actions', header: '' },
 ]
 
-const { data: products, pending, refresh } = await useAsyncData('admin-products', async () => {
+const { data: products, pending, refresh } = useAsyncData('admin-products', async () => {
   const { data } = await supabase
     .from('products')
     .select('*')
@@ -132,7 +126,6 @@ function handleCsvUpload(e: Event) {
 
 async function importCsv() {
   if (!csvFile.value) return
-  // CSV import implementation — parse and upsert
   showCsvUpload.value = false
   csvFile.value = null
   refresh()
@@ -142,10 +135,5 @@ async function confirmDelete(product: any) {
   if (!confirm(`Διαγραφή "${product.name_el}";`)) return
   await supabase.from('products').update({ is_active: false }).eq('id', product.id)
   refresh()
-}
-
-function $t(key: string) {
-  const { t } = useI18n()
-  return t(key)
 }
 </script>

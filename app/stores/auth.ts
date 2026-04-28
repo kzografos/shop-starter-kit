@@ -14,7 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
     const { data } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', user.value.id)
+      .eq('id', user.value.sub)
       .single()
     // Normalize to plain object — strips null-prototype from Supabase response
     profile.value = data ? JSON.parse(JSON.stringify(data)) : null
