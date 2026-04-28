@@ -137,3 +137,61 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
     html,
   })
 }
+
+export async function sendNewsletterWelcome(email: string) {
+  const config = useRuntimeConfig()
+
+  if (!config.resendApiKey || config.resendApiKey === 're_REPLACE_ME') return
+
+  const html = `
+<!DOCTYPE html>
+<html lang="el">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5EFE2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:520px;margin:32px auto;background:#FBF6EC;border-radius:16px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,0.08);">
+
+    <!-- Header -->
+    <div style="background:#475C3F;padding:36px 32px 28px;">
+      <h1 style="margin:0;color:#FBF6EC;font-size:24px;font-weight:700;letter-spacing:-0.5px;">PetShop CY</h1>
+      <p style="margin:10px 0 0;color:#A8B89A;font-size:14px;">Το αγαπημένο Pet Shop της Κύπρου</p>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:36px 32px;">
+      <h2 style="margin:0 0 16px;color:#3A3A2E;font-size:20px;font-weight:700;">Καλώς ήρθατε! 🐾</h2>
+      <p style="margin:0 0 16px;color:#7E7D6E;font-size:15px;line-height:1.6;">
+        Εγγραφήκατε επιτυχώς στο newsletter μας. Θα σας ενημερώνουμε για:
+      </p>
+      <ul style="margin:0 0 24px;padding-left:20px;color:#7E7D6E;font-size:15px;line-height:2;">
+        <li>Αποκλειστικές προσφορές &amp; εκπτώσεις</li>
+        <li>Νέα προϊόντα &amp; μάρκες</li>
+        <li>Συμβουλές φροντίδας κατοικίδιων</li>
+      </ul>
+
+      <a href="https://petshopcyprus.com/products"
+         style="display:inline-block;background:#C97B5A;color:#fff;text-decoration:none;padding:14px 28px;border-radius:99px;font-size:15px;font-weight:600;">
+        Εξερευνήστε τα προϊόντα μας
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:20px 32px;background:#F5EFE2;border-top:1px solid #EDE5D5;text-align:center;">
+      <p style="margin:0;font-size:12px;color:#A8A99A;">
+        PetShop CY &bull; Cyprus &bull; info@petshopcyprus.com
+      </p>
+      <p style="margin:6px 0 0;font-size:11px;color:#A8A99A;">
+        Λάβατε αυτό το email γιατί εγγραφήκατε στο ${email}
+      </p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  const resend = getResend()
+  await resend.emails.send({
+    from: config.emailFrom as string,
+    to: email,
+    subject: 'Καλώς ήρθατε στο PetShop CY! 🐾',
+    html,
+  })
+}
