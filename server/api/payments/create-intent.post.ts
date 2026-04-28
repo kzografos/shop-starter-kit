@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amount_cents,
     currency: 'eur',
-    metadata: { user_id: user.id, order_id },
+    metadata: { user_id: user.sub, order_id },
   })
 
   return { clientSecret: paymentIntent.client_secret }

@@ -42,13 +42,13 @@
       </div>
     </aside>
     <main class="flex-1 overflow-auto">
-      <slot />
+      <div :key="$route.fullPath">
+        <slot />
+      </div>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'admin' })
-
 const authStore = useAuthStore()
 </script>

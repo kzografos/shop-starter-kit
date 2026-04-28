@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     .from('orders')
     .select('*, items:order_items(quantity, unit_price, product:products(name_el, name_en))')
     .eq('id', order_id)
-    .eq('user_id', user.id)
+    .eq('user_id', user.sub)
     .single()
 
   if (orderErr || !order) throw createError({ statusCode: 404, message: 'Order not found' })
@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
     cancel_url: `${origin}/checkout/cancel?order_id=${order_id}`,
     metadata: {
       order_id,
-      user_id: user.id,
+      user_id: user.sub,
     },
   })
 

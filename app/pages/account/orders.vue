@@ -62,7 +62,7 @@ const { data: orders, pending } = await useAsyncData('orders', async () => {
   const { data } = await supabase
     .from('orders')
     .select('*, items:order_items(*, product:products(*))')
-    .eq('user_id', user.value!.id)
+    .eq('user_id', user.value!.sub)
     .order('created_at', { ascending: false })
   return data as Order[]
 })

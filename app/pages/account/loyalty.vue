@@ -99,7 +99,7 @@ const { data: transactions, pending } = await useAsyncData('loyalty-transactions
   const { data } = await supabase
     .from('loyalty_transactions')
     .select('*')
-    .eq('user_id', user.value!.id)
+    .eq('user_id', user.value!.sub)
     .order('created_at', { ascending: false })
   return data
 })
