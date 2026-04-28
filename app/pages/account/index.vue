@@ -38,6 +38,22 @@
           </div>
         </UCard>
       </NuxtLink>
+
+      <NuxtLink :to="localePath('/account/favourites')">
+        <UCard class="hover:border-primary-300 transition-colors cursor-pointer">
+          <div class="flex items-center gap-4">
+            <UIcon name="i-heroicons-heart" class="w-8 h-8 text-terracotta" />
+            <div>
+              <h3 class="font-semibold text-gray-900">{{ $t('account.favourites') }}</h3>
+              <p class="text-sm text-gray-500">
+                {{ favouritesStore.ids.length > 0
+                  ? $t('account.favourites_count', { count: favouritesStore.ids.length }, favouritesStore.ids.length)
+                  : $t('account.favourites_empty') }}
+              </p>
+            </div>
+          </div>
+        </UCard>
+      </NuxtLink>
     </div>
   </div>
 </template>
@@ -46,6 +62,7 @@
 definePageMeta({ middleware: 'auth' })
 
 const authStore = useAuthStore()
+const favouritesStore = useFavouritesStore()
 const localePath = useLocalePath()
 
 onMounted(() => authStore.fetchProfile())

@@ -112,7 +112,16 @@
     "orders": "Orders",
     "loyalty": "Reward Points",
     "profile": "Profile",
-    "no_orders": "You have no orders yet"
+    "no_orders": "You have no orders yet",
+    "favourites": "Favourites",
+    "favourites_empty": "No saved products yet",
+    "favourites_count": "{count} saved product | {count} saved products"
+  },
+  "favourites": {
+    "auth_title": "Save your favourites",
+    "auth_desc": "Sign in or create a free account to save products to your favourites list.",
+    "title": "My Favourites",
+    "empty": "No saved products yet. Browse products and tap the heart to save them here."
   },
   "orders": {
     "title": "Orders",

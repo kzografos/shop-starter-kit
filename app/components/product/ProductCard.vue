@@ -19,6 +19,45 @@
       </div>
     </NuxtLink>
 
+    <!-- Favourite button -->
+    <button
+      class="absolute top-2.5 right-2.5 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-all duration-150"
+      @click.prevent="handleFavourite"
+    >
+      <UIcon
+        :name="isFav ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
+        class="w-4 h-4 transition-colors duration-150"
+        :class="isFav ? 'text-terracotta' : 'text-bark-light'"
+      />
+    </button>
+
+    <!-- Auth modal -->
+    <UModal v-model:open="showAuthModal">
+      <template #content>
+        <div class="p-6 text-center">
+          <UIcon name="i-heroicons-heart" class="w-10 h-10 text-terracotta mx-auto mb-4" />
+          <h3 class="font-display text-xl font-bold text-bark mb-2">{{ $t('favourites.auth_title') }}</h3>
+          <p class="text-bark-light text-sm mb-6">{{ $t('favourites.auth_desc') }}</p>
+          <div class="flex gap-3 justify-center">
+            <NuxtLink
+              :to="localePath('/login')"
+              class="px-5 py-2.5 rounded-full bg-terracotta text-white text-sm font-semibold hover:bg-terracotta-dark transition-colors"
+              @click="showAuthModal = false"
+            >
+              {{ $t('auth.login_btn') }}
+            </NuxtLink>
+            <NuxtLink
+              :to="localePath('/login?tab=register')"
+              class="px-5 py-2.5 rounded-full border border-cream-pale text-bark text-sm font-semibold hover:border-terracotta transition-colors"
+              @click="showAuthModal = false"
+            >
+              {{ $t('auth.register_btn') }}
+            </NuxtLink>
+          </div>
+        </div>
+      </template>
+    </UModal>
+
     <!-- Content -->
     <div class="flex flex-col flex-1 p-4 gap-1.5">
       <NuxtLink :to="localePath(`/products/${product.slug}`)">
@@ -57,12 +96,25 @@ const props = defineProps<{ product: Product }>()
 const { locale, t } = useI18n()
 const localePath = useLocalePath()
 const cartStore = useCartStore()
-const cartOpen = useState('cart-open', () => false)
+const favouritesStore = useFavouritesStore()
+const user = useSupabaseUser()
 const toast = useToast()
+
+const showAuthModal = ref(false)
 
 const productName = computed(() =>
   locale.value === 'el' ? props.product.name_el : props.product.name_en
 )
+
+const isFav = computed(() => favouritesStore.isFavourite(props.product.id))
+
+function handleFavourite() {
+  if (!user.value) {
+    showAuthModal.value = true
+    return
+  }
+  favouritesStore.toggle(props.product.id)
+}
 
 function addToCart() {
   cartStore.addItem(props.product)
