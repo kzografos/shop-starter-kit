@@ -3,7 +3,7 @@
 
     <!-- Animal -->
     <div>
-      <h3 class="font-semibold text-gray-900 mb-4">{{ $t('filters.animal') }}</h3>
+      <h3 class="font-semibold text-bark mb-4">{{ $t('filters.animal') }}</h3>
       <div class="space-y-3">
         <label
           v-for="animal in animals"
@@ -33,12 +33,12 @@
 
     <!-- Price range -->
     <div>
-      <h3 class="font-semibold text-gray-900 mb-4">
+      <h3 class="font-semibold text-bark mb-4">
         {{ $t('filters.price') }} · €
       </h3>
       <div class="relative mb-6">
         <!-- Track -->
-        <div class="relative h-1.5 bg-gray-200 rounded-full mx-2">
+        <div class="relative h-1.5 bg-gray-200 rounded-full mx-2.5">
           <div
             class="absolute h-1.5 bg-terracotta rounded-full"
             :style="{
@@ -46,8 +46,18 @@
               right: `${100 - ((localPriceMax - PRICE_ABS_MIN) / (PRICE_ABS_MAX - PRICE_ABS_MIN)) * 100}%`,
             }"
           />
+          <!-- Visual min thumb -->
+          <div
+            class="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-2 border-terracotta shadow-md pointer-events-none -translate-x-1/2"
+            :style="{ left: `${((localPriceMin - PRICE_ABS_MIN) / (PRICE_ABS_MAX - PRICE_ABS_MIN)) * 100}%` }"
+          />
+          <!-- Visual max thumb -->
+          <div
+            class="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-2 border-terracotta shadow-md pointer-events-none -translate-x-1/2"
+            :style="{ left: `${((localPriceMax - PRICE_ABS_MIN) / (PRICE_ABS_MAX - PRICE_ABS_MIN)) * 100}%` }"
+          />
         </div>
-        <!-- Min thumb -->
+        <!-- Min thumb (invisible, handles drag) -->
         <input
           v-model.number="localPriceMin"
           type="range"
@@ -57,7 +67,7 @@
           class="range-thumb"
           @input="localPriceMin = Math.min(localPriceMin, localPriceMax - 1)"
         />
-        <!-- Max thumb -->
+        <!-- Max thumb (invisible, handles drag) -->
         <input
           v-model.number="localPriceMax"
           type="range"
@@ -78,7 +88,7 @@
 
     <!-- Brand -->
     <div>
-      <h3 class="font-semibold text-gray-900 mb-4">{{ $t('filters.brand') }}</h3>
+      <h3 class="font-semibold text-bark mb-4">{{ $t('filters.brand') }}</h3>
       <div class="space-y-3">
         <label
           v-for="brand in brands"

@@ -1,20 +1,22 @@
 <template>
+  <div class="bg-cream-pale min-h-screen">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex gap-8">
       <!-- Sidebar filters (desktop) -->
-      <aside class="hidden lg:block w-56 flex-shrink-0">
+      <aside class="hidden lg:block w-64 shrink-0">
         <ProductFilters />
       </aside>
 
       <!-- Main content -->
       <div class="flex-1 min-w-0">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h1 class="text-2xl font-bold text-gray-900">{{ $t('products.title') }}</h1>
+          <h1 class="font-display text-3xl font-bold text-bark">{{ $t('products.title') }}</h1>
           <UInput
             v-model="filtersStore.search"
             :placeholder="$t('products.search')"
             icon="i-heroicons-magnifying-glass"
-            class="w-full sm:w-64"
+            class="w-full sm:w-64 [&_input]:rounded-full [&_input]:bg-[#EFE7D6] [&_input]:border [&_input]:border-[#D8D4C2] [&_input]:placeholder-[#A8A99A] [&_input]:focus:border-terracotta [&_input]:text-bark [&_input]:text-sm"
+            :ui="{ base: 'rounded-full' }"
           />
         </div>
 
@@ -30,8 +32,8 @@
         </div>
 
         <!-- Loading -->
-        <div v-if="pending" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <USkeleton v-for="n in 8" :key="n" class="aspect-[3/4] rounded-2xl" />
+        <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <USkeleton v-for="n in 8" :key="n" class="aspect-3/4 rounded-2xl" />
         </div>
 
         <!-- Products -->
@@ -50,6 +52,8 @@
         </div>
       </div>
     </div>
+
+  </div>
 
     <!-- Mobile filters slideover -->
     <USlideover v-model:open="showMobileFilters" side="left">
