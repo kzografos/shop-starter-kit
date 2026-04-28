@@ -1,20 +1,25 @@
 <template>
-  <header class="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+  <header
+    class="sticky top-0 z-50 transition-all duration-300"
+    :class="scrolled
+      ? 'bg-cream/95 backdrop-blur-md shadow-sm border-b border-cream-pale'
+      : 'bg-cream border-b border-cream-pale/60'"
+  >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16 gap-4">
         <!-- Logo -->
-        <NuxtLink :to="localePath('/')" class="shrink-0">
-          <img src="/logo.svg" alt="PetShop CY" class="h-10 w-auto" />
+        <NuxtLink :to="localePath('/')" class="shrink-0 flex items-center gap-2">
+          <img src="/logo.svg" alt="PetShop CY" class="h-9 w-auto" />
         </NuxtLink>
 
         <!-- Desktop nav -->
-        <nav class="hidden md:flex items-center gap-6">
+        <nav class="hidden md:flex items-center gap-1">
           <NuxtLink
             v-for="link in navLinks"
             :key="link.to"
             :to="link.to"
-            class="text-sm font-medium text-gray-700 hover:text-primary-500 transition-colors"
-            active-class="text-primary-500"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium text-bark-light hover:text-bark hover:bg-cream-pale transition-all duration-150"
+            active-class="text-bark bg-cream-pale"
           >
             {{ link.label }}
           </NuxtLink>
@@ -35,43 +40,42 @@
         <!-- Actions -->
         <div class="flex items-center gap-1">
           <!-- Locale toggle -->
-          <UButton
-            :label="$t('header.locale')"
-            variant="ghost"
-            color="neutral"
-            size="sm"
+          <button
+            class="px-2.5 py-1 rounded-lg text-xs font-semibold text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
             @click="toggleLocale"
-          />
+          >
+            {{ $t('header.locale') }}
+          </button>
 
           <!-- Account dropdown (logged in) -->
           <UDropdownMenu v-if="user" :items="userMenuItems">
-            <UButton
-              icon="i-heroicons-user-circle"
-              variant="ghost"
-              color="neutral"
-              size="sm"
-            />
+            <button class="p-2 rounded-lg text-bark-light hover:text-bark hover:bg-cream-pale transition-all">
+              <UIcon name="i-heroicons-user-circle" class="w-5 h-5" />
+            </button>
           </UDropdownMenu>
 
           <!-- Login button (logged out) -->
-          <UButton
+          <NuxtLink
             v-else
-            :label="$t('header.login')"
-            variant="ghost"
-            color="neutral"
-            size="sm"
             :to="localePath('/login')"
-          />
+            class="px-3 py-1.5 rounded-lg text-sm font-medium text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
+          >
+            {{ $t('header.login') }}
+          </NuxtLink>
 
           <!-- Cart -->
-          <UButton
-            icon="i-heroicons-shopping-cart"
-            variant="ghost"
-            color="neutral"
-            size="sm"
-            :badge="cartStore.itemCount > 0 ? String(cartStore.itemCount) : undefined"
+          <button
+            class="relative p-2 rounded-lg text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
             @click="cartOpen = true"
-          />
+          >
+            <UIcon name="i-heroicons-shopping-bag" class="w-5 h-5" :class="cartBouncing ? 'cart-bounce' : ''" />
+            <span
+              v-if="cartStore.itemCount > 0"
+              class="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 flex items-center justify-center rounded-full bg-terracotta text-white text-[10px] font-bold px-1"
+            >
+              {{ cartStore.itemCount }}
+            </span>
+          </button>
         </div>
       </div>
     </div>
@@ -80,12 +84,6 @@
 
 <script setup lang="ts">
 const { locale, setLocale, t } = useI18n()
-
-const navLinks = computed(() => [
-  { to: localePath('/products'), label: t('nav.products') },
-  { to: localePath('/about'), label: t('nav.about') },
-  { to: localePath('/contact'), label: t('nav.contact') },
-])
 const localePath = useLocalePath()
 const user = useSupabaseUser()
 const authStore = useAuthStore()
@@ -94,6 +92,25 @@ const cartOpen = useState('cart-open', () => false)
 const router = useRouter()
 
 const searchQuery = ref('')
+const scrolled = ref(false)
+const cartBouncing = ref(false)
+
+watch(() => cartStore.itemCount, () => {
+  cartBouncing.value = true
+  setTimeout(() => { cartBouncing.value = false }, 400)
+})
+
+const navLinks = computed(() => [
+  { to: localePath('/products'), label: t('nav.products') },
+  { to: localePath('/about'), label: t('nav.about') },
+  { to: localePath('/contact'), label: t('nav.contact') },
+])
+
+onMounted(() => {
+  const onScroll = () => { scrolled.value = window.scrollY > 16 }
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onUnmounted(() => window.removeEventListener('scroll', onScroll))
+})
 
 function toggleLocale() {
   setLocale(locale.value === 'el' ? 'en' : 'el')
