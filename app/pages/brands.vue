@@ -1,45 +1,71 @@
 <template>
   <div>
     <!-- Hero -->
-    <section class="bg-cream-pale border-b border-cream-pale py-12">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <p class="text-bark-light text-xs font-semibold tracking-widest uppercase mb-2">{{ $t('brands.eyebrow') }}</p>
-        <h1 class="font-display text-4xl font-bold text-bark">{{ $t('brands.title') }}</h1>
-        <p class="text-bark-light mt-2 max-w-xl">{{ $t('brands.subtitle') }}</p>
-      </div>
-    </section>
-
-    <!-- Brand grid -->
-    <section class="bg-cream min-h-screen">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div v-if="pending" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <USkeleton v-for="n in 12" :key="n" class="h-32 rounded-2xl" />
-        </div>
-
-        <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <button
-            v-for="brand in brands"
-            :key="brand.name"
-            class="group flex flex-col items-center justify-center gap-3 p-6 bg-cream rounded-2xl border border-cream-pale hover:border-terracotta/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 text-center"
-            @click="goToBrand(brand.name)"
-          >
-            <div class="w-12 h-12 rounded-xl bg-cream-pale flex items-center justify-center group-hover:bg-terracotta/10 transition-colors">
-              <UIcon :name="brandIcon(brand.name)" class="w-6 h-6 text-bark-light group-hover:text-terracotta transition-colors" />
-            </div>
-            <div>
-              <p class="font-semibold text-bark text-sm group-hover:text-terracotta transition-colors leading-snug">
-                {{ brand.name }}
-              </p>
-              <p class="text-bark-light text-xs mt-0.5">{{ brand.count }} {{ $t('brands.products') }}</p>
-            </div>
-          </button>
-        </div>
-
-        <p v-if="!pending && !brands?.length" class="text-center text-bark-light py-20">
-          {{ $t('brands.empty') }}
+    <section class="bg-cream-pale border-b border-[#EDE5D5] py-14 px-4">
+      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <p class="text-terracotta text-xs font-semibold tracking-widest uppercase mb-3">{{ $t('brands.eyebrow') }}</p>
+        <h1 class="font-display text-4xl sm:text-5xl font-bold text-bark mb-3">{{ $t('brands.title') }}</h1>
+        <p class="text-bark-light max-w-xl">{{ $t('brands.subtitle') }}</p>
+        <p v-if="brands?.length" class="mt-4 text-sm text-bark-light">
+          <span class="font-semibold text-bark">{{ brands.length }}</span> {{ $t('brands.available') }}
         </p>
       </div>
     </section>
+
+    <!-- Loading -->
+    <div v-if="pending" class="bg-cream-pale min-h-screen">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
+        <div class="grid sm:grid-cols-3 gap-5">
+          <USkeleton v-for="n in 3" :key="n" class="h-36 rounded-2xl" />
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <USkeleton v-for="n in 8" :key="n" class="h-24 rounded-2xl" />
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="brands?.length" class="bg-cream-pale min-h-screen">
+      <!-- Featured brands (top 3) -->
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6">
+        <div class="grid sm:grid-cols-3 gap-5">
+          <button
+            v-for="brand in featuredBrands"
+            :key="brand.name"
+            class="group relative bg-white rounded-2xl p-10 shadow-sm overflow-hidden text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+            @click="goToBrand(brand.name)"
+          >
+            <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-terracotta scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+            <p class="font-display text-2xl font-bold text-bark group-hover:text-terracotta transition-colors duration-300 leading-tight">
+              {{ brand.name }}
+            </p>
+            <p class="text-bark-light text-sm mt-2">{{ brand.count }} {{ $t('brands.products') }}</p>
+            <UIcon name="i-heroicons-arrow-right" class="absolute top-8 right-8 w-4 h-4 text-bark-light/30 group-hover:text-terracotta/60 group-hover:translate-x-0.5 transition-all duration-300" />
+          </button>
+        </div>
+      </section>
+
+      <!-- Regular brands -->
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <button
+            v-for="brand in regularBrands"
+            :key="brand.name"
+            class="group relative bg-white rounded-2xl p-6 shadow-sm overflow-hidden text-left transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
+            @click="goToBrand(brand.name)"
+          >
+            <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-terracotta scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+            <p class="font-display text-lg font-bold text-bark group-hover:text-terracotta transition-colors duration-300 leading-tight">
+              {{ brand.name }}
+            </p>
+            <p class="text-bark-light text-xs mt-1">{{ brand.count }} {{ $t('brands.products') }}</p>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <p v-else-if="!pending" class="text-center text-bark-light py-24">
+      {{ $t('brands.empty') }}
+    </p>
   </div>
 </template>
 
@@ -48,25 +74,7 @@ const supabase = useSupabaseClient()
 const localePath = useLocalePath()
 const filtersStore = useFiltersStore()
 const router = useRouter()
-
-const brandIcons: Record<string, string> = {
-  'Royal Canin': 'i-heroicons-star',
-  'Purina Pro Plan': 'i-heroicons-heart',
-  'Pedigree': 'i-heroicons-sparkles',
-  'Whiskas': 'i-heroicons-moon',
-  'Dreamies': 'i-heroicons-gift',
-  'Trixie': 'i-heroicons-bolt',
-  'Kong': 'i-heroicons-shield-check',
-  'Versele-Laga': 'i-heroicons-sun',
-  'Vitakraft': 'i-heroicons-beaker',
-  "Hill's Science Diet": 'i-heroicons-academic-cap',
-  'Eukanuba': 'i-heroicons-trophy',
-  'Orijen': 'i-heroicons-fire',
-}
-
-function brandIcon(name: string) {
-  return brandIcons[name] ?? 'i-heroicons-tag'
-}
+const { t } = useI18n()
 
 const { data: brands, pending } = useAsyncData('brands-page', async () => {
   const { data } = await supabase
@@ -84,6 +92,9 @@ const { data: brands, pending } = useAsyncData('brands-page', async () => {
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count)
 })
+
+const featuredBrands = computed(() => brands.value?.slice(0, 3) ?? [])
+const regularBrands = computed(() => brands.value?.slice(3) ?? [])
 
 function goToBrand(brandName: string) {
   filtersStore.reset()

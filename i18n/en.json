@@ -216,6 +216,7 @@
     "title": "Our Brands",
     "subtitle": "Select a brand to browse all its available products.",
     "products": "products",
+    "available": "brands available",
     "empty": "No brands found."
   },
   "newsletter": {
