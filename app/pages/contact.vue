@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="background: #F5F0E8;">
     <!-- Hero -->
     <section class="bg-cream-pale py-16 px-4">
       <div class="max-w-3xl mx-auto text-center">
@@ -18,7 +18,7 @@
             v-for="(item, i) in allContactItems"
             :key="item.icon"
             :ref="(el) => { if (el) cardRefs[i] = el as Element }"
-            class="bg-white rounded-2xl p-5 shadow-sm flex gap-4 items-start transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+            class="rounded-2xl p-5 flex gap-4 items-start transition-all duration-300 hover:-translate-y-1" style="background: #EFE7D6; border: 1px solid #D8D4C2; box-shadow: 0 2px 12px rgba(0,0,0,0.06);"
             :class="visibleCards[i] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'"
           >
             <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-linear-to-br from-terracotta to-terracotta-dark">
@@ -33,7 +33,7 @@
           <!-- Hours card -->
           <div
             :ref="(el) => { if (el) cardRefs[allContactItems.length] = el as Element }"
-            class="bg-white rounded-2xl p-5 shadow-sm flex gap-4 items-start transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+            class="rounded-2xl p-5 flex gap-4 items-start transition-all duration-300 hover:-translate-y-1" style="background: #EFE7D6; border: 1px solid #D8D4C2; box-shadow: 0 2px 12px rgba(0,0,0,0.06);"
             :class="visibleCards[allContactItems.length] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'"
           >
             <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-linear-to-br from-terracotta to-terracotta-dark">
@@ -61,7 +61,7 @@
 
         <!-- Map -->
         <div class="lg:col-span-3">
-          <div class="rounded-2xl overflow-hidden shadow-md h-105 lg:h-125">
+          <div class="rounded-2xl overflow-hidden h-105 lg:h-125" style="border: 1px solid #D8D4C2;">
             <iframe
               :src="mapUrl"
               width="100%"
