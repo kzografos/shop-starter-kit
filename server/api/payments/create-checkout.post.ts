@@ -25,7 +25,12 @@ export default defineEventHandler(async (event) => {
   const origin = getHeader(event, 'origin') || 'https://localhost:3000'
 
   // Build line items
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = order.items.map((item: any) => ({
+  type OrderItemWithProduct = {
+    quantity: number
+    unit_price: number
+    product: { name_el: string; name_en: string }
+  }
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = order.items.map((item: OrderItemWithProduct) => ({
     price_data: {
       currency: 'eur',
       product_data: { name: item.product.name_el ?? item.product.name_en },

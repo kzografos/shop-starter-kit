@@ -3,7 +3,7 @@
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
         <NuxtLink :to="localePath('/')">
-          <img src="/logo.svg" alt="PetShop CY" class="h-14 w-auto mx-auto mb-4" />
+          <img src="/logo.svg" alt="PetShop CY" class="h-14 w-auto mx-auto mb-4" >
         </NuxtLink>
       </div>
 
@@ -67,8 +67,8 @@ async function onSubmit() {
     })
     if (err) throw err
     sent.value = true
-  } catch (err: any) {
-    error.value = err.message
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'An error occurred'
   } finally {
     loading.value = false
   }

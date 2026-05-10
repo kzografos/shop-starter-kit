@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
     const supabase = serverSupabaseServiceRole(event)
 
     const { data: settings } = await supabase.from('settings').select('key, value')
-    const cfg = Object.fromEntries((settings ?? []).map((s: any) => [s.key, s.value]))
+    const cfg = Object.fromEntries((settings ?? []).map((s: { key: string; value: string }) => [s.key, s.value]))
     const earnRate = parseInt(cfg.loyalty_earn_rate ?? '100')
 
     const { data: order } = await supabase

@@ -50,7 +50,7 @@ const supabase = useSupabaseClient()
 const { t } = useI18n()
 
 const columns = [
-  { accessorKey: 'id', header: 'ID', cell: ({ row }: any) => row.original.id.slice(0, 8).toUpperCase() },
+  { accessorKey: 'id', header: 'ID', cell: ({ row }: { row: { original: { id: string } } }) => row.original.id.slice(0, 8).toUpperCase() },
   { accessorKey: 'created_at', header: t('orders.date') },
   { accessorKey: 'fulfillment_type', header: 'Τύπος' },
   { accessorKey: 'payment_status', header: 'Πληρωμή' },

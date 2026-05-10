@@ -15,7 +15,7 @@
               required
               :placeholder="$t('newsletter.placeholder')"
               class="flex-1 px-4 py-2.5 rounded-xl bg-forest border border-sage/30 text-cream placeholder-bark-light text-sm focus:outline-none focus:border-sage transition-colors"
-            />
+            >
             <button
               type="submit"
               :disabled="loading"
@@ -41,7 +41,7 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
           <!-- Brand -->
           <div class="md:col-span-1">
-            <img src="/logo.svg" alt="PetShop CY" class="h-9 w-auto mb-4 brightness-0 invert opacity-80" />
+            <img src="/logo.svg" alt="PetShop CY" class="h-9 w-auto mb-4 brightness-0 invert opacity-80" >
             <p class="text-sm leading-relaxed">{{ $t('footer.description') }}</p>
           </div>
 
@@ -112,8 +112,8 @@ async function subscribe() {
       body: { email: email.value },
     })
     subscribed.value = true
-  } catch (e: any) {
-    error.value = e?.data?.message ?? t('newsletter.error')
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : t('newsletter.error')
   } finally {
     loading.value = false
   }

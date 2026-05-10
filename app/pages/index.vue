@@ -9,7 +9,7 @@
           src="/hero-image.png"
           alt="PetShop CY"
           class="w-full h-full object-cover object-center"
-        />
+        >
         <!-- Gradient blend into forest on the left edge -->
         <div class="absolute inset-y-0 left-0 w-40 bg-linear-to-r from-forest to-transparent pointer-events-none" />
       </div>
@@ -74,7 +74,7 @@
               :src="catImage(cat.slug)"
               :alt="cat.slug"
               class="h-24 w-auto object-contain mb-4 group-hover:scale-105 transition-transform duration-300"
-            />
+            >
             <span v-else class="text-5xl mb-4 block">🐾</span>
 
             <span class="font-semibold text-bark group-hover:text-terracotta transition-colors">

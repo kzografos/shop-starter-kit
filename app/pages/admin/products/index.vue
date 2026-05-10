@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Product } from '~/types'
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const supabase = useSupabaseClient()
@@ -131,7 +132,7 @@ async function importCsv() {
   refresh()
 }
 
-async function confirmDelete(product: any) {
+async function confirmDelete(product: Product) {
   if (!confirm(`Διαγραφή "${product.name_el}";`)) return
   await supabase.from('products').update({ is_active: false }).eq('id', product.id)
   refresh()

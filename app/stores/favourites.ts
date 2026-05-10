@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia'
+import type { Database } from '~/types/database.types'
+
+type FavouriteRow = Database['public']['Tables']['favourites']['Row']
 
 export const useFavouritesStore = defineStore('favourites', () => {
-  const supabase = useSupabaseClient()
+  const supabase = useSupabaseClient<Database>()
   const user = useSupabaseUser()
 
   const ids = ref<string[]>([])
@@ -16,7 +19,7 @@ export const useFavouritesStore = defineStore('favourites', () => {
       console.error('[favourites] load error:', error)
       return
     }
-    ids.value = (data ?? []).map((r: any) => String(r.product_id))
+    ids.value = (data ?? []).map((r: Pick<FavouriteRow, 'product_id'>) => String(r.product_id))
     loaded.value = true
   }
 

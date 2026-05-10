@@ -21,7 +21,7 @@ export default defineNuxtConfig({
     },
   },
 
-  modules: ["@nuxt/ui", "@nuxtjs/supabase", "@nuxtjs/i18n", "@pinia/nuxt", "pinia-plugin-persistedstate/nuxt", "nuxt-charts"],
+  modules: ["@nuxt/ui", "@nuxtjs/supabase", "@nuxtjs/i18n", "@pinia/nuxt", "pinia-plugin-persistedstate/nuxt", "nuxt-charts", "@nuxt/eslint"],
 
   css: ["~/assets/css/main.css"],
 

@@ -119,7 +119,7 @@ export default defineEventHandler(async (event) => {
       .from('products')
       .select('id, name_el')
       .in('id', productIds)
-    const nameMap = new Map((products ?? []).map((p: any) => [p.id, p.name_el]))
+    const nameMap = new Map((products ?? []).map((p: { id: string; name_el: string }) => [p.id, p.name_el]))
 
     await sendOrderConfirmation({
       orderId: order.id,

@@ -4,7 +4,7 @@
       :src="item.product.images[0] || '/placeholder.png'"
       :alt="productName"
       class="w-16 h-16 object-cover rounded-lg bg-gray-100 flex-shrink-0"
-    />
+    >
     <div class="flex-1 min-w-0">
       <p class="text-sm font-medium text-gray-900 line-clamp-2 leading-tight">{{ productName }}</p>
       <p class="text-sm text-primary-600 font-semibold mt-0.5">€{{ item.product.price.toFixed(2) }}</p>

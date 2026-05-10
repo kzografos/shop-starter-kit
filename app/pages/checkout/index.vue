@@ -226,8 +226,8 @@ async function placeOrder() {
       await authStore.fetchProfile()
       success.value = true
     }
-  } catch (e: any) {
-    orderError.value = e?.data?.message || e?.message || 'Something went wrong'
+  } catch (e: unknown) {
+    orderError.value = e instanceof Error ? e.message : 'Something went wrong'
   } finally {
     loading.value = false
   }

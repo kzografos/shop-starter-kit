@@ -17,7 +17,7 @@
             :src="product.images[selectedImage] || '/placeholder.png'"
             :alt="productName"
             class="w-full h-full object-cover"
-          />
+          >
         </div>
         <div v-if="product.images.length > 1" class="flex gap-2 flex-wrap">
           <button
@@ -27,7 +27,7 @@
             :class="selectedImage === i ? 'border-primary-500' : 'border-gray-200'"
             @click="selectedImage = i"
           >
-            <img :src="img" class="w-full h-full object-cover" />
+            <img :src="img" class="w-full h-full object-cover" >
           </button>
         </div>
       </div>

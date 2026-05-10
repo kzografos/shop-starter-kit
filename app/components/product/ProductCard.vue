@@ -13,7 +13,7 @@
           :alt="productName"
           class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           loading="lazy"
-        />
+        >
       </div>
 
       <!-- Out of stock overlay -->

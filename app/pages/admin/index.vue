@@ -184,7 +184,12 @@
 </template>
 
 <script setup lang="ts">
+import type { Database } from '~/types/database.types'
+
 definePageMeta({ layout: 'admin', middleware: 'admin' })
+
+type OrderRow = Database['public']['Tables']['orders']['Row']
+type ProductRow = Database['public']['Tables']['products']['Row']
 
 const supabase = useSupabaseClient()
 const localePath = useLocalePath()
@@ -196,15 +201,15 @@ const kpi = reactive({
   newCustomers: 0,
 })
 
-const recentOrders = ref<any[]>([])
+const recentOrders = ref<Pick<OrderRow, 'id' | 'created_at' | 'status' | 'total'>[]>([])
 const loadingOrders = ref(true)
 const loadingCharts = ref(true)
 
-const revenueChartData = ref<any[]>([])
+const revenueChartData = ref<{ 'Έσοδα': number }[]>([])
 const revenueDates = ref<string[]>([])
 const orderStatusData = ref<{ status: string; count: number }[]>([])
 const topProducts = ref<{ name: string; units: number }[]>([])
-const lowStockProducts = ref<any[]>([])
+const lowStockProducts = ref<Pick<ProductRow, 'id' | 'name_el' | 'stock'>[]>([])
 
 const revenueCategories = { 'Έσοδα': { name: 'Έσοδα', color: '#10b981' } }
 
@@ -219,7 +224,7 @@ const donutCategories = computed(() => {
   )
 })
 
-function revenueXFormatter(_: any, i: number) {
+function revenueXFormatter(_: unknown, i: number) {
   return revenueDates.value[i] ?? ''
 }
 
@@ -290,7 +295,7 @@ onMounted(async () => {
   // Top products
   const productMap = new Map<string, { name: string; units: number }>()
   for (const item of orderItems.data ?? []) {
-    const name = (item.products as any)?.name_el ?? item.product_id
+    const name = (item.products as { name_el: string } | null)?.name_el ?? item.product_id
     const existing = productMap.get(item.product_id)
     if (existing) existing.units += item.quantity
     else productMap.set(item.product_id, { name, units: item.quantity })

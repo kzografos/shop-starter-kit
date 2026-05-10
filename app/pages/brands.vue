@@ -74,7 +74,6 @@ const supabase = useSupabaseClient()
 const localePath = useLocalePath()
 const filtersStore = useFiltersStore()
 const router = useRouter()
-const { t } = useI18n()
 
 const { data: brands, pending } = useAsyncData('brands-page', async () => {
   const { data } = await supabase

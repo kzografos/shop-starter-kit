@@ -9,7 +9,7 @@
       <div class="flex items-center justify-between h-16 gap-4">
         <!-- Logo -->
         <NuxtLink :to="localePath('/')" class="shrink-0 flex items-center gap-2">
-          <img src="/logo.svg" alt="PetShop CY" class="h-9 w-auto" />
+          <img src="/logo.svg" alt="PetShop CY" class="h-9 w-auto" >
         </NuxtLink>
 
         <!-- Desktop nav -->
@@ -131,8 +131,15 @@ async function handleLogout() {
   await navigateTo(localePath('/'))
 }
 
+interface MenuItem {
+  label: string
+  icon: string
+  to?: string
+  onSelect?: () => void
+}
+
 const userMenuItems = computed(() => {
-  const items: any[][] = [
+  const items: MenuItem[][] = [
     [
       {
         label: t('nav.account'),

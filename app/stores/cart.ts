@@ -17,7 +17,7 @@ export const useCartStore = defineStore('cart', () => {
     if (existing) {
       existing.quantity = Math.min(existing.quantity + quantity, product.stock)
     } else {
-      items.value.push({ product: JSON.parse(JSON.stringify(product)), quantity })
+      items.value.push({ product: structuredClone(product), quantity })
     }
   }
 
@@ -43,7 +43,7 @@ export const useCartStore = defineStore('cart', () => {
     items.value = orderItems
       .filter(i => i.product.stock > 0)
       .map(i => ({
-        product: JSON.parse(JSON.stringify(i.product)),
+        product: structuredClone(i.product),
         quantity: Math.min(i.quantity, i.product.stock),
       }))
   }

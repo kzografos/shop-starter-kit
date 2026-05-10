@@ -66,7 +66,7 @@
           step="1"
           class="range-thumb"
           @input="localPriceMin = Math.min(localPriceMin, localPriceMax - 1)"
-        />
+        >
         <!-- Max thumb (invisible, handles drag) -->
         <input
           v-model.number="localPriceMax"
@@ -76,7 +76,7 @@
           step="1"
           class="range-thumb"
           @input="localPriceMax = Math.max(localPriceMax, localPriceMin + 1)"
-        />
+        >
       </div>
       <div class="flex justify-between text-sm font-medium text-gray-600">
         <span>€{{ localPriceMin }}</span>
@@ -134,6 +134,10 @@
 </template>
 
 <script setup lang="ts">
+import type { Database } from '~/types/database.types'
+
+type CategoryRow = Database['public']['Tables']['categories']['Row']
+type ProductRow = Database['public']['Tables']['products']['Row']
 const filtersStore = useFiltersStore()
 const { locale } = useI18n()
 const supabase = useSupabaseClient()
@@ -188,7 +192,7 @@ onMounted(async () => {
 
   // Build brand counts
   const brandMap = new Map<string, number>()
-  products.forEach((p: any) => {
+  products.forEach((p: { brand: string | null }) => {
     if (p.brand) brandMap.set(p.brand, (brandMap.get(p.brand) ?? 0) + 1)
   })
   brands.value = [...brandMap.entries()]
@@ -215,15 +219,15 @@ onMounted(async () => {
     .select('category_id')
     .eq('is_active', true)
 
-  const subCatToParent = new Map((subCats ?? []).map((s: any) => [s.id, s.parent_id]))
+  const subCatToParent = new Map((subCats ?? []).map((s: Pick<CategoryRow, 'id' | 'parent_id'>) => [s.id, s.parent_id]))
   const parentCounts = new Map<string, number>()
 
-  ;(productCats ?? []).forEach((p: any) => {
+  ;(productCats ?? []).forEach((p: Pick<ProductRow, 'category_id'>) => {
     const parentId = subCatToParent.get(p.category_id) ?? p.category_id
     parentCounts.set(parentId, (parentCounts.get(parentId) ?? 0) + 1)
   })
 
-  animals.value = cats.map((c: any) => ({
+  animals.value = cats.map((c: Pick<CategoryRow, 'id' | 'slug' | 'name_el' | 'name_en'>) => ({
     slug: c.slug,
     name: locale.value === 'el' ? c.name_el : c.name_en,
     count: parentCounts.get(c.id) ?? 0,

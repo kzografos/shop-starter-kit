@@ -20,10 +20,10 @@
         </div>
         <div class="relative h-72 flex items-center justify-center">
           <div class="absolute left-4 top-0 w-44 h-56 rounded-2xl bg-cream shadow-lg rotate-[-5deg] overflow-hidden flex items-center justify-center">
-            <img src="/categories/dog.png" alt="Dog" class="w-full h-full object-contain p-4" />
+            <img src="/categories/dog.png" alt="Dog" class="w-full h-full object-contain p-4" >
           </div>
           <div class="absolute right-4 bottom-0 w-44 h-56 rounded-2xl shadow-lg rotate-[4deg] overflow-hidden flex items-center justify-center" style="background: #EFE7D6;">
-            <img src="/categories/cat.png" alt="Cat" class="w-full h-full object-contain p-4" />
+            <img src="/categories/cat.png" alt="Cat" class="w-full h-full object-contain p-4" >
           </div>
         </div>
       </div>
