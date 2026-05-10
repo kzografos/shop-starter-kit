@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="bg-surface-page">
     <!-- Hero -->
     <section class="relative overflow-hidden py-24 sm:py-32 px-4" style="background: linear-gradient(135deg, var(--color-surface-card), var(--color-cream-pale))">
       <span class="absolute top-6 left-8 text-6xl opacity-15 select-none pointer-events-none">🐾</span>
