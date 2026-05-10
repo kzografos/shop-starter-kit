@@ -1,9 +1,8 @@
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { serverSupabaseServiceRole } from '#supabase/server'
+import { stripe } from '../../utils/stripe'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-  const stripe = new Stripe(config.stripeSecretKey as string)
 
   const body = await readRawBody(event)
   const sig = getHeader(event, 'stripe-signature')

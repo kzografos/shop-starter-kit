@@ -112,6 +112,7 @@ definePageMeta({ layout: false })
 const supabase = useSupabaseClient()
 const authStore = useAuthStore()
 const localePath = useLocalePath()
+const route = useRoute()
 const { t } = useI18n()
 
 const isLogin = ref(true)
@@ -144,7 +145,11 @@ async function onSubmit() {
       })
       if (err) throw err
       await authStore.fetchProfile()
-      await navigateTo(localePath('/'))
+      const redirectTo = route.query.redirect as string | undefined
+      const destination = redirectTo && redirectTo.startsWith('/')
+        ? decodeURIComponent(redirectTo)
+        : '/account'
+      await navigateTo(destination)
     } else {
       const { error: err } = await supabase.auth.signUp({
         email: form.email,

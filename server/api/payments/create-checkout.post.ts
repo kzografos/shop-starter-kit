@@ -1,15 +1,24 @@
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
+import { z } from 'zod'
 import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
+import { stripe } from '../../utils/stripe'
+
+const schema = z.object({ order_id: z.uuid() })
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user) throw createError({ statusCode: 401, message: 'Unauthorized' })
 
-  const { order_id } = await readBody<{ order_id: string }>(event)
-  if (!order_id) throw createError({ statusCode: 400, message: 'order_id required' })
+  let body: z.infer<typeof schema>
+  try {
+    body = schema.parse(await readBody(event))
+  } catch (error) {
+    if (error instanceof z.ZodError) throw createError({ statusCode: 400, message: error.message })
+    throw error
+  }
+  const { order_id } = body
 
   const supabase = await serverSupabaseClient(event)
-  const config = useRuntimeConfig()
 
   // Fetch order + items with product names
   const { data: order, error: orderErr } = await supabase
@@ -21,7 +30,6 @@ export default defineEventHandler(async (event) => {
 
   if (orderErr || !order) throw createError({ statusCode: 404, message: 'Order not found' })
 
-  const stripe = new Stripe(config.stripeSecretKey as string)
   const origin = getHeader(event, 'origin') || 'https://localhost:3000'
 
   // Build line items

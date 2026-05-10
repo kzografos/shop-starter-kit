@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Hero -->
-    <section class="bg-cream-pale border-b border-[#EDE5D5] py-14 px-4">
+    <section class="bg-cream-pale border-b border-[--color-border-soft] py-14 px-4">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <p class="text-terracotta text-xs font-semibold tracking-widest uppercase mb-3">{{ $t('brands.eyebrow') }}</p>
         <h1 class="font-display text-4xl sm:text-5xl font-bold text-bark mb-3">{{ $t('brands.title') }}</h1>

@@ -1,6 +1,6 @@
 <template>
   <header
-    class="sticky top-0 z-50 transition-all duration-300 border-b border-[#EDE5D5]"
+    class="sticky top-0 z-50 transition-all duration-300 border-b border-[--color-border-soft]"
     :class="scrolled
       ? 'bg-cream/95 backdrop-blur-md shadow-[0_1px_12px_rgba(58,58,46,0.08)]'
       : 'bg-cream'"
@@ -32,7 +32,7 @@
             :placeholder="$t('header.search_placeholder')"
             icon="i-heroicons-magnifying-glass"
             size="sm"
-            class="w-full [&_input]:rounded-full [&_input]:bg-[#EFE7D6] [&_input]:border [&_input]:border-[#D8D4C2] [&_input]:placeholder-[#A8A99A] [&_input]:focus:border-terracotta [&_input]:text-bark [&_input]:text-sm"
+            class="w-full [&_input]:rounded-full [&_input]:bg-[--color-surface-card] [&_input]:border [&_input]:border-[--color-border-warm] [&_input]:placeholder-[--color-bark-light] [&_input]:focus:border-terracotta [&_input]:text-bark [&_input]:text-sm"
             :ui="{ base: 'rounded-full' }"
             @keyup.enter="goToSearch"
           />
@@ -42,7 +42,7 @@
         <div class="flex items-center gap-3">
           <!-- Locale toggle — pill matching icon visual weight -->
           <button
-            class="h-8 px-2.5 rounded-full text-xs font-semibold text-bark-light hover:text-bark hover:bg-cream-pale border border-transparent hover:border-[#D8D4C2] transition-all"
+            class="h-8 px-2.5 rounded-full text-xs font-semibold text-bark-light hover:text-bark hover:bg-cream-pale border border-transparent hover:border-[--color-border-warm] transition-all"
             @click="toggleLocale"
           >
             {{ $t('header.locale') }}

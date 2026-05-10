@@ -1,12 +1,40 @@
+import { z } from 'zod'
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import type { CreateOrderPayload } from '../../../types'
+
+const shippingAddressSchema = z.object({
+  full_name: z.string().min(1),
+  address: z.string().min(1),
+  city: z.string().min(1),
+  postal_code: z.string().min(1),
+  phone: z.string().min(1),
+})
+
+const createOrderSchema = z.object({
+  items: z.array(z.object({
+    product_id: z.uuid(),
+    quantity: z.number().int().positive(),
+    unit_price: z.number().positive(),
+  })).min(1),
+  fulfillment_type: z.enum(['shipping', 'pickup']),
+  payment_method: z.enum(['stripe', 'cash_on_pickup', 'card_on_pickup']),
+  shipping_address: shippingAddressSchema.optional(),
+  loyalty_points_to_redeem: z.number().int().nonnegative().optional(),
+  notes: z.string().optional(),
+})
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user) throw createError({ statusCode: 401, message: 'Unauthorized' })
 
   const supabase = await serverSupabaseClient(event)
-  const body = await readBody<CreateOrderPayload>(event)
+
+  let body: z.infer<typeof createOrderSchema>
+  try {
+    body = createOrderSchema.parse(await readBody(event))
+  } catch (error) {
+    if (error instanceof z.ZodError) throw createError({ statusCode: 400, message: error.message })
+    throw error
+  }
 
   const { items, fulfillment_type, payment_method, shipping_address, loyalty_points_to_redeem = 0, notes } = body
 

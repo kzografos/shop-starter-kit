@@ -15,7 +15,7 @@
             v-model="filtersStore.search"
             :placeholder="$t('products.search')"
             icon="i-heroicons-magnifying-glass"
-            class="w-full sm:w-64 [&_input]:rounded-full [&_input]:bg-[#EFE7D6] [&_input]:border [&_input]:border-[#D8D4C2] [&_input]:placeholder-[#A8A99A] [&_input]:focus:border-terracotta [&_input]:text-bark [&_input]:text-sm"
+            class="w-full sm:w-64 [&_input]:rounded-full [&_input]:bg-[--color-surface-card] [&_input]:border [&_input]:border-[--color-border-warm] [&_input]:placeholder-[--color-bark-light] [&_input]:focus:border-terracotta [&_input]:text-bark [&_input]:text-sm"
             :ui="{ base: 'rounded-full' }"
           />
         </div>

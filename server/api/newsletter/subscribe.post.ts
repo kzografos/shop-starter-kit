@@ -1,13 +1,18 @@
+import { z } from 'zod'
 import { serverSupabaseServiceRole } from '#supabase/server'
 import { sendNewsletterWelcome } from '../../utils/mailer'
 
-export default defineEventHandler(async (event) => {
-  const { email } = await readBody(event)
-  const normalised = email?.toLowerCase().trim()
+const schema = z.object({ email: z.email() })
 
-  if (!normalised || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalised)) {
-    throw createError({ statusCode: 400, data: { message: 'Invalid email address' } })
+export default defineEventHandler(async (event) => {
+  let parsed: z.infer<typeof schema>
+  try {
+    parsed = schema.parse(await readBody(event))
+  } catch (error) {
+    if (error instanceof z.ZodError) throw createError({ statusCode: 400, data: { message: error.message } })
+    throw error
   }
+  const normalised = parsed.email.toLowerCase().trim()
 
   const client = serverSupabaseServiceRole(event)
 
