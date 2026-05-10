@@ -245,6 +245,27 @@
     "active": "Active",
     "inactive": "Inactive"
   },
+  "login": {
+    "welcome_back": "Welcome back,",
+    "welcome_accent": "friend.",
+    "tagline": "Caring for your pets since 2018.",
+    "feature_orders": "Track your orders",
+    "feature_points": "Redeem your loyalty points",
+    "feature_reorder": "Quickly reorder your favourites",
+    "loyalty_note": "Earn points with every purchase — redeem them for discounts",
+    "toggle_signin": "Sign in",
+    "toggle_register": "Register",
+    "title": "Sign in.",
+    "subtitle": "Enter your details to sign in.",
+    "register_title": "Register.",
+    "register_subtitle": "Create your account.",
+    "google": "Continue with Google",
+    "or": "or",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "arrow_button": "Sign in →",
+    "register_arrow_button": "Register →"
+  },
   "common": {
     "loading": "Loading...",
     "or": "or",
