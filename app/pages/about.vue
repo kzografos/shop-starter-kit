@@ -51,12 +51,24 @@
     </section>
 
     <!-- Stats -->
-    <section ref="statsSection" class="bg-cream py-16 px-4">
+    <section class="bg-cream py-16 px-4">
       <div class="max-w-4xl mx-auto">
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
-          <div v-for="stat in animatedStats" :key="stat.label">
-            <div class="font-display text-4xl font-bold text-terracotta mb-1">{{ stat.display }}</div>
-            <div class="text-sm text-bark-light uppercase tracking-wider">{{ stat.label }}</div>
+          <div>
+            <div class="font-display text-4xl font-bold text-terracotta mb-1">200+</div>
+            <div class="text-sm text-bark-light uppercase tracking-wider">Προϊόντα</div>
+          </div>
+          <div>
+            <div class="font-display text-4xl font-bold text-terracotta mb-1">1,500+</div>
+            <div class="text-sm text-bark-light uppercase tracking-wider">Ικανοποιημένοι πελάτες</div>
+          </div>
+          <div>
+            <div class="font-display text-4xl font-bold text-terracotta mb-1">4.9★</div>
+            <div class="text-sm text-bark-light uppercase tracking-wider">Αξιολόγηση</div>
+          </div>
+          <div>
+            <div class="font-display text-4xl font-bold text-terracotta mb-1">2018</div>
+            <div class="text-sm text-bark-light uppercase tracking-wider">Ίδρυση</div>
           </div>
         </div>
       </div>
@@ -77,53 +89,7 @@ const values = computed(() => [
 const cardRefs: Element[] = []
 const visibleCards = ref([false, false, false])
 
-// Stats count-up
-const statsSection = ref<HTMLElement | null>(null)
-const statsStarted = ref(false)
-const animatedValues = ref([0, 0, 0, 0])
-
-const statDefs = [
-  { target: 500, suffix: '+', comma: false },
-  { target: 2000, suffix: '+', comma: true },
-  { target: 5, suffix: '★', comma: false },
-  { target: 2018, suffix: '', comma: false },
-]
-
-const animatedStats = computed(() =>
-  statDefs.map((s, i) => ({
-    display: (s.comma
-      ? animatedValues.value[i].toLocaleString('en-US')
-      : String(animatedValues.value[i])) + s.suffix,
-    label: [t('about.stat_products'), t('about.stat_customers'), t('about.stat_rating'), t('about.stat_since')][i],
-  }))
-)
-
-function animateStats() {
-  statDefs.forEach((stat, i) => {
-    const duration = 1500
-    const startTime = performance.now()
-    function step(now: number) {
-      const progress = Math.min((now - startTime) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      animatedValues.value[i] = Math.round(eased * stat.target)
-      if (progress < 1) requestAnimationFrame(step)
-    }
-    requestAnimationFrame(step)
-  })
-}
-
 onMounted(() => {
-  if (statsSection.value) {
-    const statsObs = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !statsStarted.value) {
-        statsStarted.value = true
-        animateStats()
-        statsObs.disconnect()
-      }
-    }, { threshold: 0.5 })
-    statsObs.observe(statsSection.value)
-  }
-
   const cardObs = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
