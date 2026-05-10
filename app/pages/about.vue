@@ -1,9 +1,10 @@
 <template>
   <div>
     <!-- Hero -->
-    <section class="bg-cream-pale py-20 px-4">
-      <div class="max-w-4xl mx-auto text-center">
-        <img src="/logo.svg" alt="PetShop CY" class="h-20 w-auto mx-auto mb-6" />
+    <section class="relative overflow-hidden py-24 sm:py-32 px-4" style="background: linear-gradient(135deg, var(--color-surface-card), var(--color-cream-pale))">
+      <span class="absolute top-6 left-8 text-6xl opacity-15 select-none pointer-events-none">🐾</span>
+      <span class="absolute bottom-6 right-8 text-6xl opacity-15 select-none pointer-events-none">🐈</span>
+      <div class="max-w-4xl mx-auto text-center relative z-10">
         <h1 class="font-display text-4xl sm:text-5xl font-bold text-bark mb-4">{{ $t('about.title') }}</h1>
         <p class="text-lg text-bark-light max-w-2xl mx-auto">{{ $t('about.subtitle') }}</p>
       </div>
