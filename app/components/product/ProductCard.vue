@@ -87,7 +87,7 @@
         <h3
           class="text-sm font-medium text-bark line-clamp-2 leading-snug mt-0.5 group-hover:text-terracotta transition-colors duration-200"
         >
-          {{ productName }}
+          {{ displayName }}
         </h3>
       </NuxtLink>
 
@@ -137,6 +137,13 @@ const showAuthModal = ref(false);
 const productName = computed(() =>
   locale.value === "el" ? props.product.name_el : props.product.name_en,
 );
+
+const displayName = computed(() => {
+  const name = productName.value;
+  const brand = props.product.brand;
+  if (brand && name.startsWith(brand)) return name.slice(brand.length).trim();
+  return name;
+});
 
 const isFav = computed(() => favouritesStore.isFavourite(props.product.id));
 

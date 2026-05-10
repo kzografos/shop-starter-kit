@@ -2,19 +2,19 @@
 @import "@nuxt/ui";
 
 @theme {
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 
-  --color-cream: #FBF6EC;
-  --color-cream-pale: #F5EFE2;
+  --color-cream: #fbf6ec;
+  --color-cream-pale: #f5efe2;
 
   /* Terracotta scale — used by NuxtUI primary color system */
-  --color-terracotta-50:  #fef6f2;
+  --color-terracotta-50: #fef6f2;
   --color-terracotta-100: #fce8dc;
   --color-terracotta-200: #f8ccb5;
   --color-terracotta-300: #f1a887;
   --color-terracotta-400: #e08e6a;
-  --color-terracotta-500: #C97B5A;
+  --color-terracotta-500: #c97b5a;
   --color-terracotta-600: #b5613f;
   --color-terracotta-700: #964d34;
   --color-terracotta-800: #7c3f2b;
@@ -25,21 +25,37 @@
   --color-terracotta: var(--color-terracotta-500);
   --color-terracotta-dark: var(--color-terracotta-600);
 
-  --color-sage: #A8B89A;
-  --color-sage-dark: #6E8163;
-  --color-forest: #475C3F;
-  --color-bark: #3A3A2E;
-  --color-bark-light: #7E7D6E;
-  --color-gold: #D9A85A;
-  --color-warm-red: #9B4A4A;
+  --color-sage: #a8b89a;
+  --color-sage-dark: #6e8163;
+  --color-forest: #475c3f;
+  --color-bark: #3a3a2e;
+  --color-bark-light: #7e7d6e;
+  --color-gold: #d9a85a;
+  --color-warm-red: #9b4a4a;
+
+  /* Page & card surface colours */
+  --color-surface-page: #f5f0e8; /* global inner page background */
+  --color-surface-card: #efe7d6; /* card / info box background */
+  --color-border-warm: #d8d4c2; /* warm neutral border */
+  --color-border-soft: #ede5d5; /* lighter border, e.g. navbar divider */
 }
 
 @keyframes cart-bounce {
-  0%   { transform: scale(1); }
-  30%  { transform: scale(1.35); }
-  60%  { transform: scale(0.9); }
-  80%  { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.35);
+  }
+  60% {
+    transform: scale(0.9);
+  }
+  80% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .cart-bounce {
@@ -48,14 +64,18 @@
 
 @layer base {
   body {
+    background-color: var(--color-surface-page);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display);
   }
-
-
 }
