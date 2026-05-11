@@ -1,57 +1,190 @@
 <template>
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex items-center gap-4 mb-8">
-      <UButton icon="i-heroicons-arrow-left" variant="ghost" :to="localePath('/account')" />
-      <h1 class="text-2xl font-bold text-gray-900">{{ $t('account.orders') }}</h1>
-    </div>
+  <div class="bg-surface-page min-h-screen">
+    <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 max-w-6xl mx-auto px-4 py-10">
 
-    <div v-if="pending" class="space-y-4">
-      <USkeleton v-for="n in 3" :key="n" class="h-24 rounded-xl" />
-    </div>
+      <!-- TODO: extract to AppAccountSidebar component -->
+      <aside class="h-fit sticky top-6 bg-[--color-surface-card] rounded-2xl border border-[--color-border-warm] p-6">
 
-    <div v-else-if="!orders || orders.length === 0" class="text-center py-20">
-      <UIcon name="i-heroicons-shopping-bag" class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-      <p class="text-gray-500">{{ $t('account.no_orders') }}</p>
-      <UButton :label="$t('home.shop_now')" :to="localePath('/products')" class="mt-4" />
-    </div>
-
-    <div v-else class="space-y-4">
-      <UCard
-        v-for="order in orders"
-        :key="order.id"
-        class="hover:border-primary-200 transition-colors"
-      >
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div class="space-y-1">
-            <div class="flex items-center gap-3">
-              <span class="font-medium text-gray-900">
-                {{ $t('orders.order_number') }}{{ order.id.slice(0, 8).toUpperCase() }}
-              </span>
-              <UBadge :label="$t(`orders.status_${order.status}`)" :color="statusColor(order.status)" />
-            </div>
-            <p class="text-sm text-gray-500">
-              {{ new Date(order.created_at).toLocaleDateString(locale === 'el' ? 'el-GR' : 'en-GB') }}
-            </p>
-            <p class="text-sm font-semibold text-gray-900">€{{ order.total.toFixed(2) }}</p>
+        <!-- Avatar + name -->
+        <div class="flex flex-col items-center text-center mb-6">
+          <div class="w-16 h-16 rounded-full bg-terracotta flex items-center justify-center mb-3">
+            <span class="font-display text-2xl font-bold text-white">
+              {{ (authStore.profile?.full_name || authStore.profile?.email || '?')[0].toUpperCase() }}
+            </span>
           </div>
-          <UButton
-            :label="$t('orders.repeat')"
-            variant="outline"
-            size="sm"
-            @click="repeatOrder(order)"
-          />
+          <p class="text-xs text-[--color-bark-light] mb-0.5">Καλώς ήρθατε</p>
+          <p class="font-display font-bold text-[--color-bark] text-base leading-tight">
+            {{ authStore.profile?.full_name || authStore.profile?.email }}
+          </p>
         </div>
-      </UCard>
+
+        <!-- Nav -->
+        <nav class="flex flex-col gap-1 mb-6">
+          <NuxtLink
+            :to="localePath('/account')"
+            class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            :class="$route.path === localePath('/account')
+              ? 'bg-terracotta text-white'
+              : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'"
+          >
+            <span>🏠</span> {{ $t('account.title') }}
+          </NuxtLink>
+          <NuxtLink
+            :to="localePath('/account/orders')"
+            class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            :class="$route.path.includes('/account/orders')
+              ? 'bg-terracotta text-white'
+              : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'"
+          >
+            <span>📦</span> {{ $t('account.orders') }}
+          </NuxtLink>
+          <NuxtLink
+            :to="localePath('/account/favourites')"
+            class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            :class="$route.path.includes('/account/favourites')
+              ? 'bg-terracotta text-white'
+              : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'"
+          >
+            <span>❤️</span> {{ $t('account.favourites') }}
+          </NuxtLink>
+          <NuxtLink
+            :to="localePath('/account/loyalty')"
+            class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            :class="$route.path.includes('/account/loyalty')
+              ? 'bg-terracotta text-white'
+              : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'"
+          >
+            <span>⭐</span> {{ $t('account.loyalty') }}
+          </NuxtLink>
+        </nav>
+
+        <div class="h-px bg-[--color-border-warm] mb-4" />
+
+        <button
+          class="w-full px-4 py-2.5 rounded-xl text-sm font-medium text-terracotta hover:bg-[--color-surface-page] transition-colors text-left cursor-pointer border border-transparent hover:border-terracotta"
+          @click="authStore.signOut()"
+        >
+          {{ $t('nav.logout') }}
+        </button>
+      </aside>
+
+      <!-- Main content -->
+      <div class="flex flex-col gap-6">
+
+        <div>
+          <h1 class="font-display text-3xl font-bold text-[--color-bark]">
+            {{ $t('account.orders') }}
+          </h1>
+          <p class="text-sm text-[--color-bark-light] mt-1">{{ $t('orders.subtitle') }}</p>
+        </div>
+
+        <!-- Loading -->
+        <div v-if="pending" class="space-y-4">
+          <USkeleton v-for="n in 3" :key="n" class="h-24 rounded-xl" />
+        </div>
+
+        <!-- Empty -->
+        <div v-else-if="!orders || orders.length === 0" class="text-center py-20">
+          <UIcon name="i-heroicons-shopping-bag" class="w-16 h-16 text-[--color-bark-light] mx-auto mb-4" />
+          <p class="text-[--color-bark-light]">{{ $t('account.no_orders') }}</p>
+          <UButton :label="$t('home.shop_now')" :to="localePath('/products')" class="mt-4" />
+        </div>
+
+        <!-- Orders list -->
+        <div v-else class="space-y-4">
+          <div
+            v-for="order in orders"
+            :key="order.id"
+            class="bg-[--color-surface-card] rounded-xl border border-[--color-border-warm] overflow-hidden transition-colors hover:border-terracotta"
+          >
+            <!-- Order header — clickable to toggle -->
+            <button
+              class="w-full text-left p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              @click="toggleOrder(order.id)"
+            >
+              <div class="space-y-1">
+                <div class="flex items-center gap-3 flex-wrap">
+                  <span class="font-display font-bold text-[--color-bark]">
+                    #{{ order.id.slice(0, 8).toUpperCase() }}
+                  </span>
+                  <UBadge
+                    :label="$t(`orders.status_${order.status}`)"
+                    :color="statusColor(order.status)"
+                    variant="subtle"
+                    size="sm"
+                  />
+                </div>
+                <p class="text-xs text-[--color-bark-light]">
+                  {{ new Date(order.created_at!).toLocaleDateString(locale === 'el' ? 'el-GR' : 'en-GB') }}
+                </p>
+                <p class="text-sm text-[--color-bark-light]">
+                  {{ order.items?.length ?? 0 }} {{ $t('orders.items') }} ·
+                  <span class="font-semibold text-[--color-bark]">€{{ order.total.toFixed(2) }}</span>
+                </p>
+              </div>
+              <UIcon
+                name="i-heroicons-chevron-down"
+                class="w-5 h-5 text-[--color-bark-light] shrink-0 transition-transform duration-200 self-start sm:self-center"
+                :class="isExpanded(order.id) ? 'rotate-180' : ''"
+              />
+            </button>
+
+            <!-- Expanded items list -->
+            <div v-show="isExpanded(order.id)">
+              <div class="border-t border-[--color-border-warm] px-5 py-4 space-y-3">
+                <div
+                  v-for="item in order.items"
+                  :key="item.id"
+                  class="flex items-center justify-between gap-4"
+                >
+                  <div class="flex items-center gap-3 min-w-0">
+                    <img
+                      v-if="item.product?.images?.[0]"
+                      :src="item.product.images[0]"
+                      :alt="locale === 'el' ? item.product.name_el : item.product.name_en"
+                      class="w-10 h-10 rounded-lg object-cover shrink-0 bg-[--color-surface-page]"
+                    >
+                    <div
+                      v-else
+                      class="w-10 h-10 rounded-lg bg-[--color-surface-page] flex items-center justify-center shrink-0"
+                    >
+                      <span class="text-lg">📦</span>
+                    </div>
+                    <span class="text-sm text-[--color-bark] truncate">
+                      x{{ item.quantity }} ·
+                      {{ locale === 'el' ? item.product?.name_el : item.product?.name_en }}
+                    </span>
+                  </div>
+                  <span class="text-sm font-medium text-[--color-bark] shrink-0">
+                    €{{ (item.unit_price * item.quantity).toFixed(2) }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="border-t border-[--color-border-warm] px-5 py-3 flex justify-end">
+                <button
+                  class="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors"
+                  @click.stop="repeatOrder(order)"
+                >
+                  {{ $t('orders.repeat') }} →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { Database } from '~/types/database.types'
 import type { Order } from '~/types'
 
 definePageMeta({ middleware: 'auth' })
 
-const supabase = useSupabaseClient()
+const authStore = useAuthStore()
 const user = useSupabaseUser()
 const cartStore = useCartStore()
 const localePath = useLocalePath()
@@ -59,19 +192,37 @@ const { locale } = useI18n()
 const router = useRouter()
 
 const { data: orders, pending } = await useAsyncData('orders', async () => {
+  if (!user.value) return []
+  const supabase = useSupabaseClient<Database>()
   const { data } = await supabase
     .from('orders')
     .select('*, items:order_items(*, product:products(*))')
-    .eq('user_id', user.value!.sub)
+    .eq('user_id', user.value.sub)
     .order('created_at', { ascending: false })
   return data as Order[]
 })
 
-function statusColor(status: string) {
-  const map: Record<string, string> = {
+const expandedOrders = ref<Set<string>>(new Set())
+
+function toggleOrder(id: string) {
+  if (expandedOrders.value.has(id)) {
+    expandedOrders.value.delete(id)
+  } else {
+    expandedOrders.value.add(id)
+  }
+}
+
+function isExpanded(id: string) {
+  return expandedOrders.value.has(id)
+}
+
+type BadgeColor = 'error' | 'warning' | 'primary' | 'success' | 'neutral' | 'secondary' | 'info'
+
+function statusColor(status: string): BadgeColor {
+  const map: Record<string, BadgeColor> = {
     pending: 'warning',
-    confirmed: 'info',
-    processing: 'info',
+    confirmed: 'primary',
+    processing: 'primary',
     ready: 'success',
     completed: 'success',
     cancelled: 'error',

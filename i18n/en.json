@@ -139,7 +139,9 @@
     "status_processing": "Processing",
     "status_ready": "Ready",
     "status_completed": "Completed",
-    "status_cancelled": "Cancelled"
+    "status_cancelled": "Cancelled",
+    "subtitle": "Your order history and status",
+    "items": "items"
   },
   "auth": {
     "login_title": "Sign In",

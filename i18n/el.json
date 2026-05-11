@@ -139,7 +139,9 @@
     "status_processing": "Σε επεξεργασία",
     "status_ready": "Έτοιμη",
     "status_completed": "Ολοκληρωμένη",
-    "status_cancelled": "Ακυρωμένη"
+    "status_cancelled": "Ακυρωμένη",
+    "subtitle": "Ιστορικό και κατάσταση παραγγελιών σας",
+    "items": "προϊόντα"
   },
   "auth": {
     "login_title": "Σύνδεση",
