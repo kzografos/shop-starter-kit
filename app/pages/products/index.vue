@@ -12,7 +12,7 @@
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <h1 class="font-display text-3xl font-bold text-bark">{{ $t('products.title') }}</h1>
             <UInput
-              v-model="filtersStore.search"
+              v-model="searchQuery"
               :placeholder="$t('products.search')"
               icon="i-heroicons-magnifying-glass"
               class="w-auto [&_input]:rounded-full [&_input]:bg-surface-card [&_input]:border [&_input]:border-[--color-border-warm] [&_input]:placeholder-[--color-bark-light] [&_input]:focus:border-terracotta [&_input]:text-bark [&_input]:text-sm"
@@ -75,6 +75,17 @@ import type { Database } from '~/types/database.types'
 const filtersStore = useFiltersStore()
 const showMobileFilters = ref(false)
 const { products, pending } = useProducts()
+
+// Local ref for search input — decoupled from the store
+const searchQuery = ref(filtersStore.search ?? '')
+
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(searchQuery, (value) => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    filtersStore.search = value
+  }, 600)
+})
 
 const route = useRoute()
 const router = useRouter()
