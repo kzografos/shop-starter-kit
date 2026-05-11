@@ -115,7 +115,11 @@
     "no_orders": "You have no orders yet",
     "favourites": "Favourites",
     "favourites_empty": "No saved products yet",
-    "favourites_count": "{count} saved product | {count} saved products"
+    "favourites_count": "{count} saved product | {count} saved products",
+    "greeting": "Hi",
+    "dashboard_subtitle": "Welcome to your account",
+    "points_until_reward": "points until next reward",
+    "redeem": "Redeem"
   },
   "favourites": {
     "auth_title": "Save your favourites",

@@ -115,7 +115,11 @@
     "no_orders": "Δεν έχετε παραγγελίες ακόμα",
     "favourites": "Αγαπημένα",
     "favourites_empty": "Δεν έχετε αποθηκεύσει προϊόντα ακόμα",
-    "favourites_count": "{count} αποθηκευμένο προϊόν | {count} αποθηκευμένα προϊόντα"
+    "favourites_count": "{count} αποθηκευμένο προϊόν | {count} αποθηκευμένα προϊόντα",
+    "greeting": "Γεια σου",
+    "dashboard_subtitle": "Καλώς ήρθες στον λογαριασμό σου",
+    "points_until_reward": "πόντοι μέχρι την επόμενη ανταμοιβή",
+    "redeem": "Εξαργύρωση"
   },
   "favourites": {
     "auth_title": "Αποθηκεύστε τα αγαπημένα σας",
