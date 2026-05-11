@@ -1,82 +1,7 @@
 <template>
   <div class="bg-surface-page min-h-screen">
     <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 max-w-6xl mx-auto px-4 py-10">
-      <!-- TODO: extract to AppAccountSidebar component -->
-      <aside
-        class="h-fit sticky top-6 bg-[--color-surface-card] rounded-2xl border border-[--color-border-warm] p-6"
-      >
-        <!-- Avatar + name -->
-        <div class="flex flex-col items-center text-center mb-6">
-          <div class="w-16 h-16 rounded-full bg-terracotta flex items-center justify-center mb-3">
-            <span class="font-display text-2xl font-bold text-white">
-              {{
-                (authStore.profile?.full_name || authStore.profile?.email || '?')[0].toUpperCase()
-              }}
-            </span>
-          </div>
-          <p class="text-xs text-[--color-bark-light] mb-0.5">Καλώς ήρθατε</p>
-          <p class="font-display font-bold text-[--color-bark] text-base leading-tight">
-            {{ authStore.profile?.full_name || authStore.profile?.email }}
-          </p>
-        </div>
-
-        <!-- Nav -->
-        <nav class="flex flex-col gap-1 mb-6">
-          <NuxtLink
-            :to="localePath('/account')"
-            class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-            :class="
-              $route.path === localePath('/account')
-                ? 'bg-terracotta text-white'
-                : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'
-            "
-          >
-            <span>🏠</span> {{ $t('account.title') }}
-          </NuxtLink>
-          <NuxtLink
-            :to="localePath('/account/orders')"
-            class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-            :class="
-              $route.path.includes('/account/orders')
-                ? 'bg-terracotta text-white'
-                : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'
-            "
-          >
-            <span>📦</span> {{ $t('account.orders') }}
-          </NuxtLink>
-          <NuxtLink
-            :to="localePath('/account/favourites')"
-            class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-            :class="
-              $route.path.includes('/account/favourites')
-                ? 'bg-terracotta text-white'
-                : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'
-            "
-          >
-            <span>❤️</span> {{ $t('account.favourites') }}
-          </NuxtLink>
-          <NuxtLink
-            :to="localePath('/account/loyalty')"
-            class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-            :class="
-              $route.path.includes('/account/loyalty')
-                ? 'bg-terracotta text-white'
-                : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'
-            "
-          >
-            <span>⭐</span> {{ $t('account.loyalty') }}
-          </NuxtLink>
-        </nav>
-
-        <div class="h-px bg-[--color-border-warm] mb-4" />
-
-        <button
-          class="w-full px-4 py-2.5 rounded-xl text-sm font-medium text-terracotta hover:bg-[--color-surface-page] transition-colors text-left cursor-pointer border border-transparent hover:border-terracotta"
-          @click="authStore.signOut()"
-        >
-          {{ $t('nav.logout') }}
-        </button>
-      </aside>
+      <AccountSidebar />
 
       <!-- Main content -->
       <div class="flex flex-col gap-6">
@@ -117,7 +42,6 @@ import type { Product } from '~~/types'
 
 definePageMeta({ middleware: 'auth' })
 
-const authStore = useAuthStore()
 const localePath = useLocalePath()
 const { t } = useI18n()
 const favouritesStore = useFavouritesStore()
