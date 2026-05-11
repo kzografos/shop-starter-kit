@@ -42,7 +42,12 @@
     "quantity": "Quantity",
     "description": "Description",
     "brand": "Brand",
-    "added": "Added to cart!"
+    "added": "Added to cart!",
+    "related": "Related Products",
+    "age_puppy": "Puppy",
+    "age_kitten": "Kitten",
+    "age_adult": "Adult",
+    "age_senior": "Senior"
   },
   "cart": {
     "title": "Shopping Cart",
