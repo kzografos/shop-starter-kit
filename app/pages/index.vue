@@ -41,7 +41,7 @@
           </div>
 
           <!-- Trust badges -->
-          <div class="flex flex-wrap gap-6">
+          <div class="flex flex-wrap gap-x-6 gap-y-2 overflow-hidden">
             <div v-for="badge in trustBadges" :key="badge.label" class="flex items-center gap-2 text-sage text-sm">
               <UIcon :name="badge.icon" class="w-4 h-4 text-gold shrink-0" />
               {{ badge.label }}
