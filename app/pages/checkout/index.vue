@@ -1,6 +1,9 @@
 <template>
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-2xl font-bold text-gray-900 mb-8">{{ $t('checkout.title') }}</h1>
+  <div class="bg-surface-page min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="font-display text-2xl font-bold text-[--color-bark] mb-6">{{ $t('checkout.title') }}</h1>
+
+    <CheckoutSteps :current-step="2" />
 
     <div v-if="success" class="text-center py-20">
       <UIcon name="i-heroicons-check-circle" class="w-20 h-20 text-green-500 mx-auto mb-4" />
@@ -132,6 +135,7 @@
         </UCard>
       </div>
     </div>
+  </div>
   </div>
 </template>
 

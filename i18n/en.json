@@ -83,7 +83,10 @@
     "success_message": "We'll keep you updated on your order status.",
     "cancel_title": "Payment cancelled",
     "cancel_message": "You were not charged. You can try again or continue shopping.",
-    "retry_payment": "Try Payment Again"
+    "retry_payment": "Try Payment Again",
+    "step_cart": "Cart",
+    "step_details": "Details",
+    "step_confirmation": "Confirmation"
   },
   "filters": {
     "title": "Filters",
