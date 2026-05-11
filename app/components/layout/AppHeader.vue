@@ -40,13 +40,26 @@
 
         <!-- Actions -->
         <div class="flex items-center gap-3">
-          <!-- Locale toggle — pill matching icon visual weight -->
-          <button
-            class="h-8 px-2.5 rounded-full text-xs font-semibold text-bark-light hover:text-bark hover:bg-cream-pale border border-transparent hover:border-[--color-border-warm] transition-all"
-            @click="toggleLocale"
-          >
-            {{ $t('header.locale') }}
-          </button>
+          <!-- Locale toggle -->
+          <div class="flex items-center gap-2">
+            <button
+              class="transition-opacity duration-150 hover:opacity-100 flex items-center"
+              :class="locale === 'el' ? 'opacity-100' : 'opacity-35'"
+              aria-label="Ελληνικά"
+              @click="setLocale('el')"
+            >
+              <span class="fi fi-cy fis rounded-sm w-5 h-5" />
+            </button>
+            <span class="text-[--color-border-warm] text-xs">|</span>
+            <button
+              class="transition-opacity duration-150 hover:opacity-100 flex items-center"
+              :class="locale === 'en' ? 'opacity-100' : 'opacity-35'"
+              aria-label="English"
+              @click="setLocale('en')"
+            >
+              <span class="fi fi-gb fis rounded-sm w-5 h-5" />
+            </button>
+          </div>
 
           <!-- Account dropdown (logged in) -->
           <div v-if="user" ref="dropdownRef" class="relative">
@@ -192,10 +205,6 @@ onMounted(() => {
   document.addEventListener('click', onClickOutside)
   onUnmounted(() => document.removeEventListener('click', onClickOutside))
 })
-
-function toggleLocale() {
-  setLocale(locale.value === 'el' ? 'en' : 'el')
-}
 
 function goToSearch() {
   if (!searchQuery.value.trim()) return
