@@ -6,19 +6,29 @@
       class="w-16 h-16 object-cover rounded-lg bg-[--color-surface-page] shrink-0"
     />
     <div class="flex-1 min-w-0">
-      <p class="text-sm font-medium text-[--color-bark] line-clamp-2 leading-tight">{{ productName }}</p>
-      <p class="text-sm text-terracotta font-semibold mt-0.5">€{{ item.product.price.toFixed(2) }}</p>
+      <p class="text-sm font-medium text-[--color-bark] line-clamp-2 leading-tight">
+        {{ productName }}
+      </p>
+      <p class="text-sm text-terracotta font-semibold mt-0.5">
+        €{{ item.product.price.toFixed(2) }}
+      </p>
       <div class="flex items-center gap-2 mt-2">
         <button
           class="w-6 h-6 flex items-center justify-center rounded border border-[--color-border-warm] text-[--color-bark-light] hover:border-terracotta hover:text-terracotta transition-colors text-sm"
           @click="cartStore.updateQuantity(item.product.id, item.quantity - 1)"
-        >−</button>
-        <span class="text-sm font-medium w-6 text-center text-[--color-bark]">{{ item.quantity }}</span>
+        >
+          −
+        </button>
+        <span class="text-sm font-medium w-6 text-center text-[--color-bark]">{{
+          item.quantity
+        }}</span>
         <button
           class="w-6 h-6 flex items-center justify-center rounded border border-[--color-border-warm] text-[--color-bark-light] hover:border-terracotta hover:text-terracotta transition-colors text-sm"
           :disabled="item.quantity >= item.product.stock"
           @click="cartStore.updateQuantity(item.product.id, item.quantity + 1)"
-        >+</button>
+        >
+          +
+        </button>
       </div>
     </div>
     <button

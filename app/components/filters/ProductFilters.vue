@@ -154,6 +154,21 @@ const localPriceMax = ref<number>(filtersStore.priceMax ?? PRICE_ABS_MAX)
 const animals = ref<Array<{ slug: string; name: string; count: number }>>([])
 const brands = ref<Array<{ name: string; count: number }>>([])
 
+// Sync local state when store is updated from outside (e.g. URL-based init)
+watch(
+  () => filtersStore.selectedAnimals,
+  (newAnimals) => {
+    localAnimals.value = [...newAnimals]
+  }
+)
+
+watch(
+  () => filtersStore.selectedBrands,
+  (newBrands) => {
+    localBrands.value = [...newBrands]
+  }
+)
+
 function toggleAnimal(slug: string) {
   const idx = localAnimals.value.indexOf(slug)
   if (idx === -1) localAnimals.value.push(slug)
