@@ -24,7 +24,7 @@
     "vet_approved": "Vet approved",
     "badge_vet": "Vet approved",
     "badge_returns": "Free 30-day returns",
-    "badge_shipping": "Free shipping over €40",
+    "badge_shipping": "Free shipping over €50",
     "categories": "Categories",
     "featured": "Featured Products",
     "brands": "Brands we carry"
@@ -244,6 +244,13 @@
     "stock": "Stock",
     "active": "Active",
     "inactive": "Inactive"
+  },
+  "hero": {
+    "tagline": "Cyprus' Favourite Pet Store",
+    "stat_products": "Products",
+    "stat_customers": "Customers",
+    "stat_rating": "Rating",
+    "stat_shipping": "Free shipping"
   },
   "login": {
     "welcome_back": "Welcome back,",

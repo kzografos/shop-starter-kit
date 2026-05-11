@@ -1,55 +1,51 @@
 <template>
   <div>
     <!-- Hero -->
-    <section class="relative overflow-hidden bg-forest min-h-150 lg:min-h-170">
+    <section class="grid grid-cols-1 lg:grid-cols-2 min-h-145">
+      <!-- Left column -->
+      <div class="bg-forest flex flex-col justify-center px-10 py-16 lg:px-16 min-h-125 lg:min-h-0">
+        <p class="text-sage text-xs font-medium tracking-widest uppercase mb-4">
+          {{ $t('hero.tagline') }}
+        </p>
+        <h1 class="font-display text-4xl md:text-5xl font-bold text-cream leading-[1.05] mb-6">
+          {{ $t('home.hero_title') }}<br />
+          <em class="text-terracotta not-italic">{{ $t('home.hero_title_accent') }}</em>
+        </h1>
+        <p class="text-white/70 text-base md:text-lg mb-10 max-w-sm leading-relaxed">
+          {{ $t('home.hero_subtitle') }}
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <NuxtLink
+            :to="localePath('/products')"
+            class="inline-flex items-center px-8 py-3.5 rounded-full bg-terracotta text-white font-semibold text-base hover:bg-terracotta-dark transition-colors"
+          >
+            {{ $t('home.shop_now') }}
+          </NuxtLink>
+          <NuxtLink
+            :to="localePath('/brands')"
+            class="inline-flex items-center px-8 py-3.5 rounded-full border border-white/40 text-cream font-semibold text-base hover:border-white transition-colors"
+          >
+            {{ $t('home.explore_brands') }}
+          </NuxtLink>
+        </div>
 
-      <!-- Right: hero image — absolutely fills right half, full height -->
-      <div class="hidden lg:block absolute right-0 top-0 w-[62%] h-full">
-        <img
-          src="/hero-image.png"
-          alt="PetShop CY"
-          class="w-full h-full object-cover object-center"
-        >
-        <!-- Gradient blend into forest on the left edge -->
-        <div class="absolute inset-y-0 left-0 w-40 bg-linear-to-r from-forest to-transparent pointer-events-none" />
-      </div>
-
-      <!-- Left: text + CTAs + badges -->
-      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="lg:w-[52%] flex flex-col justify-center py-24 md:py-32 min-h-150 lg:min-h-170">
-          <p class="text-sage text-sm font-medium tracking-widest uppercase mb-4">{{ $t('home.hero_label') }}</p>
-          <h1 class="font-display text-5xl md:text-7xl font-bold text-cream leading-[1.05] mb-6">
-            {{ $t('home.hero_title') }}
-            <em class="text-terracotta not-italic">{{ $t('home.hero_title_accent') }}</em>
-          </h1>
-          <p class="text-sage text-lg md:text-xl mb-10 max-w-lg leading-relaxed">
-            {{ $t('home.hero_subtitle') }}
-          </p>
-          <div class="flex flex-wrap gap-4 mb-12">
-            <NuxtLink
-              :to="localePath('/products')"
-              class="inline-flex items-center px-8 py-3.5 rounded-full bg-terracotta text-white font-semibold text-base hover:bg-terracotta-dark transition-colors"
-            >
-              {{ $t('home.shop_now') }}
-            </NuxtLink>
-            <NuxtLink
-              :to="localePath('/brands')"
-              class="inline-flex items-center px-8 py-3.5 rounded-full border border-sage/40 text-cream font-semibold text-base hover:border-sage transition-colors"
-            >
-              {{ $t('home.explore_brands') }}
-            </NuxtLink>
-          </div>
-
-          <!-- Trust badges -->
-          <div class="flex flex-wrap gap-x-6 gap-y-2 overflow-hidden">
-            <div v-for="badge in trustBadges" :key="badge.label" class="flex items-center gap-2 text-sage text-sm">
-              <UIcon :name="badge.icon" class="w-4 h-4 text-gold shrink-0" />
-              {{ badge.label }}
-            </div>
+        <!-- Stats row -->
+        <div class="flex gap-8 flex-wrap mt-8 pt-8 border-t border-white/20">
+          <div v-for="stat in stats" :key="stat.labelKey" class="flex flex-col">
+            <span class="text-2xl font-bold font-display text-white">{{ stat.value }}</span>
+            <span class="text-xs text-white/60 mt-0.5">{{ $t(stat.labelKey) }}</span>
           </div>
         </div>
       </div>
 
+      <!-- Right column: image, hidden on mobile -->
+      <div class="hidden lg:block">
+        <img
+          src="/hero-image.png"
+          alt="PetShop CY"
+          class="w-full h-full object-cover object-center"
+        />
+      </div>
     </section>
 
     <!-- Top-level categories -->
@@ -74,7 +70,7 @@
               :src="catImage(cat.slug)"
               :alt="cat.slug"
               class="h-24 w-auto object-contain mb-4 group-hover:scale-105 transition-transform duration-300"
-            >
+            />
             <span v-else class="text-5xl mb-4 block">🐾</span>
 
             <span class="font-semibold text-bark group-hover:text-terracotta transition-colors">
@@ -91,7 +87,9 @@
     <!-- Shipping info banner -->
     <section class="bg-bark border-y border-bark-light/20">
       <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm font-medium text-cream/80">
+        <div
+          class="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm font-medium text-cream/80"
+        >
           <span class="flex items-center gap-2">
             <UIcon name="i-heroicons-truck" class="w-5 h-5 text-gold" />
             {{ $t('footer.shipping_info') }}
@@ -112,13 +110,14 @@
 
 <script setup lang="ts">
 const localePath = useLocalePath()
-const { locale, t } = useI18n()
+const { locale } = useI18n()
 const supabase = useSupabaseClient()
 
-const trustBadges = [
-  { icon: 'i-heroicons-check-badge', label: t('home.badge_vet') },
-  { icon: 'i-heroicons-arrow-uturn-left', label: t('home.badge_returns') },
-  { icon: 'i-heroicons-truck', label: t('home.badge_shipping') },
+const stats = [
+  { value: '200+', labelKey: 'hero.stat_products' },
+  { value: '1,500+', labelKey: 'hero.stat_customers' },
+  { value: '4.9★', labelKey: 'hero.stat_rating' },
+  { value: '€50+', labelKey: 'hero.stat_shipping' },
 ]
 
 const { data: categories, pending } = await useAsyncData('root-categories', async () => {
@@ -137,12 +136,13 @@ const catImages: Record<string, string> = {
   rodents: '/categories/rodent.png',
 }
 
-function catImage(slug: string): string | null {
-  return catImages[slug] ?? null
+function catImage(slug: string): string | undefined {
+  return catImages[slug] ?? undefined
 }
 
 useSeoMeta({
   title: 'PetShop CY — Το Pet Shop σας στην Κύπρο',
-  description: 'Τροφές, αξεσουάρ και περιποίηση για σκύλους, γάτες, πουλιά και τρωκτικά. Αποστολή σε όλη την Κύπρο.',
+  description:
+    'Τροφές, αξεσουάρ και περιποίηση για σκύλους, γάτες, πουλιά και τρωκτικά. Αποστολή σε όλη την Κύπρο.',
 })
 </script>
