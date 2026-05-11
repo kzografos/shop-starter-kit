@@ -2,7 +2,11 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
 
   app: {
+    htmlAttrs: {
+      class: 'light',
+    },
     head: {
+      meta: [{ name: 'color-scheme', content: 'light only' }],
       link: [
         {
           rel: 'preconnect',
@@ -25,13 +29,19 @@ export default defineNuxtConfig({
     },
   },
 
-  modules: ["@nuxt/ui", "@nuxtjs/supabase", "@nuxtjs/i18n", "@pinia/nuxt", "pinia-plugin-persistedstate/nuxt", "nuxt-charts", "@nuxt/eslint"],
-
-  css: ["~/assets/css/main.css"],
-
-  components: [
-    { path: '~/components', pathPrefix: false },
+  modules: [
+    '@nuxt/ui',
+    '@nuxtjs/supabase',
+    '@nuxtjs/i18n',
+    '@pinia/nuxt',
+    'pinia-plugin-persistedstate/nuxt',
+    'nuxt-charts',
+    '@nuxt/eslint',
   ],
+
+  css: ['~/assets/css/main.css'],
+
+  components: [{ path: '~/components', pathPrefix: false }],
 
   supabase: {
     redirect: false,
@@ -40,12 +50,12 @@ export default defineNuxtConfig({
 
   i18n: {
     locales: [
-      { code: "el", name: "Ελληνικά", file: "el.json" },
-      { code: "en", name: "English", file: "en.json" },
+      { code: 'el', name: 'Ελληνικά', file: 'el.json' },
+      { code: 'en', name: 'English', file: 'en.json' },
     ],
-    defaultLocale: "el",
-    langDir: ".",
-    strategy: "prefix_except_default",
+    defaultLocale: 'el',
+    langDir: '.',
+    strategy: 'prefix_except_default',
     detectBrowserLanguage: false,
   },
 
@@ -56,19 +66,21 @@ export default defineNuxtConfig({
     emailFrom: process.env.EMAIL_FROM || 'PetShop CY <orders@petshopcyprus.com>',
     public: {
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-      whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || "35799000000",
+      whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || '35799000000',
     },
   },
 
   vite: {
     optimizeDeps: {
-      include: [
-        '@vue/devtools-kit',
-        '@vue/devtools-core',
-        '@stripe/stripe-js',
-      ],
+      include: ['@vue/devtools-kit', '@vue/devtools-core', '@stripe/stripe-js'],
     },
   },
 
-  compatibilityDate: "2024-11-01",
-});
+  colorMode: {
+    preference: 'light',
+    fallback: 'light',
+    classSuffix: '',
+  },
+
+  compatibilityDate: '2024-11-01',
+})

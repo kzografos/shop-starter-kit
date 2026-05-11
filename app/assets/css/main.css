@@ -1,9 +1,15 @@
-@import "tailwindcss";
-@import "@nuxt/ui";
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light only;
+}
 
 @theme {
-  --font-display: "Fraunces", Georgia, serif;
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
 
   --color-cream: #fbf6ec;
   --color-cream-pale: #f5efe2;
@@ -79,7 +85,8 @@
     font-family: var(--font-display);
   }
 
-  button, [role="button"] {
+  button,
+  [role='button'] {
     cursor: pointer;
   }
 }
