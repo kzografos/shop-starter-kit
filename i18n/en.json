@@ -105,7 +105,9 @@
     "redeem_info": "100 points = €1 discount",
     "history": "Points History",
     "earned": "Earned",
-    "redeemed": "Redeemed"
+    "redeemed": "Redeemed",
+    "subtitle": "Your reward points and transaction history",
+    "no_history": "No transactions yet"
   },
   "account": {
     "title": "My Account",
