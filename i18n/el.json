@@ -286,7 +286,8 @@
     "no_account": "Δεν έχετε λογαριασμό;",
     "have_account": "Έχετε ήδη λογαριασμό;",
     "arrow_button": "Σύνδεση →",
-    "register_arrow_button": "Εγγραφή →"
+    "register_arrow_button": "Εγγραφή →",
+    "continue_browsing": "Συνέχεια χωρίς σύνδεση"
   },
   "common": {
     "loading": "Φόρτωση...",

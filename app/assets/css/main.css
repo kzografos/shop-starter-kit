@@ -78,4 +78,8 @@
   h6 {
     font-family: var(--font-display);
   }
+
+  button, [role="button"] {
+    cursor: pointer;
+  }
 }

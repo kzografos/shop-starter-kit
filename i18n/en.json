@@ -286,7 +286,8 @@
     "no_account": "Don't have an account?",
     "have_account": "Already have an account?",
     "arrow_button": "Sign in →",
-    "register_arrow_button": "Register →"
+    "register_arrow_button": "Register →",
+    "continue_browsing": "Continue without signing in"
   },
   "common": {
     "loading": "Loading...",

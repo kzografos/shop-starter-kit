@@ -3,19 +3,23 @@
     class="relative h-screen overflow-hidden grid grid-cols-1 lg:grid-cols-2 bg-[--color-surface-page]"
   >
     <!-- Language switcher -->
-    <div class="absolute top-4 right-6 z-10">
+    <div class="absolute top-4 right-6 z-10 flex items-center gap-2">
       <button
-        v-for="locale in availableLocales"
-        :key="locale.code"
-        class="px-2 py-1 text-sm font-medium rounded transition-colors"
-        :class="
-          locale.code === currentLocale
-            ? 'text-terracotta font-semibold'
-            : 'text-[--color-bark-light] hover:text-bark'
-        "
-        @click="setLocale(locale.code as 'el' | 'en')"
+        class="transition-opacity duration-150 hover:opacity-100 flex items-center"
+        :class="currentLocale === 'el' ? 'opacity-100' : 'opacity-35'"
+        aria-label="Ελληνικά"
+        @click="setLocale('el')"
       >
-        {{ locale.code.toUpperCase() }}
+        <span class="fi fi-cy fis rounded-sm w-5 h-5" />
+      </button>
+      <span class="text-[--color-border-warm] text-xs">|</span>
+      <button
+        class="transition-opacity duration-150 hover:opacity-100 flex items-center"
+        :class="currentLocale === 'en' ? 'opacity-100' : 'opacity-35'"
+        aria-label="English"
+        @click="setLocale('en')"
+      >
+        <span class="fi fi-gb fis rounded-sm w-5 h-5" />
       </button>
     </div>
 
@@ -27,7 +31,13 @@
       "
     >
       <div class="mb-10">
-        <img src="/logo.svg" alt="PetShop CY" class="h-14 w-auto" />
+        <NuxtLink :to="localePath('/')">
+          <img
+            src="/logo.svg"
+            alt="PetShop CY"
+            class="h-14 w-auto hover:opacity-80 transition-opacity"
+          />
+        </NuxtLink>
       </div>
 
       <div class="text-center mb-10 max-w-sm">
@@ -75,7 +85,7 @@
       <div class="w-full max-w-105 min-h-130 flex flex-col">
         <!-- Pill toggle -->
         <div
-          class="flex items-center bg-[--color-surface-card] lg:bg-[--color-surface-page] rounded-full p-1 mb-8 w-fit mx-auto"
+          class="flex items-center bg-[--color-surface-card] lg:bg-[--color-surface-page] rounded-full p-1 mb-8 w-fit mx-auto gap-4"
         >
           <button
             type="button"
@@ -83,7 +93,7 @@
             :class="
               isLogin
                 ? 'bg-terracotta text-white shadow'
-                : 'text-[--color-bark-light] hover:text-[--color-bark]'
+                : 'text-[--color-bark] border border-[--color-border-warm] hover:border-terracotta/50'
             "
             @click="!isLogin && toggleMode()"
           >
@@ -95,7 +105,7 @@
             :class="
               !isLogin
                 ? 'bg-terracotta text-white shadow'
-                : 'text-[--color-bark-light] hover:text-[--color-bark]'
+                : 'text-[--color-bark] border border-[--color-border-warm] hover:border-terracotta/50'
             "
             @click="isLogin && toggleMode()"
           >
@@ -214,6 +224,14 @@
           <span class="text-base shrink-0">🐾</span>
           <span>{{ $t('login.loyalty_note') }}</span>
         </div>
+
+        <NuxtLink
+          :to="localePath('/products')"
+          class="flex items-center justify-center gap-1.5 text-xs text-[--color-bark-light] hover:text-[--color-bark] transition-colors mt-2"
+        >
+          <UIcon name="i-heroicons-arrow-left" class="w-3 h-3" />
+          {{ $t('login.continue_browsing') }}
+        </NuxtLink>
       </div>
     </div>
   </div>
@@ -226,12 +244,7 @@ const supabase = useSupabaseClient()
 const authStore = useAuthStore()
 const localePath = useLocalePath()
 const route = useRoute()
-const { t, locale: currentLocale, locales, setLocale } = useI18n()
-const availableLocales = computed(() =>
-  (locales.value as Array<{ code: string }>)
-    .filter((l) => l.code !== currentLocale.value)
-    .concat([{ code: currentLocale.value }])
-)
+const { t, locale: currentLocale, setLocale } = useI18n()
 
 const isLogin = ref(true)
 const loading = ref(false)
