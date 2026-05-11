@@ -2,18 +2,36 @@
   <div v-if="product" class="bg-surface-page min-h-screen">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Breadcrumb -->
-      <UBreadcrumb
-        :links="[
-          { label: $t('nav.products'), to: localePath('/products') },
-          { label: productName },
-        ]"
-        class="mb-8"
-      />
+      <nav class="flex items-center gap-2 text-sm mb-8 flex-wrap">
+        <NuxtLink
+          :to="localePath('/products')"
+          class="text-[--color-bark-light] hover:text-[--color-bark] transition-colors"
+        >
+          {{ $t('nav.products') }}
+        </NuxtLink>
+
+        <template v-if="product.category">
+          <span class="text-[--color-border-warm]">/</span>
+          <NuxtLink
+            :to="localePath(`/products?category=${product.category.slug}`)"
+            class="text-[--color-bark-light] hover:text-[--color-bark] transition-colors"
+          >
+            {{ locale === 'el' ? product.category.name_el : product.category.name_en }}
+          </NuxtLink>
+        </template>
+
+        <span class="text-[--color-border-warm]">/</span>
+        <span class="text-[--color-bark] font-medium truncate max-w-[200px]">{{
+          productName
+        }}</span>
+      </nav>
 
       <div class="grid md:grid-cols-2 gap-10 lg:gap-16">
         <!-- Images -->
         <div class="space-y-4">
-          <div class="aspect-square bg-cream-pale rounded-2xl overflow-hidden border border-[--color-border-warm]">
+          <div
+            class="aspect-square bg-cream-pale rounded-2xl overflow-hidden border border-[--color-border-warm]"
+          >
             <img
               :src="product.images[selectedImage] || '/placeholder.png'"
               :alt="productName"
@@ -91,18 +109,27 @@
 
           <!-- Quantity + Add to Cart + Favourite -->
           <div v-if="product.stock > 0" class="flex items-center gap-3">
-            <div class="flex items-center border border-[--color-border-warm] rounded-xl overflow-hidden bg-[--color-surface-card]">
+            <div
+              class="flex items-center border border-[--color-border-warm] rounded-xl overflow-hidden bg-[--color-surface-card]"
+            >
               <button
                 class="px-3 py-2.5 hover:bg-[--color-surface-page] transition-colors disabled:opacity-40 text-[--color-bark]"
                 :disabled="qty <= 1"
                 @click="qty--"
-              >−</button>
-              <span class="px-4 py-2.5 font-semibold text-[--color-bark] min-w-12 text-center border-x border-[--color-border-warm]">{{ qty }}</span>
+              >
+                −
+              </button>
+              <span
+                class="px-4 py-2.5 font-semibold text-[--color-bark] min-w-12 text-center border-x border-[--color-border-warm]"
+                >{{ qty }}</span
+              >
               <button
                 class="px-3 py-2.5 hover:bg-[--color-surface-page] transition-colors disabled:opacity-40 text-[--color-bark]"
                 :disabled="qty >= product.stock"
                 @click="qty++"
-              >+</button>
+              >
+                +
+              </button>
             </div>
 
             <button
@@ -129,7 +156,9 @@
             <h2 class="font-display text-lg font-bold text-[--color-bark] mb-3">
               {{ $t('product.description') }}
             </h2>
-            <p class="text-sm text-[--color-bark-light] leading-relaxed">{{ productDescription }}</p>
+            <p class="text-sm text-[--color-bark-light] leading-relaxed">
+              {{ productDescription }}
+            </p>
           </div>
         </div>
       </div>
