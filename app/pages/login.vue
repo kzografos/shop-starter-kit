@@ -1,5 +1,5 @@
 <template>
-  <div class="relative min-h-screen bg-[--color-surface-page] lg:grid lg:grid-cols-2">
+  <div class="relative h-screen overflow-hidden grid grid-cols-1 lg:grid-cols-2 bg-[--color-surface-page]">
 
     <!-- Language switcher -->
     <div class="absolute top-4 right-6 z-10">
@@ -18,7 +18,7 @@
 
     <!-- Left panel: desktop only -->
     <div
-      class="hidden lg:flex flex-col justify-center items-center px-12 py-16 relative overflow-hidden"
+      class="hidden lg:flex flex-col justify-center items-center px-12 py-16 relative overflow-hidden h-screen"
       style="background: linear-gradient(145deg, var(--color-surface-card), var(--color-cream-pale))"
     >
       <div class="mb-10">
@@ -57,14 +57,14 @@
     </div>
 
     <!-- Right panel: form -->
-    <div class="flex flex-col items-center justify-center px-6 py-12 min-h-screen lg:min-h-0 bg-[--color-surface-page] lg:bg-[--color-surface-card]">
+    <div class="flex flex-col items-center justify-center px-6 py-12 h-screen overflow-y-auto bg-[--color-surface-page] lg:bg-[--color-surface-card]">
 
       <!-- Mobile logo -->
       <div class="lg:hidden mb-8">
         <img src="/logo.svg" alt="PetShop CY" class="h-12 w-auto mx-auto">
       </div>
 
-      <div class="w-full max-w-105">
+      <div class="w-full max-w-105 min-h-130 flex flex-col">
 
         <!-- Pill toggle -->
         <div class="flex items-center bg-[--color-surface-card] lg:bg-[--color-surface-page] rounded-full p-1 mb-8 w-fit mx-auto">
@@ -142,7 +142,7 @@
             />
           </UFormField>
 
-          <div v-if="isLogin" class="flex justify-end -mt-2">
+          <div v-show="isLogin" class="flex justify-end -mt-2">
             <NuxtLink
               :to="localePath('/forgot-password')"
               class="text-xs text-terracotta hover:text-terracotta-dark transition-colors"
@@ -151,7 +151,7 @@
             </NuxtLink>
           </div>
 
-          <div v-if="isLogin" class="flex items-center gap-2">
+          <div v-show="isLogin" class="flex items-center gap-2">
             <UCheckbox v-model="form.rememberMe" :label="$t('auth.remember_me')" name="remember" />
           </div>
 
