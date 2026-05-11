@@ -125,6 +125,7 @@
     "auth_title": "Save your favourites",
     "auth_desc": "Sign in or create a free account to save products to your favourites list.",
     "title": "My Favourites",
+    "subtitle": "Your saved products",
     "empty": "No saved products yet. Browse products and tap the heart to save them here."
   },
   "orders": {

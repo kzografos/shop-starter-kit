@@ -1,15 +1,17 @@
 <template>
   <div class="bg-surface-page min-h-screen">
     <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 max-w-6xl mx-auto px-4 py-10">
-
       <!-- TODO: extract to AppAccountSidebar component -->
-      <aside class="h-fit sticky top-6 bg-[--color-surface-card] rounded-2xl border border-[--color-border-warm] p-6">
-
+      <aside
+        class="h-fit sticky top-6 bg-[--color-surface-card] rounded-2xl border border-[--color-border-warm] p-6"
+      >
         <!-- Avatar + name -->
         <div class="flex flex-col items-center text-center mb-6">
           <div class="w-16 h-16 rounded-full bg-terracotta flex items-center justify-center mb-3">
             <span class="font-display text-2xl font-bold text-white">
-              {{ (authStore.profile?.full_name || authStore.profile?.email || '?')[0].toUpperCase() }}
+              {{
+                (authStore.profile?.full_name || authStore.profile?.email || '?')[0].toUpperCase()
+              }}
             </span>
           </div>
           <p class="text-xs text-[--color-bark-light] mb-0.5">Καλώς ήρθατε</p>
@@ -23,36 +25,44 @@
           <NuxtLink
             :to="localePath('/account')"
             class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-            :class="$route.path === localePath('/account')
-              ? 'bg-terracotta text-white'
-              : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'"
+            :class="
+              $route.path === localePath('/account')
+                ? 'bg-terracotta text-white'
+                : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'
+            "
           >
             <span>🏠</span> {{ $t('account.title') }}
           </NuxtLink>
           <NuxtLink
             :to="localePath('/account/orders')"
             class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-            :class="$route.path.includes('/account/orders')
-              ? 'bg-terracotta text-white'
-              : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'"
+            :class="
+              $route.path.includes('/account/orders')
+                ? 'bg-terracotta text-white'
+                : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'
+            "
           >
             <span>📦</span> {{ $t('account.orders') }}
           </NuxtLink>
           <NuxtLink
             :to="localePath('/account/favourites')"
             class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-            :class="$route.path.includes('/account/favourites')
-              ? 'bg-terracotta text-white'
-              : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'"
+            :class="
+              $route.path.includes('/account/favourites')
+                ? 'bg-terracotta text-white'
+                : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'
+            "
           >
             <span>❤️</span> {{ $t('account.favourites') }}
           </NuxtLink>
           <NuxtLink
             :to="localePath('/account/loyalty')"
             class="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-            :class="$route.path.includes('/account/loyalty')
-              ? 'bg-terracotta text-white'
-              : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'"
+            :class="
+              $route.path.includes('/account/loyalty')
+                ? 'bg-terracotta text-white'
+                : 'text-[--color-bark-light] hover:bg-[--color-surface-page] hover:text-[--color-bark]'
+            "
           >
             <span>⭐</span> {{ $t('account.loyalty') }}
           </NuxtLink>
@@ -70,7 +80,6 @@
 
       <!-- Main content -->
       <div class="flex flex-col gap-6">
-
         <div>
           <h1 class="font-display text-3xl font-bold text-[--color-bark]">
             {{ $t('account.orders') }}
@@ -85,7 +94,10 @@
 
         <!-- Empty -->
         <div v-else-if="!orders || orders.length === 0" class="text-center py-20">
-          <UIcon name="i-heroicons-shopping-bag" class="w-16 h-16 text-[--color-bark-light] mx-auto mb-4" />
+          <UIcon
+            name="i-heroicons-shopping-bag"
+            class="w-16 h-16 text-[--color-bark-light] mx-auto mb-4"
+          />
           <p class="text-[--color-bark-light]">{{ $t('account.no_orders') }}</p>
           <UButton :label="$t('home.shop_now')" :to="localePath('/products')" class="mt-4" />
         </div>
@@ -115,11 +127,17 @@
                   />
                 </div>
                 <p class="text-xs text-[--color-bark-light]">
-                  {{ new Date(order.created_at!).toLocaleDateString(locale === 'el' ? 'el-GR' : 'en-GB') }}
+                  {{
+                    new Date(order.created_at!).toLocaleDateString(
+                      locale === 'el' ? 'el-GR' : 'en-GB'
+                    )
+                  }}
                 </p>
                 <p class="text-sm text-[--color-bark-light]">
                   {{ order.items?.length ?? 0 }} {{ $t('orders.items') }} ·
-                  <span class="font-semibold text-[--color-bark]">€{{ order.total.toFixed(2) }}</span>
+                  <span class="font-semibold text-[--color-bark]"
+                    >€{{ order.total.toFixed(2) }}</span
+                  >
                 </p>
               </div>
               <UIcon
@@ -143,7 +161,7 @@
                       :src="item.product.images[0]"
                       :alt="locale === 'el' ? item.product.name_el : item.product.name_en"
                       class="w-10 h-10 rounded-lg object-cover shrink-0 bg-[--color-surface-page]"
-                    >
+                    />
                     <div
                       v-else
                       class="w-10 h-10 rounded-lg bg-[--color-surface-page] flex items-center justify-center shrink-0"
@@ -172,7 +190,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -180,7 +197,7 @@
 
 <script setup lang="ts">
 import type { Database } from '~/types/database.types'
-import type { Order } from '~/types'
+import type { Order } from '~~/types'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -233,8 +250,8 @@ function statusColor(status: string): BadgeColor {
 async function repeatOrder(order: Order) {
   if (!order.items) return
   const products = order.items
-    .filter(i => i.product && i.product.stock > 0)
-    .map(i => ({ product: i.product!, quantity: i.quantity }))
+    .filter((i) => i.product && i.product.stock > 0)
+    .map((i) => ({ product: i.product!, quantity: i.quantity }))
   cartStore.loadFromOrder(products)
   await router.push(localePath('/checkout'))
 }
