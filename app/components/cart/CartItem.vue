@@ -1,28 +1,28 @@
 <template>
-  <div class="flex gap-3 py-2">
+  <div class="flex gap-3 py-3 border-b border-[--color-border-warm] last:border-b-0">
     <img
       :src="item.product.images[0] || '/placeholder.png'"
       :alt="productName"
-      class="w-16 h-16 object-cover rounded-lg bg-gray-100 flex-shrink-0"
-    >
+      class="w-16 h-16 object-cover rounded-lg bg-[--color-surface-page] shrink-0"
+    />
     <div class="flex-1 min-w-0">
-      <p class="text-sm font-medium text-gray-900 line-clamp-2 leading-tight">{{ productName }}</p>
-      <p class="text-sm text-primary-600 font-semibold mt-0.5">€{{ item.product.price.toFixed(2) }}</p>
+      <p class="text-sm font-medium text-[--color-bark] line-clamp-2 leading-tight">{{ productName }}</p>
+      <p class="text-sm text-terracotta font-semibold mt-0.5">€{{ item.product.price.toFixed(2) }}</p>
       <div class="flex items-center gap-2 mt-2">
         <button
-          class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:border-primary-500 hover:text-primary-500 transition-colors text-sm"
+          class="w-6 h-6 flex items-center justify-center rounded border border-[--color-border-warm] text-[--color-bark-light] hover:border-terracotta hover:text-terracotta transition-colors text-sm"
           @click="cartStore.updateQuantity(item.product.id, item.quantity - 1)"
         >−</button>
-        <span class="text-sm font-medium w-6 text-center">{{ item.quantity }}</span>
+        <span class="text-sm font-medium w-6 text-center text-[--color-bark]">{{ item.quantity }}</span>
         <button
-          class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:border-primary-500 hover:text-primary-500 transition-colors text-sm"
+          class="w-6 h-6 flex items-center justify-center rounded border border-[--color-border-warm] text-[--color-bark-light] hover:border-terracotta hover:text-terracotta transition-colors text-sm"
           :disabled="item.quantity >= item.product.stock"
           @click="cartStore.updateQuantity(item.product.id, item.quantity + 1)"
         >+</button>
       </div>
     </div>
     <button
-      class="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0 self-start mt-0.5"
+      class="text-[--color-bark-light] hover:text-[--color-warm-red] transition-colors shrink-0 self-start mt-0.5"
       :aria-label="$t('cart.remove')"
       @click="cartStore.removeItem(item.product.id)"
     >
@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CartItem } from '~/types'
+import type { CartItem } from '~~/types'
 
 const props = defineProps<{ item: CartItem }>()
 
