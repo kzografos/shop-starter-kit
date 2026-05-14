@@ -200,13 +200,13 @@ const { data: product } = await useAsyncData(`product-${route.params.slug}`, asy
     .catch(() => null)
   if (!data) throw createError({ statusCode: 404, fatal: true })
   return data
-})
+}, { server: false })
 
 const { data: relatedProducts } = await useAsyncData(`related-${route.params.slug}`, async () => {
   if (!product.value) return []
   return $fetch<Product[]>(`${apiBase}/products/${route.params.slug}/related`, { credentials: 'include' })
     .catch(() => [] as Product[])
-})
+}, { server: false })
 
 const productName = computed(() =>
   locale.value === 'el' ? product.value?.name_el : product.value?.name_en

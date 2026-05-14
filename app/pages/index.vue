@@ -125,7 +125,7 @@ const stats = [
 const { data: categories, pending } = await useAsyncData('root-categories', async () => {
   const tree = await $fetch<Category[]>(`${apiBase}/categories`, { credentials: 'include' }).catch(() => [])
   return tree.filter((c) => !c.parent_id)
-})
+}, { server: false })
 
 const catImages: Record<string, string> = {
   dogs: '/categories/dog.png',

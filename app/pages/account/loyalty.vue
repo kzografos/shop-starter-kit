@@ -137,6 +137,7 @@ const authStore = useAuthStore()
 
 const { data: transactions, pending } = await useAsyncData('loyalty-transactions', () =>
   api<LoyaltyTransaction[]>('/profile/loyalty').catch(() => [] as LoyaltyTransaction[]),
+  { server: false },
 )
 
 onMounted(() => authStore.fetchProfile())

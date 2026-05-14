@@ -134,6 +134,7 @@ const router = useRouter()
 
 const { data: orders, pending } = await useAsyncData('orders', () =>
   api<Order[]>('/orders').catch(() => [] as Order[]),
+  { server: false },
 )
 
 const expandedOrders = ref<Set<string>>(new Set())

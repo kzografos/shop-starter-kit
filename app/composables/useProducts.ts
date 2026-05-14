@@ -37,6 +37,7 @@ export function useProducts(page: Ref<number>) {
       return { products: res.products, total: res.total }
     },
     {
+      server: false,
       watch: [
         page,
         () => [...filtersStore.selectedAnimals],

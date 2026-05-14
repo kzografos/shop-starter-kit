@@ -48,7 +48,7 @@ const { t } = useI18n()
 const { data: products, pending } = await useAsyncData('favourites', async () => {
   const favs = await api<Array<{ product: Product }>>('/favourites').catch(() => [])
   return favs.map((f) => f.product)
-})
+}, { server: false })
 
 useSeoMeta({ title: () => `${t('favourites.title')} | PetShop CY` })
 </script>

@@ -101,7 +101,7 @@ const { data: brands, pending } = useAsyncData('brands-page', async () => {
     { credentials: 'include' },
   ).catch(() => [])
   return data.map((r) => ({ name: r.brand, count: r.count }))
-})
+}, { server: false })
 
 const featuredBrands = computed(() => brands.value?.slice(0, 3) ?? [])
 const regularBrands = computed(() => brands.value?.slice(3) ?? [])
