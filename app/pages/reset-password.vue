@@ -68,9 +68,9 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
-const supabase = useSupabaseClient()
+const api = useApi()
 const localePath = useLocalePath()
-const user = useSupabaseUser()
+const route = useRoute()
 
 const password = ref('')
 const confirm = ref('')
@@ -78,8 +78,7 @@ const loading = ref(false)
 const error = ref('')
 const success = ref(false)
 
-// ready = Supabase exchanged the recovery token and user session is active
-const ready = computed(() => !!user.value)
+const ready = computed(() => !!route.query.token)
 
 async function onSubmit() {
   error.value = ''
@@ -94,13 +93,14 @@ async function onSubmit() {
 
   loading.value = true
   try {
-    const { error: err } = await supabase.auth.updateUser({ password: password.value })
-    if (err) throw err
+    await api('/auth/reset-password', {
+      method: 'POST',
+      body: { token: route.query.token as string, password: password.value },
+    })
     success.value = true
-    // Redirect to home after short delay
     setTimeout(() => navigateTo(localePath('/')), 2000)
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'An error occurred'
+    error.value = (err as { data?: { message?: string } })?.data?.message ?? 'An error occurred'
   } finally {
     loading.value = false
   }

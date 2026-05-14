@@ -37,25 +37,18 @@
 </template>
 
 <script setup lang="ts">
-import type { Database } from '~/types/database.types'
 import type { Product } from '~~/types'
 
 definePageMeta({ middleware: 'auth' })
 
+const api = useApi()
 const localePath = useLocalePath()
 const { t } = useI18n()
-const favouritesStore = useFavouritesStore()
 
 const { data: products, pending } = await useAsyncData('favourites', async () => {
-  if (!favouritesStore.ids.length) return []
-  const supabase = useSupabaseClient<Database>()
-  const { data } = await supabase
-    .from('products')
-    .select('*, category:categories(*)')
-    .in('id', favouritesStore.ids)
-    .eq('is_active', true)
-  return (data ?? []) as Product[]
-}, { watch: [() => favouritesStore.ids.length] })
+  const favs = await api<Array<{ product: Product }>>('/favourites').catch(() => [])
+  return favs.map((f) => f.product)
+})
 
 useSeoMeta({ title: () => `${t('favourites.title')} | PetShop CY` })
 </script>

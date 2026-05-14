@@ -31,7 +31,6 @@ export default defineNuxtConfig({
 
   modules: [
     '@nuxt/ui',
-    '@nuxtjs/supabase',
     '@nuxtjs/i18n',
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt',
@@ -42,11 +41,6 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   components: [{ path: '~/components', pathPrefix: false }],
-
-  supabase: {
-    redirect: false,
-    useSsrCookies: true,
-  },
 
   i18n: {
     locales: [
@@ -65,6 +59,7 @@ export default defineNuxtConfig({
     resendApiKey: process.env.RESEND_API_KEY,
     emailFrom: process.env.EMAIL_FROM || 'PetShop CY <orders@petshopcyprus.com>',
     public: {
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
       whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || '35799000000',
     },

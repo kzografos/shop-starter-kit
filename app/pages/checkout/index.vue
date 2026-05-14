@@ -140,10 +140,9 @@
 </template>
 
 <script setup lang="ts">
-import type { CreateOrderPayload } from '~/types'
-
 definePageMeta({ middleware: 'auth' })
 
+const { public: { apiBase } } = useRuntimeConfig()
 const cartStore = useCartStore()
 const authStore = useAuthStore()
 const { locale, t } = useI18n()
@@ -202,30 +201,42 @@ async function placeOrder() {
   loading.value = true
   orderError.value = ''
   try {
-    const payload: CreateOrderPayload = {
-      items: cartStore.items.map(i => ({
-        product_id: i.product.id,
-        quantity: i.quantity,
-        unit_price: i.product.price,
-      })),
-      fulfillment_type: form.fulfillment_type,
-      payment_method: form.payment_method,
-      shipping_address: form.fulfillment_type === 'shipping' ? form.shipping_address : undefined,
-      loyalty_points_to_redeem: pointsToRedeem.value,
-      notes: form.notes || undefined,
-    }
-
-    const order = await $fetch<{ id: string }>('/api/orders', { method: 'POST', body: payload })
+    const order = await $fetch<{ id: string }>(`${apiBase}/orders`, {
+      method: 'POST',
+      credentials: 'include',
+      body: {
+        items: cartStore.items.map(i => ({
+          productId: i.product.id,
+          quantity: i.quantity,
+          unitPrice: Number(i.product.price),
+        })),
+        fulfillmentType: form.fulfillment_type.toUpperCase(),
+        paymentMethod: form.payment_method.toUpperCase(),
+        shippingAddress: form.fulfillment_type === 'shipping' ? {
+          fullName: form.shipping_address.full_name,
+          address: form.shipping_address.address,
+          city: form.shipping_address.city,
+          postalCode: form.shipping_address.postal_code,
+          phone: form.shipping_address.phone,
+        } : undefined,
+        loyaltyPointsToRedeem: pointsToRedeem.value,
+        notes: form.notes || undefined,
+      },
+    })
 
     if (form.payment_method === 'stripe') {
-      // Redirect to Stripe hosted checkout — do NOT clear cart yet
-      const { url } = await $fetch<{ url: string }>('/api/payments/create-checkout', {
+      const origin = window.location.origin
+      const { url } = await $fetch<{ url: string }>(`${apiBase}/payments/create-checkout`, {
         method: 'POST',
-        body: { order_id: order.id },
+        credentials: 'include',
+        body: {
+          orderId: order.id,
+          successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${origin}/checkout/cancel?order_id=${order.id}`,
+        },
       })
       window.location.href = url
     } else {
-      // Pickup: cash or card — complete immediately
       cartStore.clear()
       await authStore.fetchProfile()
       success.value = true

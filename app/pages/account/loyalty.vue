@@ -128,23 +128,16 @@
 </template>
 
 <script setup lang="ts">
-import type { Database } from '~/types/database.types'
+import type { LoyaltyTransaction } from '~~/types'
 
 definePageMeta({ middleware: 'auth' })
 
-const user = useSupabaseUser()
+const api = useApi()
 const authStore = useAuthStore()
 
-const { data: transactions, pending } = await useAsyncData('loyalty-transactions', async () => {
-  if (!user.value) return []
-  const supabase = useSupabaseClient<Database>()
-  const { data } = await supabase
-    .from('loyalty_transactions')
-    .select('*')
-    .eq('user_id', user.value.sub)
-    .order('created_at', { ascending: false })
-  return data ?? []
-})
+const { data: transactions, pending } = await useAsyncData('loyalty-transactions', () =>
+  api<LoyaltyTransaction[]>('/profile/loyalty').catch(() => [] as LoyaltyTransaction[]),
+)
 
 onMounted(() => authStore.fetchProfile())
 </script>

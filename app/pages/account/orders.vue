@@ -121,27 +121,19 @@
 </template>
 
 <script setup lang="ts">
-import type { Database } from '~/types/database.types'
 import type { Order } from '~~/types'
 
 definePageMeta({ middleware: 'auth' })
 
-const user = useSupabaseUser()
+const api = useApi()
 const cartStore = useCartStore()
 const localePath = useLocalePath()
 const { locale } = useI18n()
 const router = useRouter()
 
-const { data: orders, pending } = await useAsyncData('orders', async () => {
-  if (!user.value) return []
-  const supabase = useSupabaseClient<Database>()
-  const { data } = await supabase
-    .from('orders')
-    .select('*, items:order_items(*, product:products(*))')
-    .eq('user_id', user.value.sub)
-    .order('created_at', { ascending: false })
-  return data as Order[]
-})
+const { data: orders, pending } = await useAsyncData('orders', () =>
+  api<Order[]>('/orders').catch(() => [] as Order[]),
+)
 
 const expandedOrders = ref<Set<string>>(new Set())
 

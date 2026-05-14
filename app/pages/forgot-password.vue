@@ -50,7 +50,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
-const supabase = useSupabaseClient()
+const api = useApi()
 const localePath = useLocalePath()
 
 const email = ref('')
@@ -62,13 +62,10 @@ async function onSubmit() {
   loading.value = true
   error.value = ''
   try {
-    const { error: err } = await supabase.auth.resetPasswordForEmail(email.value, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    })
-    if (err) throw err
+    await api('/auth/forgot-password', { method: 'POST', body: { email: email.value } })
     sent.value = true
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'An error occurred'
+    error.value = (err as { data?: { message?: string } })?.data?.message ?? 'An error occurred'
   } finally {
     loading.value = false
   }

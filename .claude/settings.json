@@ -3,7 +3,12 @@
     "allow": [
       "Bash(Get-Content \"c:\\\\Users\\\\konsz\\\\Documents\\\\Projects\\\\PetShopCY\\\\app\\\\pages\\\\account\\\\index.vue\" -Raw)",
       "Bash(Select-String -Pattern \"TODO|<aside\" -AllMatches)",
-      "Bash(Select-Object -First 5)"
+      "Bash(Select-Object -First 5)",
+      "Bash(Get-ChildItem \"c:\\\\Users\\\\konsz\\\\Documents\\\\Projects\\\\PetShopCY\")",
+      "Bash(Select-Object Name)",
+      "PowerShell(docker version 2>&1)",
+      "Bash(npx prisma *)",
+      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\konsz\\\\Documents\\\\Projects\\\\PetShopCY\\\\backend\\\\prisma\\\\migrations\\\\20260514120000_lowercase_enums_uuid_defaults\" -Force)"
     ]
   }
 }

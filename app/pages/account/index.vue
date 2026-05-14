@@ -84,10 +84,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Database } from '~/types/database.types'
-
 definePageMeta({ middleware: 'auth' })
 
+const api = useApi()
 const authStore = useAuthStore()
 const favouritesStore = useFavouritesStore()
 const localePath = useLocalePath()
@@ -103,13 +102,7 @@ const orderCount = ref<number | null>(null)
 
 onMounted(async () => {
   await authStore.fetchProfile()
-  if (authStore.profile?.id) {
-    const supabase = useSupabaseClient<Database>()
-    const { count } = await supabase
-      .from('orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', authStore.profile.id)
-    orderCount.value = count ?? 0
-  }
+  const orders = await api<Array<{ id: string }>>('/orders').catch(() => [])
+  orderCount.value = orders.length
 })
 </script>

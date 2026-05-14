@@ -115,7 +115,7 @@ const { locale, t } = useI18n()
 const localePath = useLocalePath()
 const cartStore = useCartStore()
 const favouritesStore = useFavouritesStore()
-const user = useSupabaseUser()
+const authStore = useAuthStore()
 const toast = useToast()
 
 const showAuthModal = ref(false)
@@ -134,7 +134,7 @@ const displayName = computed(() => {
 const isFav = computed(() => favouritesStore.isFavourite(props.product.id))
 
 function handleFavourite() {
-  if (!user.value) {
+  if (!authStore.isLoggedIn) {
     showAuthModal.value = true
     return
   }

@@ -56,15 +56,49 @@
           </UFormField>
         </div>
 
-        <!-- Image URLs -->
-        <UFormField label="URLs Φωτογραφιών (μία ανά γραμμή)">
-          <UTextarea
-            :model-value="form.images.join('\n')"
-            :rows="4"
-            class="w-full font-mono text-sm"
-            @update:model-value="form.images = $event.split('\n').map(s => s.trim()).filter(Boolean)"
-          />
-        </UFormField>
+        <!-- Images -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Φωτογραφίες</label>
+
+          <!-- Preview grid -->
+          <div v-if="form.images.length" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
+            <div
+              v-for="(url, idx) in form.images"
+              :key="url"
+              class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200"
+            >
+              <img :src="url" :alt="`Image ${idx + 1}`" class="w-full h-full object-cover" >
+              <button
+                type="button"
+                class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                @click="form.images.splice(idx, 1)"
+              >
+                <UIcon name="i-heroicons-trash" class="w-5 h-5 text-white" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Upload button -->
+          <div class="flex items-center gap-3">
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
+              class="hidden"
+              @change="uploadFiles"
+            >
+            <UButton
+              type="button"
+              icon="i-heroicons-cloud-arrow-up"
+              variant="outline"
+              :loading="uploading"
+              :label="uploading ? 'Uploading...' : 'Upload Images'"
+              @click="(fileInput as HTMLInputElement)?.click()"
+            />
+            <span v-if="uploadError" class="text-sm text-red-500">{{ uploadError }}</span>
+          </div>
+        </div>
 
         <div class="flex justify-end gap-3">
           <UButton :label="$t('common.cancel')" variant="outline" :to="localePath('/admin/products')" />
@@ -79,10 +113,37 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const route = useRoute()
-const supabase = useSupabaseClient()
+const { public: { apiBase } } = useRuntimeConfig()
 const localePath = useLocalePath()
 const { t } = useI18n()
 const saving = ref(false)
+const uploading = ref(false)
+const uploadError = ref('')
+const fileInput = ref<HTMLInputElement | null>(null)
+
+async function uploadFiles(event: Event) {
+  const files = (event.target as HTMLInputElement).files
+  if (!files?.length) return
+  uploading.value = true
+  uploadError.value = ''
+  try {
+    for (const file of Array.from(files)) {
+      const fd = new FormData()
+      fd.append('file', file)
+      const { url } = await $fetch<{ url: string }>(`${apiBase}/uploads/image`, {
+        method: 'POST',
+        credentials: 'include',
+        body: fd,
+      })
+      form.images.push(url)
+    }
+  } catch {
+    uploadError.value = 'Upload failed'
+  } finally {
+    uploading.value = false
+    if (fileInput.value) fileInput.value.value = ''
+  }
+}
 
 const isNew = computed(() => route.params.id === 'new')
 
@@ -110,34 +171,40 @@ const ageOptions = [
   { label: t('age.senior'), value: 'senior' },
 ]
 
-const { data: categories } = useAsyncData('admin-categories', async () => {
-  const { data } = await supabase.from('categories').select('*').order('name_el')
-  return data
-})
+type Category = { id: string; name_el: string }
 
-const categoryOptions = computed(() =>
-  (categories.value ?? []).map(c => ({ label: c.name_el, value: c.id }))
+const { data: categories } = useAsyncData('admin-categories', () =>
+  $fetch<Category[]>(`${apiBase}/categories`, { credentials: 'include' })
 )
 
-// Load existing product
+const categoryOptions = computed(() =>
+  (categories.value ?? []).map((c: Category) => ({ label: c.name_el, value: c.id }))
+)
+
 if (!isNew.value) {
-  const { data: productData } = useAsyncData(`admin-product-${route.params.id}`, async () => {
-    const { data } = await supabase.from('products').select('*').eq('id', route.params.id).single()
-    return data
-  })
+  const { data: productData } = useAsyncData(`admin-product-${route.params.id}`, () =>
+    $fetch<Record<string, unknown>>(`${apiBase}/admin/products/${route.params.id}`, { credentials: 'include' })
+  )
   watch(productData, (val) => {
-    if (val) Object.assign(form, { ...val, images: val.images ?? [] })
+    if (val) Object.assign(form, { ...val, images: (val.images as string[]) ?? [] })
   }, { immediate: true })
 }
 
 async function save() {
   saving.value = true
   try {
-    const payload = { ...form }
     if (isNew.value) {
-      await supabase.from('products').insert(payload)
+      await $fetch(`${apiBase}/admin/products`, {
+        method: 'POST',
+        body: { ...form },
+        credentials: 'include',
+      })
     } else {
-      await supabase.from('products').update(payload).eq('id', route.params.id as string)
+      await $fetch(`${apiBase}/admin/products/${route.params.id}`, {
+        method: 'PATCH',
+        body: { ...form },
+        credentials: 'include',
+      })
     }
     await navigateTo(localePath('/admin/products'))
   } finally {

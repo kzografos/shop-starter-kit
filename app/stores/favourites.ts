@@ -1,50 +1,45 @@
 import { defineStore } from 'pinia'
-import type { Database } from '~/types/database.types'
-
-type FavouriteRow = Database['public']['Tables']['favourites']['Row']
 
 export const useFavouritesStore = defineStore('favourites', () => {
-  const supabase = useSupabaseClient<Database>()
-  const user = useSupabaseUser()
+  const authStore = useAuthStore()
 
   const ids = ref<string[]>([])
   const loaded = ref(false)
 
   async function load() {
-    if (!user.value) return
-    const { data, error } = await supabase
-      .from('favourites')
-      .select('product_id')
-    if (error) {
-      console.error('[favourites] load error:', error)
-      return
+    if (!authStore.isLoggedIn) return
+    const api = useApi()
+    try {
+      const data = await api<string[]>('/favourites/ids')
+      ids.value = data
+      loaded.value = true
+    } catch {
+      ids.value = []
     }
-    ids.value = (data ?? []).map((r: Pick<FavouriteRow, 'product_id'>) => String(r.product_id))
-    loaded.value = true
   }
 
   async function toggle(productId: string) {
-    if (!user.value) return
+    if (!authStore.isLoggedIn) return
     const id = String(productId)
-    if (ids.value.includes(id)) {
-      ids.value = ids.value.filter(i => i !== id)
-      const { error } = await supabase
-        .from('favourites')
-        .delete()
-        .eq('product_id', id)
-      if (error) {
-        console.error('[favourites] delete error:', error)
-        ids.value = [...ids.value, id]
-      }
-    } else {
-      ids.value = [...ids.value, id]
-      const { error } = await supabase
-        .from('favourites')
-        .insert({ product_id: id })
-      if (error) {
-        console.error('[favourites] insert error:', error)
-        ids.value = ids.value.filter(i => i !== id)
-      }
+    const wasIn = ids.value.includes(id)
+
+    // Optimistic update
+    if (wasIn) ids.value = ids.value.filter((i) => i !== id)
+    else ids.value = [...ids.value, id]
+
+    const api = useApi()
+    try {
+      const res = await api<{ action: string; product_id: string }>('/favourites/toggle', {
+        method: 'POST',
+        body: { productId: id },
+      })
+      // Sync with server response
+      if (res.action === 'added' && !ids.value.includes(id)) ids.value = [...ids.value, id]
+      if (res.action === 'removed') ids.value = ids.value.filter((i) => i !== id)
+    } catch {
+      // Rollback on error
+      if (wasIn) ids.value = [...ids.value, id]
+      else ids.value = ids.value.filter((i) => i !== id)
     }
   }
 
@@ -52,10 +47,14 @@ export const useFavouritesStore = defineStore('favourites', () => {
     return ids.value.includes(String(productId))
   }
 
-  watch(user, (u) => {
-    if (u) load()
-    else { ids.value = []; loaded.value = false }
-  }, { immediate: true })
+  watch(
+    () => authStore.isLoggedIn,
+    (loggedIn) => {
+      if (loggedIn) load()
+      else { ids.value = []; loaded.value = false }
+    },
+    { immediate: true },
+  )
 
   return { ids, loaded, load, toggle, isFavourite }
 })

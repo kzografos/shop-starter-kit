@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
+definePageMeta({})
 
 const localePath = useLocalePath()
 const cartStore = useCartStore()

@@ -240,7 +240,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
-const supabase = useSupabaseClient()
+const api = useApi()
 const authStore = useAuthStore()
 const localePath = useLocalePath()
 const route = useRoute()
@@ -270,36 +270,25 @@ async function onSubmit() {
 
   try {
     if (isLogin.value) {
-      const { error: err } = await supabase.auth.signInWithPassword({
-        email: form.email,
-        password: form.password,
-      })
-      if (err) throw err
+      await api('/auth/login', { method: 'POST', body: { email: form.email, password: form.password } })
       await authStore.fetchProfile()
       const redirectTo = route.query.redirect as string | undefined
       const destination =
         redirectTo && redirectTo.startsWith('/') ? decodeURIComponent(redirectTo) : '/account'
       await navigateTo(destination)
     } else {
-      const { error: err } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-      })
-      if (err) throw err
+      await api('/auth/register', { method: 'POST', body: { email: form.email, password: form.password } })
       successMsg.value = t('auth.register_success')
     }
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'An error occurred'
+    const msg = (err as { data?: { message?: string | string[] } })?.data?.message
+    error.value = Array.isArray(msg) ? msg[0] : (msg ?? 'An error occurred')
   } finally {
     loading.value = false
   }
 }
 
 async function signInWithGoogle() {
-  const { error: err } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: `${window.location.origin}/confirm` },
-  })
-  if (err) error.value = err.message
+  error.value = t('auth.google_unavailable') || 'Google sign-in not available'
 }
 </script>

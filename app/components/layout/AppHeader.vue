@@ -62,7 +62,7 @@
           </div>
 
           <!-- Account dropdown (logged in) -->
-          <div v-if="user" ref="dropdownRef" class="relative">
+          <div v-if="authStore.isLoggedIn" ref="dropdownRef" class="relative">
             <button
               class="h-8 w-8 flex items-center justify-center rounded-full text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
               @click="userMenuOpen = !userMenuOpen"
@@ -88,7 +88,7 @@
                     <p class="text-sm font-semibold text-[--color-bark] truncate">
                       {{ displayName }}
                     </p>
-                    <p class="text-xs text-[--color-bark-light] truncate">{{ user.email }}</p>
+                    <p class="text-xs text-[--color-bark-light] truncate">{{ authStore.profile?.email }}</p>
                   </div>
                 </div>
               </div>
@@ -217,7 +217,7 @@
 
         <div class="border-t border-[--color-border-soft] mt-1 px-4">
           <NuxtLink
-            v-if="user"
+            v-if="authStore.isLoggedIn"
             :to="localePath('/account')"
             class="flex items-center justify-between py-4 text-base font-medium text-[--color-bark] hover:text-terracotta transition-colors"
             @click="mobileMenuOpen = false"
@@ -270,7 +270,6 @@
 <script setup lang="ts">
 const { locale, setLocale, t } = useI18n()
 const localePath = useLocalePath()
-const user = useSupabaseUser()
 const authStore = useAuthStore()
 const cartStore = useCartStore()
 const cartOpen = useState('cart-open', () => false)

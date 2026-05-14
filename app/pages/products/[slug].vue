@@ -175,7 +175,6 @@
 </template>
 
 <script setup lang="ts">
-import type { Database } from '~/types/database.types'
 import type { Product } from '~~/types'
 
 const route = useRoute()
@@ -184,35 +183,24 @@ const localePath = useLocalePath()
 const cartStore = useCartStore()
 const cartOpen = useState('cart-open', () => false)
 const favouritesStore = useFavouritesStore()
-const user = useSupabaseUser()
+const authStore = useAuthStore()
 const toast = useToast()
+const { public: { apiBase } } = useRuntimeConfig()
 
 const selectedImage = ref(0)
 const qty = ref(1)
 
 const { data: product } = await useAsyncData(`product-${route.params.slug}`, async () => {
-  const supabase = useSupabaseClient<Database>()
-  const { data, error } = await supabase
-    .from('products')
-    .select('*, category:categories(*)')
-    .eq('slug', route.params.slug as string)
-    .eq('is_active', true)
-    .single()
-  if (error) throw createError({ statusCode: 404, fatal: true })
+  const data = await $fetch<Product>(`${apiBase}/products/${route.params.slug}`, { credentials: 'include' })
+    .catch(() => null)
+  if (!data) throw createError({ statusCode: 404, fatal: true })
   return data
 })
 
 const { data: relatedProducts } = await useAsyncData(`related-${route.params.slug}`, async () => {
   if (!product.value) return []
-  const supabase = useSupabaseClient<Database>()
-  const { data } = await supabase
-    .from('products')
-    .select('*, category:categories(*)')
-    .eq('is_active', true)
-    .eq('brand', product.value.brand ?? '')
-    .neq('slug', route.params.slug as string)
-    .limit(4)
-  return (data ?? []) as Product[]
+  return $fetch<Product[]>(`${apiBase}/products/${route.params.slug}/related`, { credentials: 'include' })
+    .catch(() => [] as Product[])
 })
 
 const productName = computed(() =>
@@ -225,7 +213,7 @@ const productDescription = computed(() =>
 const isFav = computed(() => favouritesStore.isFavourite(product.value?.id ?? ''))
 
 function handleFavourite() {
-  if (!user.value) {
+  if (!authStore.isLoggedIn) {
     navigateTo(localePath('/login'))
     return
   }

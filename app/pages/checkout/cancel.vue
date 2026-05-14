@@ -27,8 +27,9 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
+definePageMeta({})
 
+const { public: { apiBase } } = useRuntimeConfig()
 const route = useRoute()
 const localePath = useLocalePath()
 const retrying = ref(false)
@@ -39,9 +40,15 @@ async function retryPayment() {
   if (!orderId.value) return
   retrying.value = true
   try {
-    const { url } = await $fetch<{ url: string }>('/api/payments/create-checkout', {
+    const origin = window.location.origin
+    const { url } = await $fetch<{ url: string }>(`${apiBase}/payments/create-checkout`, {
       method: 'POST',
-      body: { order_id: orderId.value },
+      credentials: 'include',
+      body: {
+        orderId: orderId.value,
+        successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${origin}/checkout/cancel?order_id=${orderId.value}`,
+      },
     })
     window.location.href = url
   } catch {

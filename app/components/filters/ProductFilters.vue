@@ -134,13 +134,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Database } from '~/types/database.types'
-
-type CategoryRow = Database['public']['Tables']['categories']['Row']
-type ProductRow = Database['public']['Tables']['products']['Row']
 const filtersStore = useFiltersStore()
 const { locale } = useI18n()
-const supabase = useSupabaseClient()
+const { public: { apiBase } } = useRuntimeConfig()
 
 const PRICE_ABS_MIN = 0
 const PRICE_ABS_MAX = 500
@@ -197,56 +193,23 @@ function resetAll() {
 }
 
 onMounted(async () => {
-  // Fetch products with category info for counts
-  const { data: products } = await supabase
-    .from('products')
-    .select('brand, category:categories!inner(slug, parent:categories(slug))')
-    .eq('is_active', true)
+  type BrandRow = { brand: string; count: number }
+  type CatTree = { id: string; slug: string; name_el: string; name_en: string; children: Array<{ id: string }> }
 
-  if (!products) return
+  const [brandData, catTree] = await Promise.all([
+    $fetch<BrandRow[]>(`${apiBase}/products/brands`, { credentials: 'include' }).catch(() => []),
+    $fetch<CatTree[]>(`${apiBase}/categories`, { credentials: 'include' }).catch(() => []),
+  ])
 
-  // Build brand counts
-  const brandMap = new Map<string, number>()
-  products.forEach((p: { brand: string | null }) => {
-    if (p.brand) brandMap.set(p.brand, (brandMap.get(p.brand) ?? 0) + 1)
-  })
-  brands.value = [...brandMap.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, count]) => ({ name, count }))
+  brands.value = brandData.map((r) => ({ name: r.brand, count: r.count }))
 
-  // Fetch top-level categories with counts
-  const { data: cats } = await supabase
-    .from('categories')
-    .select('id, slug, name_el, name_en')
-    .is('parent_id', null)
-    .order('sort_order')
-
-  if (!cats) return
-
-  // Count products per top-level category (via sub-categories)
-  const { data: subCats } = await supabase
-    .from('categories')
-    .select('id, parent_id')
-    .not('parent_id', 'is', null)
-
-  const { data: productCats } = await supabase
-    .from('products')
-    .select('category_id')
-    .eq('is_active', true)
-
-  const subCatToParent = new Map((subCats ?? []).map((s: Pick<CategoryRow, 'id' | 'parent_id'>) => [s.id, s.parent_id]))
-  const parentCounts = new Map<string, number>()
-
-  ;(productCats ?? []).forEach((p: Pick<ProductRow, 'category_id'>) => {
-    const parentId = subCatToParent.get(p.category_id) ?? p.category_id
-    parentCounts.set(parentId, (parentCounts.get(parentId) ?? 0) + 1)
-  })
-
-  animals.value = cats.map((c: Pick<CategoryRow, 'id' | 'slug' | 'name_el' | 'name_en'>) => ({
-    slug: c.slug,
-    name: locale.value === 'el' ? c.name_el : c.name_en,
-    count: parentCounts.get(c.id) ?? 0,
-  }))
+  animals.value = catTree
+    .filter((c) => !c.children || true)
+    .map((c) => ({
+      slug: c.slug,
+      name: locale.value === 'el' ? c.name_el : c.name_en,
+      count: c.children?.length ?? 0,
+    }))
 })
 </script>
 

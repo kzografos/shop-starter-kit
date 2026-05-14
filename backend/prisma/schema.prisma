@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Settings ────────────────────────────────────────────────
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// ─── Users / Profiles ────────────────────────────────────────
+
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  fullName      String?   @map("full_name")
+  phone         String?
+  loyaltyPoints Int       @default(0) @map("loyalty_points")
+  role          UserRole  @default(CUSTOMER)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  orders              Order[]
+  favourites          Favourite[]
+  loyaltyTransactions LoyaltyTransaction[]
+  refreshTokens       RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+enum UserRole {
+  CUSTOMER @map("customer")
+  ADMIN    @map("admin")
+
+  @@map("user_role")
+}
+
+// ─── Categories ──────────────────────────────────────────────
+
+model Category {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug      String     @unique
+  nameEl    String     @map("name_el")
+  nameEn    String     @map("name_en")
+  parentId  String?    @map("parent_id") @db.Uuid
+  sortOrder Int        @default(0) @map("sort_order")
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  parent   Category?  @relation("CategoryChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryChildren")
+  products Product[]
+
+  @@map("categories")
+}
+
+// ─── Products ────────────────────────────────────────────────
+
+model Product {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug          String     @unique
+  nameEl        String     @map("name_el")
+  nameEn        String     @map("name_en")
+  descriptionEl String?    @map("description_el")
+  descriptionEn String?    @map("description_en")
+  price         Decimal    @db.Decimal(10, 2)
+  stock         Int        @default(0)
+  isActive      Boolean    @default(true) @map("is_active")
+  categoryId    String?    @map("category_id") @db.Uuid
+  brand         String?
+  animalAge     AnimalAge  @default(ALL) @map("animal_age")
+  packageSize   String?    @map("package_size")
+  images        String[]   @default([])
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @default(now()) @updatedAt @map("updated_at")
+
+  category   Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  orderItems OrderItem[]
+  favourites Favourite[]
+
+  @@index([categoryId])
+  @@index([brand])
+  @@index([isActive])
+  @@index([slug])
+  @@map("products")
+}
+
+enum AnimalAge {
+  PUPPY  @map("puppy")
+  KITTEN @map("kitten")
+  ADULT  @map("adult")
+  SENIOR @map("senior")
+  ALL    @map("all")
+
+  @@map("animal_age")
+}
+
+// ─── Orders ──────────────────────────────────────────────────
+
+model Order {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String?       @map("user_id") @db.Uuid
+  status                OrderStatus   @default(PENDING)
+  fulfillmentType       FulfillmentType @map("fulfillment_type")
+  paymentMethod         PaymentMethod @map("payment_method")
+  paymentStatus         PaymentStatus @default(PENDING) @map("payment_status")
+  stripePaymentIntentId String?       @map("stripe_payment_intent_id")
+  stripeSessionId       String?       @map("stripe_session_id")
+  subtotal              Decimal       @db.Decimal(10, 2)
+  shippingCost          Decimal       @default(0) @db.Decimal(10, 2) @map("shipping_cost")
+  loyaltyDiscount       Decimal       @default(0) @db.Decimal(10, 2) @map("loyalty_discount")
+  total                 Decimal       @db.Decimal(10, 2)
+  shippingAddress       Json?         @map("shipping_address")
+  notes                 String?
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  user                User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items               OrderItem[]
+  loyaltyTransactions LoyaltyTransaction[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId   String   @map("order_id") @db.Uuid
+  productId String?  @map("product_id") @db.Uuid
+  quantity  Int
+  unitPrice Decimal  @db.Decimal(10, 2) @map("unit_price")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING    @map("pending")
+  CONFIRMED  @map("confirmed")
+  PROCESSING @map("processing")
+  READY      @map("ready")
+  COMPLETED  @map("completed")
+  CANCELLED  @map("cancelled")
+
+  @@map("order_status")
+}
+
+enum FulfillmentType {
+  SHIPPING @map("shipping")
+  PICKUP   @map("pickup")
+
+  @@map("fulfillment_type")
+}
+
+enum PaymentMethod {
+  STRIPE        @map("stripe")
+  CASH_ON_PICKUP @map("cash_on_pickup")
+  CARD_ON_PICKUP @map("card_on_pickup")
+
+  @@map("payment_method")
+}
+
+enum PaymentStatus {
+  PENDING  @map("pending")
+  PAID     @map("paid")
+  FAILED   @map("failed")
+  REFUNDED @map("refunded")
+
+  @@map("payment_status")
+}
+
+// ─── Loyalty ─────────────────────────────────────────────────
+
+model LoyaltyTransaction {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String          @map("user_id") @db.Uuid
+  orderId     String?         @map("order_id") @db.Uuid
+  pointsDelta Int             @map("points_delta")
+  type        LoyaltyType
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("loyalty_transactions")
+}
+
+enum LoyaltyType {
+  EARN   @map("earn")
+  REDEEM @map("redeem")
+
+  @@map("loyalty_type")
+}
+
+// ─── Favourites ──────────────────────────────────────────────
+
+model Favourite {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("favourites")
+}
+
+// ─── Newsletter ──────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("newsletter_subscribers")
+}

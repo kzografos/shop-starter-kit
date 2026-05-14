@@ -89,29 +89,18 @@
 </template>
 
 <script setup lang="ts">
-import type { Database } from '~/types/database.types'
-
 const localePath = useLocalePath()
 const filtersStore = useFiltersStore()
 const router = useRouter()
 const { t } = useI18n()
+const { public: { apiBase } } = useRuntimeConfig()
 
 const { data: brands, pending } = useAsyncData('brands-page', async () => {
-  const supabase = useSupabaseClient<Database>()
-  const { data } = await supabase
-    .from('products')
-    .select('brand')
-    .eq('is_active', true)
-    .not('brand', 'is', null)
-
-  const brandMap = new Map<string, number>()
-  for (const p of data ?? []) {
-    if (p.brand) brandMap.set(p.brand, (brandMap.get(p.brand) ?? 0) + 1)
-  }
-
-  return Array.from(brandMap.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
+  const data = await $fetch<Array<{ brand: string; count: number }>>(
+    `${apiBase}/products/brands`,
+    { credentials: 'include' },
+  ).catch(() => [])
+  return data.map((r) => ({ name: r.brand, count: r.count }))
 })
 
 const featuredBrands = computed(() => brands.value?.slice(0, 3) ?? [])

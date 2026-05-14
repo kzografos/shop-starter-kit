@@ -57,7 +57,7 @@
         <template #header>
           <h2 class="font-semibold text-gray-800">Έσοδα τελευταίων 30 ημερών</h2>
         </template>
-        <div v-if="loadingCharts" class="h-48 flex items-center justify-center">
+        <div v-if="loading" class="h-48 flex items-center justify-center">
           <USkeleton class="w-full h-48 rounded" />
         </div>
         <LineChart
@@ -76,7 +76,7 @@
         <template #header>
           <h2 class="font-semibold text-gray-800">Παραγγελίες ανά Κατάσταση</h2>
         </template>
-        <div v-if="loadingCharts" class="h-48 flex items-center justify-center">
+        <div v-if="loading" class="h-48 flex items-center justify-center">
           <USkeleton class="w-40 h-40 rounded-full mx-auto" />
         </div>
         <template v-else>
@@ -99,7 +99,7 @@
         <template #header>
           <h2 class="font-semibold text-gray-800">Top 5 Προϊόντα</h2>
         </template>
-        <div v-if="loadingCharts" class="space-y-2">
+        <div v-if="loading" class="space-y-2">
           <USkeleton v-for="n in 5" :key="n" class="h-8 rounded" />
         </div>
         <div v-else class="space-y-3">
@@ -129,15 +129,15 @@
         <template #header>
           <div class="flex items-center justify-between">
             <h2 class="font-semibold text-gray-800">Χαμηλό Απόθεμα</h2>
-            <UBadge :label="`${lowStockProducts.length}`" color="warning" variant="subtle" />
+            <UBadge :label="`${lowStock.length}`" color="warning" variant="subtle" />
           </div>
         </template>
-        <div v-if="loadingCharts" class="space-y-2">
+        <div v-if="loading" class="space-y-2">
           <USkeleton v-for="n in 5" :key="n" class="h-8 rounded" />
         </div>
         <div v-else class="space-y-2">
           <div
-            v-for="p in lowStockProducts"
+            v-for="p in lowStock"
             :key="p.id"
             class="flex items-center justify-between text-sm"
           >
@@ -149,7 +149,7 @@
               size="sm"
             />
           </div>
-          <p v-if="!lowStockProducts.length" class="text-sm text-gray-400 text-center py-4">Όλα τα αποθέματα OK</p>
+          <p v-if="!lowStock.length" class="text-sm text-gray-400 text-center py-4">Όλα τα αποθέματα OK</p>
         </div>
       </UCard>
 
@@ -161,7 +161,7 @@
             <UButton label="Όλες" variant="ghost" size="xs" :to="localePath('/admin/orders')" />
           </div>
         </template>
-        <div v-if="loadingOrders" class="space-y-2">
+        <div v-if="loading" class="space-y-2">
           <USkeleton v-for="n in 5" :key="n" class="h-10 rounded" />
         </div>
         <div v-else-if="!recentOrders.length" class="text-sm text-gray-400 py-4 text-center">
@@ -184,32 +184,20 @@
 </template>
 
 <script setup lang="ts">
-import type { Database } from '~/types/database.types'
-
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-type OrderRow = Database['public']['Tables']['orders']['Row']
-type ProductRow = Database['public']['Tables']['products']['Row']
-
-const supabase = useSupabaseClient()
+const { public: { apiBase } } = useRuntimeConfig()
 const localePath = useLocalePath()
 
-const kpi = reactive({
-  totalRevenue: 0,
-  monthRevenue: 0,
-  totalCustomers: 0,
-  newCustomers: 0,
-})
+const loading = ref(true)
 
-const recentOrders = ref<Pick<OrderRow, 'id' | 'created_at' | 'status' | 'total'>[]>([])
-const loadingOrders = ref(true)
-const loadingCharts = ref(true)
-
+const kpi = reactive({ totalRevenue: 0, monthRevenue: 0, totalCustomers: 0, newCustomers: 0 })
+const recentOrders = ref<Array<{ id: string; status: string; total: number; created_at: string }>>([])
 const revenueChartData = ref<{ 'Έσοδα': number }[]>([])
 const revenueDates = ref<string[]>([])
 const orderStatusData = ref<{ status: string; count: number }[]>([])
 const topProducts = ref<{ name: string; units: number }[]>([])
-const lowStockProducts = ref<Pick<ProductRow, 'id' | 'name_el' | 'stock'>[]>([])
+const lowStock = ref<{ id: string; name_el: string; stock: number }[]>([])
 
 const revenueCategories = { 'Έσοδα': { name: 'Έσοδα', color: '#10b981' } }
 
@@ -228,96 +216,53 @@ function revenueXFormatter(_: unknown, i: number) {
   return revenueDates.value[i] ?? ''
 }
 
-const monthStart = new Date()
-monthStart.setDate(1)
-monthStart.setHours(0, 0, 0, 0)
-
-const thirtyDaysAgo = new Date()
-thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
-thirtyDaysAgo.setHours(0, 0, 0, 0)
-
 onMounted(async () => {
-  const [
-    allOrders,
-    monthOrders,
-    customers,
-    newCust,
-    recent,
-    last30Orders,
-    statusBreakdown,
-    orderItems,
-    lowStock,
-  ] = await Promise.all([
-    supabase.from('orders').select('total').neq('status', 'cancelled'),
-    supabase.from('orders').select('total').neq('status', 'cancelled').gte('created_at', monthStart.toISOString()),
-    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer'),
-    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer').gte('created_at', monthStart.toISOString()),
-    supabase.from('orders').select('id, created_at, status, total').order('created_at', { ascending: false }).limit(5),
-    supabase.from('orders').select('created_at, total').neq('status', 'cancelled').gte('created_at', thirtyDaysAgo.toISOString()),
-    supabase.from('orders').select('status'),
-    supabase.from('order_items').select('product_id, quantity, products(name_el)').limit(500),
-    supabase.from('products').select('id, name_el, stock').lt('stock', 5).order('stock', { ascending: true }).limit(8),
-  ])
+  const stats = await $fetch<{
+    total_revenue: number
+    month_revenue: number
+    total_customers: number
+    new_customers: number
+    recent_orders: Array<{ id: string; status: string; total: number; created_at: string }>
+    last_30_days: Array<{ date: string; total: number }>
+    order_status_breakdown: Array<{ status: string; count: number }>
+    top_products: Array<{ name: string; units: number }>
+    low_stock: Array<{ id: string; name_el: string; stock: number }>
+  }>(`${apiBase}/admin/stats`, { credentials: 'include' })
 
-  // KPIs
-  kpi.totalRevenue = (allOrders.data ?? []).reduce((s, o) => s + Number(o.total), 0)
-  kpi.monthRevenue = (monthOrders.data ?? []).reduce((s, o) => s + Number(o.total), 0)
-  kpi.totalCustomers = customers.count ?? 0
-  kpi.newCustomers = newCust.count ?? 0
+  kpi.totalRevenue = stats.total_revenue
+  kpi.monthRevenue = stats.month_revenue
+  kpi.totalCustomers = stats.total_customers
+  kpi.newCustomers = stats.new_customers
 
-  // Recent orders
-  recentOrders.value = recent.data ?? []
-  loadingOrders.value = false
+  recentOrders.value = stats.recent_orders
+  topProducts.value = stats.top_products
+  lowStock.value = stats.low_stock
+  orderStatusData.value = stats.order_status_breakdown
 
-  // Revenue chart — bucket by day
+  // Build 30-day revenue chart
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
+  thirtyDaysAgo.setHours(0, 0, 0, 0)
+
   const dayMap = new Map<string, number>()
   for (let i = 0; i < 30; i++) {
     const d = new Date(thirtyDaysAgo)
     d.setDate(d.getDate() + i)
     dayMap.set(d.toISOString().slice(0, 10), 0)
   }
-  for (const o of last30Orders.data ?? []) {
-    const day = o.created_at.slice(0, 10)
-    if (dayMap.has(day)) dayMap.set(day, (dayMap.get(day) ?? 0) + Number(o.total))
+  for (const o of stats.last_30_days) {
+    if (dayMap.has(o.date)) dayMap.set(o.date, (dayMap.get(o.date) ?? 0) + o.total)
   }
   revenueDates.value = Array.from(dayMap.keys()).map(d => d.slice(5))
   revenueChartData.value = Array.from(dayMap.values()).map(v => ({ 'Έσοδα': v }))
 
-  // Orders by status
-  const statusMap: Record<string, number> = {}
-  for (const o of statusBreakdown.data ?? []) {
-    statusMap[o.status] = (statusMap[o.status] ?? 0) + 1
-  }
-  orderStatusData.value = Object.entries(statusMap).map(([status, count]) => ({ status, count }))
-
-  if (orderItems.error) console.error('[admin] order_items error:', orderItems.error)
-
-  // Top products
-  const productMap = new Map<string, { name: string; units: number }>()
-  for (const item of orderItems.data ?? []) {
-    const name = (item.products as { name_el: string } | null)?.name_el ?? item.product_id
-    const existing = productMap.get(item.product_id)
-    if (existing) existing.units += item.quantity
-    else productMap.set(item.product_id, { name, units: item.quantity })
-  }
-  topProducts.value = Array.from(productMap.values())
-    .sort((a, b) => b.units - a.units)
-    .slice(0, 5)
-
-  // Low stock
-  lowStockProducts.value = lowStock.data ?? []
-
-  loadingCharts.value = false
+  loading.value = false
 })
 
 function statusColor(status: string) {
   const map: Record<string, string> = {
-    pending: 'warning',
-    confirmed: 'info',
-    processing: 'info',
-    ready: 'success',
-    completed: 'success',
-    cancelled: 'error',
+    pending: 'warning', confirmed: 'info', processing: 'info',
+    ready: 'success', completed: 'success', cancelled: 'error',
   }
   return map[status] ?? 'neutral'
 }

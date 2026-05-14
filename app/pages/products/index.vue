@@ -108,7 +108,6 @@
 </template>
 
 <script setup lang="ts">
-import type { Database } from '~/types/database.types'
 
 const filtersStore = useFiltersStore()
 const showMobileFilters = ref(false)
@@ -189,21 +188,26 @@ const visiblePages = computed(() => {
 // Sync ?category query param to filter store (client-side nav from homepage cards)
 onMounted(async () => {
   if (!route.query.category) return
-
   const slug = route.query.category as string
-  const supabase = useSupabaseClient<Database>()
+  const { public: { apiBase } } = useRuntimeConfig()
+  type CatEntry = { id: string; slug: string; parent_id: string | null }
+  const allCats = await $fetch<Array<{ id: string; slug: string; children: CatEntry[] }>>(
+    `${apiBase}/categories`,
+    { credentials: 'include' },
+  ).catch(() => [])
 
-  const { data: allCats } = await supabase.from('categories').select('id, slug, parent_id')
+  // Flatten to find slug in all cats (parents + children)
+  const flat: CatEntry[] = []
+  for (const parent of allCats) {
+    flat.push({ id: parent.id, slug: parent.slug, parent_id: null })
+    for (const child of parent.children ?? []) flat.push(child)
+  }
 
-  if (!allCats) return
-
-  const cat = allCats.find((c) => c.slug === slug)
+  const cat = flat.find((c) => c.slug === slug)
   if (!cat) return
 
-  // If this is a subcategory, resolve to the parent slug
-  // If it's already a parent (no parent_id), use as-is
   const animalSlug = cat.parent_id
-    ? (allCats.find((c) => c.id === cat.parent_id)?.slug ?? slug)
+    ? (flat.find((c) => c.id === cat.parent_id)?.slug ?? slug)
     : slug
 
   filtersStore.selectedAnimals = [animalSlug]

@@ -46,7 +46,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-const supabase = useSupabaseClient()
+const { public: { apiBase } } = useRuntimeConfig()
 const { t } = useI18n()
 
 const columns = [
@@ -67,16 +67,16 @@ const statusOptions = [
   { label: t('orders.status_cancelled'), value: 'cancelled' },
 ]
 
-const { data: orders, pending, refresh } = useAsyncData('admin-orders', async () => {
-  const { data } = await supabase
-    .from('orders')
-    .select('*')
-    .order('created_at', { ascending: false })
-  return data
-})
+const { data: orders, pending, refresh } = useAsyncData('admin-orders', () =>
+  $fetch<Record<string, unknown>[]>(`${apiBase}/admin/orders`, { credentials: 'include' })
+)
 
 async function updateStatus(orderId: string, status: string) {
-  await supabase.from('orders').update({ status }).eq('id', orderId)
+  await $fetch(`${apiBase}/admin/orders/${orderId}/status`, {
+    method: 'PATCH',
+    body: { status },
+    credentials: 'include',
+  })
   refresh()
 }
 </script>

@@ -84,10 +84,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Product } from '~/types'
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-const supabase = useSupabaseClient()
+const { public: { apiBase } } = useRuntimeConfig()
 const localePath = useLocalePath()
 const { t } = useI18n()
 const search = ref('')
@@ -103,13 +102,11 @@ const columns = [
   { accessorKey: 'actions', header: '' },
 ]
 
-const { data: products, pending, refresh } = useAsyncData('admin-products', async () => {
-  const { data } = await supabase
-    .from('products')
-    .select('*')
-    .order('created_at', { ascending: false })
-  return data
-})
+type ProductRow = { id: string; name_el: string; name_en: string; brand: string; price: number; stock: number; is_active: boolean }
+
+const { data: products, pending, refresh } = useAsyncData('admin-products', () =>
+  $fetch<ProductRow[]>(`${apiBase}/admin/products`, { credentials: 'include' })
+)
 
 const filteredProducts = computed(() => {
   if (!products.value || !search.value) return products.value ?? []
@@ -132,9 +129,12 @@ async function importCsv() {
   refresh()
 }
 
-async function confirmDelete(product: Product) {
+async function confirmDelete(product: ProductRow) {
   if (!confirm(`Διαγραφή "${product.name_el}";`)) return
-  await supabase.from('products').update({ is_active: false }).eq('id', product.id)
+  await $fetch(`${apiBase}/admin/products/${product.id}/deactivate`, {
+    method: 'PATCH',
+    credentials: 'include',
+  })
   refresh()
 }
 </script>

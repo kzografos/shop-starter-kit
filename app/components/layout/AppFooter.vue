@@ -95,6 +95,7 @@
 </template>
 
 <script setup lang="ts">
+const { public: { apiBase } } = useRuntimeConfig()
 const localePath = useLocalePath()
 const { t } = useI18n()
 
@@ -107,7 +108,7 @@ async function subscribe() {
   loading.value = true
   error.value = ''
   try {
-    await $fetch('/api/newsletter/subscribe', {
+    await $fetch(`${apiBase}/newsletter/subscribe`, {
       method: 'POST',
       body: { email: email.value },
     })

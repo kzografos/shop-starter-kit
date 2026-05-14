@@ -109,9 +109,11 @@
 </template>
 
 <script setup lang="ts">
+import type { Category } from '~~/types'
+
 const localePath = useLocalePath()
 const { locale } = useI18n()
-const supabase = useSupabaseClient()
+const { public: { apiBase } } = useRuntimeConfig()
 
 const stats = [
   { value: '200+', labelKey: 'hero.stat_products' },
@@ -121,12 +123,8 @@ const stats = [
 ]
 
 const { data: categories, pending } = await useAsyncData('root-categories', async () => {
-  const { data } = await supabase
-    .from('categories')
-    .select('*')
-    .is('parent_id', null)
-    .order('sort_order')
-  return data
+  const tree = await $fetch<Category[]>(`${apiBase}/categories`, { credentials: 'include' }).catch(() => [])
+  return tree.filter((c) => !c.parent_id)
 })
 
 const catImages: Record<string, string> = {
