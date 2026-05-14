@@ -3,7 +3,13 @@
     <aside class="w-64 bg-gray-900 text-white flex flex-col flex-shrink-0">
       <div class="p-6 border-b border-gray-700">
         <h1 class="text-lg font-bold">Admin Panel</h1>
-        <p class="text-xs text-gray-400 mt-1">PetShop CY</p>
+        <NuxtLink
+          to="/"
+          class="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors mt-1"
+        >
+          <UIcon name="i-heroicons-arrow-left" class="w-3 h-3" />
+          PetShop CY
+        </NuxtLink>
       </div>
       <nav class="flex-1 p-4 space-y-1">
         <NuxtLink

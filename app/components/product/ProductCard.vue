@@ -6,10 +6,11 @@
     <NuxtLink :to="localePath(`/products/${product.slug}`)" class="block relative overflow-hidden">
       <div class="aspect-square bg-cream-pale">
         <img
-          :src="product.images[0] || '/placeholder.png'"
+          :src="product.images[0] || '/placeholder.svg'"
           :alt="productName"
           class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           loading="lazy"
+          @error="(e: Event) => ((e.target as HTMLImageElement).src = '/placeholder.svg')"
         />
       </div>
 
@@ -83,7 +84,7 @@
         </h3>
       </NuxtLink>
 
-      <p class="text-base font-bold text-bark mt-auto pt-2">€{{ product.price.toFixed(2) }}</p>
+      <p class="text-base font-bold text-bark mt-auto pt-2">€{{ Number(product.price).toFixed(2) }}</p>
     </div>
 
     <!-- Slide-in CTA -->

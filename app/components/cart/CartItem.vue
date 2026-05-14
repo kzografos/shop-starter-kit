@@ -1,16 +1,17 @@
 <template>
   <div class="flex gap-3 py-3 border-b border-[--color-border-warm] last:border-b-0">
     <img
-      :src="item.product.images[0] || '/placeholder.png'"
+      :src="item.product.images[0] || '/placeholder.svg'"
       :alt="productName"
       class="w-16 h-16 object-cover rounded-lg bg-[--color-surface-page] shrink-0"
+      @error="(e: Event) => ((e.target as HTMLImageElement).src = '/placeholder.svg')"
     />
     <div class="flex-1 min-w-0">
       <p class="text-sm font-medium text-[--color-bark] line-clamp-2 leading-tight">
         {{ productName }}
       </p>
       <p class="text-sm text-terracotta font-semibold mt-0.5">
-        €{{ item.product.price.toFixed(2) }}
+        €{{ Number(item.product.price).toFixed(2) }}
       </p>
       <div class="flex items-center gap-2 mt-2">
         <button

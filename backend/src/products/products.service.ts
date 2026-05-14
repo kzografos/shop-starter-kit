@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
+import { toCache } from '../common/utils/serialize'
 import { Prisma } from '@prisma/client'
 
 const PAGE_SIZE = 12
@@ -80,7 +81,7 @@ export class ProductsService {
       page,
       totalPages: Math.ceil(total / PAGE_SIZE),
     }
-    await this.redis.set(cacheKey, JSON.stringify(result), 30)
+    await this.redis.set(cacheKey, toCache(result), 30)
     return result
   }
 
@@ -95,7 +96,7 @@ export class ProductsService {
     })
     if (!product || !product.isActive) throw new NotFoundException('Product not found')
 
-    await this.redis.set(cacheKey, JSON.stringify(product), 60)
+    await this.redis.set(cacheKey, toCache(product), 60)
     return product
   }
 
@@ -118,7 +119,7 @@ export class ProductsService {
       take: 4,
       orderBy: { createdAt: 'desc' },
     })
-    await this.redis.set(cacheKey, JSON.stringify(result), 60)
+    await this.redis.set(cacheKey, toCache(result), 60)
     return result
   }
 
@@ -134,7 +135,7 @@ export class ProductsService {
       orderBy: { brand: 'asc' },
     })
     const result = rows.map((r) => ({ brand: r.brand!, count: r._count.brand }))
-    await this.redis.set(cacheKey, JSON.stringify(result), 30)
+    await this.redis.set(cacheKey, toCache(result), 30)
     return result
   }
 }

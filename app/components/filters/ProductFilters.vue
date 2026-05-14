@@ -24,7 +24,6 @@
             </div>
             <span class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{{ animal.name }}</span>
           </div>
-          <span class="text-xs text-gray-400 font-medium">{{ animal.count }}</span>
         </label>
       </div>
     </div>
@@ -78,9 +77,30 @@
           @input="localPriceMax = Math.max(localPriceMax, localPriceMin + 1)"
         >
       </div>
-      <div class="flex justify-between text-sm font-medium text-gray-600">
-        <span>€{{ localPriceMin }}</span>
-        <span>€{{ localPriceMax }}</span>
+      <div class="flex items-center gap-2 mt-2">
+        <div class="relative flex-1">
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
+          <input
+            v-model.number="localPriceMin"
+            type="number"
+            min="0"
+            :max="localPriceMax - 1"
+            class="w-full pl-6 pr-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-terracotta text-gray-700"
+            @blur="localPriceMin = Math.min(Math.max(0, localPriceMin), localPriceMax - 1)"
+          >
+        </div>
+        <span class="text-xs text-gray-400 shrink-0">—</span>
+        <div class="relative flex-1">
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
+          <input
+            v-model.number="localPriceMax"
+            type="number"
+            :min="localPriceMin + 1"
+            :max="PRICE_ABS_MAX"
+            class="w-full pl-6 pr-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-terracotta text-gray-700"
+            @blur="localPriceMax = Math.max(Math.min(PRICE_ABS_MAX, localPriceMax), localPriceMin + 1)"
+          >
+        </div>
       </div>
     </div>
 

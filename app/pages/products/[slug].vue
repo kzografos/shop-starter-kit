@@ -33,9 +33,10 @@
             class="aspect-square bg-cream-pale rounded-2xl overflow-hidden border border-[--color-border-warm]"
           >
             <img
-              :src="product.images[selectedImage] || '/placeholder.png'"
+              :src="product.images[selectedImage] || '/placeholder.svg'"
               :alt="productName"
               class="w-full h-full object-cover"
+              @error="(e: Event) => ((e.target as HTMLImageElement).src = '/placeholder.svg')"
             />
           </div>
           <div v-if="product.images.length > 1" class="flex gap-2 flex-wrap">
@@ -46,7 +47,11 @@
               :class="selectedImage === i ? 'border-terracotta' : 'border-[--color-border-warm]'"
               @click="selectedImage = i"
             >
-              <img :src="img" class="w-full h-full object-cover" />
+              <img
+                :src="img"
+                class="w-full h-full object-cover"
+                @error="(e: Event) => ((e.target as HTMLImageElement).src = '/placeholder.svg')"
+              />
             </button>
           </div>
         </div>
@@ -65,7 +70,7 @@
             </h1>
           </div>
 
-          <p class="text-4xl font-bold text-terracotta">€{{ product.price.toFixed(2) }}</p>
+          <p class="text-4xl font-bold text-terracotta">€{{ Number(product.price).toFixed(2) }}</p>
 
           <!-- Stock badge -->
           <div class="flex items-center gap-2">

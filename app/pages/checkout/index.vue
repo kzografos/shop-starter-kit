@@ -90,7 +90,7 @@
                 {{ locale === 'el' ? item.product.name_el : item.product.name_en }}
                 <span class="text-gray-400">× {{ item.quantity }}</span>
               </span>
-              <span class="font-medium">€{{ (item.product.price * item.quantity).toFixed(2) }}</span>
+              <span class="font-medium">€{{ (Number(item.product.price) * item.quantity).toFixed(2) }}</span>
             </div>
           </div>
 

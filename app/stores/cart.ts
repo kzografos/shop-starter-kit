@@ -9,7 +9,7 @@ export const useCartStore = defineStore('cart', () => {
   )
 
   const subtotal = computed(() =>
-    items.value.reduce((sum, i) => sum + i.product.price * i.quantity, 0)
+    items.value.reduce((sum, i) => sum + Number(i.product.price) * i.quantity, 0)
   )
 
   function addItem(product: Product, quantity = 1) {
