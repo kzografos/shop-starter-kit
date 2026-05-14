@@ -136,6 +136,17 @@
             {{ $t('header.login') }}
           </NuxtLink>
 
+          <!-- Mobile menu button -->
+          <button
+            class="md:hidden h-8 w-8 flex items-center justify-center rounded-full text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
+            @click="mobileMenuOpen = !mobileMenuOpen"
+          >
+            <UIcon
+              :name="mobileMenuOpen ? 'i-heroicons-x-mark' : 'i-heroicons-bars-3'"
+              class="w-5 h-5"
+            />
+          </button>
+
           <!-- Cart -->
           <button
             class="relative h-8 w-8 flex items-center justify-center rounded-full text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
@@ -156,6 +167,103 @@
         </div>
       </div>
     </div>
+
+    <!-- Mobile menu backdrop -->
+    <Transition
+      enter-active-class="transition-opacity duration-200"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-150"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-show="mobileMenuOpen"
+        class="md:hidden fixed inset-0 z-40 bg-bark/20 backdrop-blur-sm"
+        @click="mobileMenuOpen = false"
+      />
+    </Transition>
+
+    <!-- Mobile menu panel -->
+    <Transition
+      enter-active-class="transition-all duration-250 ease-out"
+      enter-from-class="opacity-0 -translate-y-3"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition-all duration-200 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-3"
+    >
+      <div
+        v-show="mobileMenuOpen"
+        class="md:hidden fixed top-16 left-0 right-0 bottom-0 z-50 bg-cream overflow-y-auto"
+      >
+        <nav class="flex flex-col px-4 py-2">
+          <NuxtLink
+            v-for="link in navLinks"
+            :key="link.to"
+            :to="link.to"
+            class="flex items-center justify-between py-4 text-base font-medium border-b border-[--color-border-soft] last:border-0 transition-colors"
+            :class="
+              $route.path.startsWith(link.to)
+                ? 'text-terracotta'
+                : 'text-[--color-bark] hover:text-terracotta'
+            "
+            @click="mobileMenuOpen = false"
+          >
+            {{ link.label }}
+            <UIcon name="i-heroicons-chevron-right" class="w-4 h-4 opacity-40" />
+          </NuxtLink>
+        </nav>
+
+        <div class="border-t border-[--color-border-soft] mt-1 px-4">
+          <NuxtLink
+            v-if="user"
+            :to="localePath('/account')"
+            class="flex items-center justify-between py-4 text-base font-medium text-[--color-bark] hover:text-terracotta transition-colors"
+            @click="mobileMenuOpen = false"
+          >
+            <span class="flex items-center gap-2">
+              <UIcon name="i-heroicons-user-circle" class="w-5 h-5" />
+              {{ $t('nav.account') }}
+            </span>
+            <UIcon name="i-heroicons-chevron-right" class="w-4 h-4 opacity-40" />
+          </NuxtLink>
+          <NuxtLink
+            v-else
+            :to="localePath('/login')"
+            class="flex items-center justify-between py-4 text-base font-medium text-terracotta hover:text-terracotta-dark transition-colors"
+            @click="mobileMenuOpen = false"
+          >
+            <span class="flex items-center gap-2">
+              <UIcon name="i-heroicons-arrow-right-on-rectangle" class="w-5 h-5" />
+              {{ $t('header.login') }}
+            </span>
+            <UIcon name="i-heroicons-chevron-right" class="w-4 h-4 opacity-40" />
+          </NuxtLink>
+        </div>
+
+        <div class="flex items-center gap-3 px-4 py-4 border-t border-[--color-border-soft]">
+          <span class="text-xs text-[--color-bark-light] font-medium">{{
+            $t('header.language')
+          }}</span>
+          <button
+            class="transition-opacity hover:opacity-100"
+            :class="locale === 'el' ? 'opacity-100' : 'opacity-35'"
+            @click="switchLocale('el')"
+          >
+            <span class="fi fi-cy fis rounded-sm w-5 h-5" />
+          </button>
+          <span class="text-[--color-border-warm] text-xs">|</span>
+          <button
+            class="transition-opacity hover:opacity-100"
+            :class="locale === 'en' ? 'opacity-100' : 'opacity-35'"
+            @click="switchLocale('en')"
+          >
+            <span class="fi fi-gb fis rounded-sm w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </Transition>
   </header>
 </template>
 
@@ -213,6 +321,11 @@ function goToSearch() {
   router.push(localePath('/products'))
 }
 
+function switchLocale(lang: 'el' | 'en') {
+  setLocale(lang)
+  mobileMenuOpen.value = false
+}
+
 async function handleLogout() {
   userMenuOpen.value = false
   await authStore.signOut()
@@ -221,6 +334,14 @@ async function handleLogout() {
 
 const dropdownRef = ref<HTMLElement | null>(null)
 const userMenuOpen = ref(false)
+const mobileMenuOpen = ref(false)
+
+watch(
+  () => route.path,
+  () => {
+    mobileMenuOpen.value = false
+  }
+)
 
 const avatarInitial = computed(() => {
   const name = authStore.profile?.full_name || authStore.profile?.email || '?'

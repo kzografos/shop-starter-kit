@@ -2,7 +2,8 @@
   "header": {
     "login": "Σύνδεση",
     "locale": "EN",
-    "search_placeholder": "Αναζήτηση προϊόντων..."
+    "search_placeholder": "Αναζήτηση προϊόντων...",
+    "language": "Γλώσσα"
   },
   "nav": {
     "products": "Προϊόντα",
