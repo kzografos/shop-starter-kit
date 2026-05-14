@@ -5,6 +5,11 @@ export default defineNuxtConfig({
     head: {
       htmlAttrs: { class: 'light' },
       meta: [{ name: 'color-scheme', content: 'light' }],
+      script: [
+        {
+          innerHTML: "(function(){try{localStorage.setItem('nuxt-color-mode','light');document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');}catch(e){}})()",
+        },
+      ],
       link: [
         {
           rel: 'preconnect',
