@@ -2,11 +2,9 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
 
   app: {
-    htmlAttrs: {
-      class: 'light',
-    },
     head: {
-      meta: [{ name: 'color-scheme', content: 'light only' }],
+      htmlAttrs: { class: 'light' },
+      meta: [{ name: 'color-scheme', content: 'light' }],
       link: [
         {
           rel: 'preconnect',
