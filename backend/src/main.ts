@@ -1,12 +1,16 @@
 import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
+import { Logger } from 'nestjs-pino'
 import * as cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import { AppModule } from './app.module'
 import { SnakeCaseInterceptor } from './common/interceptors/snake-case.interceptor'
+import { GlobalExceptionFilter } from './common/filters/http-exception.filter'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true })
+  const app = await NestFactory.create(AppModule, { rawBody: true, bufferLogs: true })
+
+  app.useLogger(app.get(Logger))
 
   app.use(helmet())
   app.use(cookieParser())
@@ -19,6 +23,7 @@ async function bootstrap() {
     }),
   )
 
+  app.useGlobalFilters(new GlobalExceptionFilter())
   app.useGlobalInterceptors(new SnakeCaseInterceptor())
 
   app.enableCors({
@@ -28,7 +33,6 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001
   await app.listen(port)
-  console.log(`Backend running on http://localhost:${port}`)
 }
 
 bootstrap()
