@@ -33,8 +33,18 @@ export class AdminController {
   }
 
   @Get('products')
-  products(@Query('page') page?: string, @Query('search') search?: string) {
-    return this.admin.getProducts({ page: page ? parseInt(page, 10) : 1, search })
+  products(
+    @Query('page') page?: string,
+    @Query('search') search?: string,
+    @Query('sort') sort?: string,
+    @Query('order') order?: string,
+  ) {
+    return this.admin.getProducts({
+      page: page ? parseInt(page, 10) : 1,
+      search,
+      sort,
+      order: order === 'asc' ? 'asc' : order === 'desc' ? 'desc' : undefined,
+    })
   }
 
   @Get('products/:id')

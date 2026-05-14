@@ -1,10 +1,7 @@
 <template>
-  <div class="p-8 max-w-3xl">
-    <div class="flex items-center gap-4 mb-8">
-      <UButton icon="i-heroicons-arrow-left" variant="ghost" :to="localePath('/admin/products')" />
-      <h1 class="text-2xl font-bold text-gray-900">
-        {{ isNew ? $t('admin.add_product') : $t('admin.edit') }}
-      </h1>
+  <div class="max-w-3xl">
+    <div class="flex items-center gap-3 mb-8">
+      <UButton icon="i-heroicons-arrow-left" variant="ghost" size="sm" :to="localePath('/admin/products')" />
     </div>
 
     <UCard>

@@ -123,7 +123,7 @@ export class AdminService {
     return this.prisma.order.update({ where: { id }, data: { status: mapped } })
   }
 
-  async getProducts({ page = 1, search }: { page?: number; search?: string } = {}) {
+  async getProducts({ page = 1, search, sort, order }: { page?: number; search?: string; sort?: string; order?: 'asc' | 'desc' } = {}) {
     const PAGE_SIZE = 20
     const skip = (Math.max(1, page) - 1) * PAGE_SIZE
     const where = search
@@ -135,8 +135,16 @@ export class AdminService {
           ],
         }
       : {}
+    const SORT_MAP: Record<string, string> = {
+      name: 'nameEl',
+      brand: 'brand',
+      price: 'price',
+      stock: 'stock',
+    }
+    const sortField = SORT_MAP[sort ?? ''] ?? 'createdAt'
+    const dir = order ?? 'desc'
     const [products, total] = await this.prisma.$transaction([
-      this.prisma.product.findMany({ where, orderBy: { createdAt: 'desc' }, skip, take: PAGE_SIZE }),
+      this.prisma.product.findMany({ where, orderBy: { [sortField]: dir }, skip, take: PAGE_SIZE }),
       this.prisma.product.count({ where }),
     ])
     return { products, total, page, totalPages: Math.ceil(total / PAGE_SIZE) }
