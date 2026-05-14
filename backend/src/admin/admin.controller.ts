@@ -5,6 +5,7 @@ import {
   Post,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
@@ -32,8 +33,8 @@ export class AdminController {
   }
 
   @Get('products')
-  products() {
-    return this.admin.getProducts()
+  products(@Query('page') page?: string, @Query('search') search?: string) {
+    return this.admin.getProducts({ page: page ? parseInt(page, 10) : 1, search })
   }
 
   @Get('products/:id')

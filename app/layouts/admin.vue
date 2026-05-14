@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen flex bg-gray-50">
-    <aside class="w-64 bg-gray-900 text-white flex flex-col flex-shrink-0">
+  <div class="h-screen flex overflow-hidden bg-gray-50">
+    <aside class="w-64 bg-gray-900 text-white flex flex-col flex-shrink-0 overflow-y-auto">
       <div class="p-6 border-b border-gray-700">
         <h1 class="text-lg font-bold">Admin Panel</h1>
         <NuxtLink
@@ -47,7 +47,7 @@
         />
       </div>
     </aside>
-    <main class="flex-1 overflow-auto">
+    <main class="flex-1 overflow-y-auto">
       <div :key="$route.fullPath">
         <slot />
       </div>

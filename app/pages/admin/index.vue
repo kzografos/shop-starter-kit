@@ -217,46 +217,50 @@ function revenueXFormatter(_: unknown, i: number) {
 }
 
 onMounted(async () => {
-  const stats = await $fetch<{
-    total_revenue: number
-    month_revenue: number
-    total_customers: number
-    new_customers: number
-    recent_orders: Array<{ id: string; status: string; total: number; created_at: string }>
-    last_30_days: Array<{ date: string; total: number }>
-    order_status_breakdown: Array<{ status: string; count: number }>
-    top_products: Array<{ name: string; units: number }>
-    low_stock: Array<{ id: string; name_el: string; stock: number }>
-  }>(`${apiBase}/admin/stats`, { credentials: 'include' })
+  try {
+    const stats = await $fetch<{
+      total_revenue: number
+      month_revenue: number
+      total_customers: number
+      new_customers: number
+      recent_orders: Array<{ id: string; status: string; total: number; created_at: string }>
+      last_30_days: Array<{ date: string; total: number }>
+      order_status_breakdown: Array<{ status: string; count: number }>
+      top_products: Array<{ name: string; units: number }>
+      low_stock: Array<{ id: string; name_el: string; stock: number }>
+    }>(`${apiBase}/admin/stats`, { credentials: 'include' })
 
-  kpi.totalRevenue = stats.total_revenue
-  kpi.monthRevenue = stats.month_revenue
-  kpi.totalCustomers = stats.total_customers
-  kpi.newCustomers = stats.new_customers
+    kpi.totalRevenue = stats.total_revenue ?? 0
+    kpi.monthRevenue = stats.month_revenue ?? 0
+    kpi.totalCustomers = stats.total_customers ?? 0
+    kpi.newCustomers = stats.new_customers ?? 0
 
-  recentOrders.value = stats.recent_orders
-  topProducts.value = stats.top_products
-  lowStock.value = stats.low_stock
-  orderStatusData.value = stats.order_status_breakdown
+    recentOrders.value = stats.recent_orders ?? []
+    topProducts.value = stats.top_products ?? []
+    lowStock.value = stats.low_stock ?? []
+    orderStatusData.value = stats.order_status_breakdown ?? []
 
-  // Build 30-day revenue chart
-  const thirtyDaysAgo = new Date()
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
-  thirtyDaysAgo.setHours(0, 0, 0, 0)
+    // Build 30-day revenue chart
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
+    thirtyDaysAgo.setHours(0, 0, 0, 0)
 
-  const dayMap = new Map<string, number>()
-  for (let i = 0; i < 30; i++) {
-    const d = new Date(thirtyDaysAgo)
-    d.setDate(d.getDate() + i)
-    dayMap.set(d.toISOString().slice(0, 10), 0)
+    const dayMap = new Map<string, number>()
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(thirtyDaysAgo)
+      d.setDate(d.getDate() + i)
+      dayMap.set(d.toISOString().slice(0, 10), 0)
+    }
+    for (const o of (stats.last_30_days ?? [])) {
+      if (dayMap.has(o.date)) dayMap.set(o.date, (dayMap.get(o.date) ?? 0) + o.total)
+    }
+    revenueDates.value = Array.from(dayMap.keys()).map(d => d.slice(5))
+    revenueChartData.value = Array.from(dayMap.values()).map(v => ({ 'Έσοδα': v }))
+  } catch (e) {
+    console.error('Admin stats fetch failed:', e)
+  } finally {
+    loading.value = false
   }
-  for (const o of stats.last_30_days) {
-    if (dayMap.has(o.date)) dayMap.set(o.date, (dayMap.get(o.date) ?? 0) + o.total)
-  }
-  revenueDates.value = Array.from(dayMap.keys()).map(d => d.slice(5))
-  revenueChartData.value = Array.from(dayMap.values()).map(v => ({ 'Έσοδα': v }))
-
-  loading.value = false
 })
 
 function statusColor(status: string) {

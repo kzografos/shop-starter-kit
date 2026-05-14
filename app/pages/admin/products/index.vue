@@ -31,7 +31,7 @@
         <USkeleton v-for="n in 5" :key="n" class="h-12 rounded" />
       </div>
 
-      <UTable v-else :data="filteredProducts" :columns="columns">
+      <UTable v-else :data="products ?? []" :columns="columns">
         <template #is_active-cell="{ row }">
           <UBadge
             :label="row.original.is_active ? $t('admin.active') : $t('admin.inactive')"
@@ -63,6 +63,12 @@
           </div>
         </template>
       </UTable>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="flex items-center justify-between px-2 pt-4 border-t border-gray-100">
+        <span class="text-sm text-gray-500">{{ total }} προϊόντα</span>
+        <UPagination v-model:page="page" :total="total" :items-per-page="20" />
+      </div>
     </UCard>
 
     <UModal v-model:open="showCsvUpload">
@@ -90,6 +96,7 @@ const { public: { apiBase } } = useRuntimeConfig()
 const localePath = useLocalePath()
 const { t } = useI18n()
 const search = ref('')
+const page = ref(1)
 const showCsvUpload = ref(false)
 const csvFile = ref<File | null>(null)
 
@@ -103,19 +110,24 @@ const columns = [
 ]
 
 type ProductRow = { id: string; name_el: string; name_en: string; brand: string; price: number; stock: number; is_active: boolean }
+type ProductsResponse = { products: ProductRow[]; total: number; page: number; totalPages: number }
 
-const { data: products, pending, refresh } = useAsyncData('admin-products', () =>
-  $fetch<ProductRow[]>(`${apiBase}/admin/products`, { credentials: 'include' })
+const { data, pending, refresh } = useAsyncData('admin-products', () =>
+  $fetch<ProductsResponse>(`${apiBase}/admin/products`, {
+    credentials: 'include',
+    query: { page: page.value, search: search.value || undefined },
+  }),
+  { watch: [page] }
 )
 
-const filteredProducts = computed(() => {
-  if (!products.value || !search.value) return products.value ?? []
-  const q = search.value.toLowerCase()
-  return products.value.filter(p =>
-    p.name_el.toLowerCase().includes(q) ||
-    p.name_en.toLowerCase().includes(q) ||
-    (p.brand ?? '').toLowerCase().includes(q)
-  )
+const products = computed(() => data.value?.products ?? [])
+const total = computed(() => data.value?.total ?? 0)
+const totalPages = computed(() => data.value?.totalPages ?? 1)
+
+let searchTimer: ReturnType<typeof setTimeout>
+watch(search, () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => { page.value = 1; refresh() }, 350)
 })
 
 function handleCsvUpload(e: Event) {
