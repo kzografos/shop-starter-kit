@@ -1,5 +1,5 @@
 <template>
-  <USlideover v-model:open="cartOpen" side="right" :ui="{ content: 'max-w-sm' }">
+  <USlideover v-model:open="cartOpen" side="right" :ui="{ content: 'w-full sm:max-w-sm' }">
     <template #content>
       <div class="flex flex-col h-full bg-surface-page">
         <!-- Header -->

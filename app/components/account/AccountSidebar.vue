@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="h-fit sticky top-6 bg-[--color-surface-card] rounded-2xl border border-[--color-border-warm] p-6"
+    class="h-fit lg:sticky lg:top-6 bg-[--color-surface-card] rounded-2xl border border-[--color-border-warm] p-6"
   >
     <!-- Avatar + name -->
     <div class="flex flex-col items-center text-center mb-6">
