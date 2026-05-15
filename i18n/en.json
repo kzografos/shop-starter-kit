@@ -27,6 +27,10 @@
     "badge_returns": "Free 30-day returns",
     "badge_shipping": "Free shipping over €50",
     "categories": "Categories",
+    "categories_eyebrow": "Shop by category",
+    "category_label": "Category",
+    "explore": "Explore",
+    "view_all": "View all",
     "featured": "Featured Products",
     "brands": "Brands we carry"
   },
@@ -303,5 +307,10 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "delete": "Delete"
+  },
+  "testimonials": {
+    "title": "What our customers say",
+    "subtitle": "Over 1,500 happy customers across Cyprus",
+    "verified": "Verified purchase"
   }
 }

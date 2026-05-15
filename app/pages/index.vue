@@ -49,34 +49,171 @@
     </section>
 
     <!-- Top-level categories -->
-    <section class="bg-cream-pale">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 class="font-display text-3xl font-bold text-bark mb-8">{{ $t('home.categories') }}</h2>
+    <section class="bg-surface-page py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div v-if="pending" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <USkeleton v-for="n in 4" :key="n" class="h-32 rounded-2xl" />
+        <!-- Section heading -->
+        <div class="flex items-end justify-between mb-10">
+          <div>
+            <p class="text-terracotta text-xs font-semibold tracking-widest uppercase mb-2">
+              {{ $t('home.categories_eyebrow') }}
+            </p>
+            <h2 class="font-display text-3xl sm:text-4xl font-bold text-[--color-bark]">
+              {{ $t('home.categories') }}
+            </h2>
+          </div>
+          <NuxtLink
+            :to="localePath('/products')"
+            class="hidden sm:flex items-center gap-1.5 text-sm text-[--color-bark-light] hover:text-terracotta transition-colors"
+          >
+            {{ $t('home.view_all') }}
+            <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
+          </NuxtLink>
         </div>
 
+        <!-- Skeleton -->
+        <div v-if="pending" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <USkeleton v-for="n in 4" :key="n" class="h-72 rounded-2xl" />
+        </div>
+
+        <!-- Cards -->
         <div v-else-if="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <NuxtLink
             v-for="cat in categories"
             :key="cat.id"
             :to="localePath(`/products?category=${cat.slug}`)"
-            class="group flex flex-col items-center justify-center p-6 pt-8 pb-6 bg-cream rounded-2xl border border-cream-pale hover:border-terracotta hover:shadow-md transition-all text-center overflow-hidden"
+            class="group relative rounded-2xl overflow-hidden h-64 md:h-80 block"
+            :class="catConfig[cat.slug]?.bg ?? 'bg-forest'"
           >
-            <!-- Real image if available, emoji fallback -->
+            <!-- Animal image — large, bottom-right positioned -->
             <img
               v-if="catImage(cat.slug)"
               :src="catImage(cat.slug)"
-              :alt="cat.slug"
-              class="h-24 w-auto object-contain mb-4 group-hover:scale-105 transition-transform duration-300"
+              :alt="locale === 'el' ? cat.name_el : cat.name_en"
+              class="absolute bottom-0 right-0 h-44 md:h-56 w-auto object-contain group-hover:scale-110 transition-transform duration-500 drop-shadow-xl"
             />
-            <span v-else class="text-5xl mb-4 block">🐾</span>
 
-            <span class="font-semibold text-bark group-hover:text-terracotta transition-colors">
-              {{ locale === 'el' ? cat.name_el : cat.name_en }}
-            </span>
+            <!-- Gradient overlay bottom -->
+            <div class="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+
+            <!-- Top-left: eyebrow -->
+            <div class="absolute top-4 left-4">
+              <span class="text-white/50 text-xs font-medium uppercase tracking-widest">
+                {{ $t('home.category_label') }}
+              </span>
+            </div>
+
+            <!-- Bottom-left: name + explore -->
+            <div class="absolute bottom-4 left-4 right-4">
+              <p class="font-display text-xl md:text-2xl font-bold text-white leading-tight mb-1">
+                {{ locale === 'el' ? cat.name_el : cat.name_en }}
+              </p>
+              <div class="flex items-center gap-1 text-white/70 text-xs font-medium">
+                <span>{{ $t('home.explore') }}</span>
+                <UIcon
+                  name="i-heroicons-arrow-right"
+                  class="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200"
+                />
+              </div>
+            </div>
           </NuxtLink>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="bg-surface-page py-16 px-4">
+      <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
+
+        <!-- Heading -->
+        <div class="text-center mb-12">
+          <p class="text-terracotta text-xs font-semibold tracking-widest uppercase mb-3">
+            ★★★★★ 4.9
+          </p>
+          <h2 class="font-display text-3xl sm:text-4xl font-bold text-[--color-bark] mb-3">
+            {{ $t('testimonials.title') }}
+          </h2>
+          <p class="text-[--color-bark-light] max-w-md mx-auto text-sm">
+            {{ $t('testimonials.subtitle') }}
+          </p>
+        </div>
+
+        <!-- Review cards -->
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+          <!-- Review 1 -->
+          <div class="bg-[--color-surface-card] rounded-2xl p-6 border border-[--color-border-warm] flex flex-col gap-4">
+            <div class="flex items-center gap-1 text-gold">
+              <span v-for="i in 5" :key="i" class="text-base">★</span>
+            </div>
+            <p class="text-sm text-[--color-bark] leading-relaxed flex-1">
+              "Εξαιρετική εξυπηρέτηση και πολύ γρήγορη παράδοση! Βρήκα όλα τα προϊόντα που χρειαζόμουν για τον σκύλο μου σε πολύ καλές τιμές. Σίγουρα θα ξαναγοράσω!"
+            </p>
+            <div class="flex items-center justify-between pt-3 border-t border-[--color-border-warm]">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-terracotta flex items-center justify-center shrink-0">
+                  <span class="text-white text-sm font-bold">Μ</span>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[--color-bark]">Μαρία Παπαδοπούλου</p>
+                  <p class="text-xs text-[--color-bark-light]">Λευκωσία</p>
+                </div>
+              </div>
+              <span class="text-xs text-[--color-bark-light] bg-[--color-surface-page] px-2 py-1 rounded-full border border-[--color-border-warm]">
+                Google
+              </span>
+            </div>
+          </div>
+
+          <!-- Review 2 -->
+          <div class="bg-[--color-surface-card] rounded-2xl p-6 border border-[--color-border-warm] flex flex-col gap-4">
+            <div class="flex items-center gap-1 text-gold">
+              <span v-for="i in 5" :key="i" class="text-base">★</span>
+            </div>
+            <p class="text-sm text-[--color-bark] leading-relaxed flex-1">
+              "Το καλύτερο online pet shop στην Κύπρο! Τεράστια ποικιλία προϊόντων, εύκολη πλοήγηση και το σύστημα πόντων ανταμοιβής είναι φανταστικό. Ανεπιφύλακτα το συστήνω!"
+            </p>
+            <div class="flex items-center justify-between pt-3 border-t border-[--color-border-warm]">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-forest flex items-center justify-center shrink-0">
+                  <span class="text-white text-sm font-bold">Γ</span>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[--color-bark]">Γιώργος Χριστοδούλου</p>
+                  <p class="text-xs text-[--color-bark-light]">Λάρνακα</p>
+                </div>
+              </div>
+              <span class="text-xs text-[--color-bark-light] bg-[--color-surface-page] px-2 py-1 rounded-full border border-[--color-border-warm]">
+                Google
+              </span>
+            </div>
+          </div>
+
+          <!-- Review 3 -->
+          <div class="bg-[--color-surface-card] rounded-2xl p-6 border border-[--color-border-warm] flex flex-col gap-4 sm:col-span-2 lg:col-span-1">
+            <div class="flex items-center gap-1 text-gold">
+              <span v-for="i in 5" :key="i" class="text-base">★</span>
+            </div>
+            <p class="text-sm text-[--color-bark] leading-relaxed flex-1">
+              "Amazing selection and super fast delivery! My cats absolutely love the Royal Canin food I ordered. The loyalty points system is a great bonus. Highly recommend to all pet owners in Cyprus!"
+            </p>
+            <div class="flex items-center justify-between pt-3 border-t border-[--color-border-warm]">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-sage-dark flex items-center justify-center shrink-0">
+                  <span class="text-white text-sm font-bold">A</span>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[--color-bark]">Andreas Georgiou</p>
+                  <p class="text-xs text-[--color-bark-light]">Λεμεσός</p>
+                </div>
+              </div>
+              <span class="text-xs text-[--color-bark-light] bg-[--color-surface-page] px-2 py-1 rounded-full border border-[--color-border-warm]">
+                Facebook
+              </span>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -132,6 +269,13 @@ const catImages: Record<string, string> = {
   cats: '/categories/cat.png',
   birds: '/categories/bird.png',
   rodents: '/categories/rodent.png',
+}
+
+const catConfig: Record<string, { bg: string }> = {
+  dogs: { bg: 'bg-forest' },
+  cats: { bg: 'bg-terracotta' },
+  birds: { bg: 'bg-sage-dark' },
+  rodents: { bg: 'bg-bark' },
 }
 
 function catImage(slug: string): string | undefined {
