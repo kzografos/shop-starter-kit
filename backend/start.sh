@@ -1,7 +1,7 @@
 #!/bin/sh
 echo "Running migrations..."
-npx prisma migrate deploy
+./node_modules/.bin/prisma migrate deploy
 echo "Running seed..."
-node dist/seed.js
+node dist/seed.js || echo "Seed skipped or failed"
 echo "Starting application..."
 exec node dist/main

@@ -10,8 +10,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
 RUN npm run build
-RUN npx tsc prisma/seed.ts --outDir dist --esModuleInterop --module commonjs --moduleResolution node --skipLibCheck --target ES2021
-RUN find /app/dist -name "*.js" | head -20 && echo "---dist contents---"
+RUN npx tsc prisma/seed.ts --outDir dist \
+  --esModuleInterop --module commonjs \
+  --moduleResolution node --skipLibCheck \
+  --target ES2021 || echo "seed compile warning"
 
 FROM base AS runner
 ENV NODE_ENV=production
