@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 
 export const useFavouritesStore = defineStore('favourites', () => {
+  const api = useApi()
   const authStore = useAuthStore()
 
   const ids = ref<string[]>([])
@@ -8,7 +9,6 @@ export const useFavouritesStore = defineStore('favourites', () => {
 
   async function load() {
     if (!authStore.isLoggedIn) return
-    const api = useApi()
     try {
       const data = await api<string[]>('/favourites/ids')
       ids.value = data
@@ -27,7 +27,6 @@ export const useFavouritesStore = defineStore('favourites', () => {
     if (wasIn) ids.value = ids.value.filter((i) => i !== id)
     else ids.value = [...ids.value, id]
 
-    const api = useApi()
     try {
       const res = await api<{ action: string; product_id: string }>('/favourites/toggle', {
         method: 'POST',

@@ -66,7 +66,9 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: false })
+definePageMeta({ middleware: 'guest', layout: false })
+
+const { t } = useI18n()
 
 const api = useApi()
 const localePath = useLocalePath()
@@ -106,5 +108,5 @@ async function onSubmit() {
   }
 }
 
-useSeoMeta({ title: 'Set New Password | PetShop CY' })
+useSeoMeta({ title: () => t('seo.reset_password.title') })
 </script>

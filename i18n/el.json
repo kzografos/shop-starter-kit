@@ -312,5 +312,13 @@
     "title": "Τι λένε οι πελάτες μας",
     "subtitle": "Πάνω από 1.500 ικανοποιημένοι πελάτες σε όλη την Κύπρο",
     "verified": "Επαληθευμένη αγορά"
+  },
+  "seo": {
+    "login": { "title": "Σύνδεση | PetShop CY" },
+    "forgot_password": { "title": "Ξέχασα τον Κωδικό | PetShop CY" },
+    "reset_password": { "title": "Επαναφορά Κωδικού | PetShop CY" },
+    "checkout": { "title": "Ολοκλήρωση Αγοράς | PetShop CY" },
+    "order_confirmed": { "title": "Επιβεβαίωση Παραγγελίας | PetShop CY" },
+    "payment_cancelled": { "title": "Ακύρωση Πληρωμής | PetShop CY" }
   }
 }

@@ -312,5 +312,13 @@
     "title": "What our customers say",
     "subtitle": "Over 1,500 happy customers across Cyprus",
     "verified": "Verified purchase"
+  },
+  "seo": {
+    "login": { "title": "Login | PetShop CY" },
+    "forgot_password": { "title": "Forgot Password | PetShop CY" },
+    "reset_password": { "title": "Reset Password | PetShop CY" },
+    "checkout": { "title": "Checkout | PetShop CY" },
+    "order_confirmed": { "title": "Order Confirmed | PetShop CY" },
+    "payment_cancelled": { "title": "Payment Cancelled | PetShop CY" }
   }
 }

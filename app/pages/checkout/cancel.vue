@@ -29,6 +29,8 @@
 <script setup lang="ts">
 definePageMeta({})
 
+const { t } = useI18n()
+
 const { public: { apiBase } } = useRuntimeConfig()
 const route = useRoute()
 const localePath = useLocalePath()
@@ -56,5 +58,5 @@ async function retryPayment() {
   }
 }
 
-useSeoMeta({ title: 'Payment Cancelled | PetShop CY' })
+useSeoMeta({ title: () => t('seo.payment_cancelled.title') })
 </script>

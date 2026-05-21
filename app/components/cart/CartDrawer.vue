@@ -17,7 +17,7 @@
 
         <!-- Empty state -->
         <div
-          v-if="cartStore.items.length === 0"
+          v-if="items.length === 0"
           class="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center"
         >
           <UIcon name="i-heroicons-shopping-cart" class="w-16 h-16 text-[--color-bark-light]" />
@@ -31,17 +31,17 @@
 
         <!-- Items -->
         <div v-else class="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          <CartItem v-for="item in cartStore.items" :key="item.product.id" :item="item" />
+          <CartItem v-for="item in items" :key="item.product.id" :item="item" />
         </div>
 
         <!-- Footer -->
         <div
-          v-if="cartStore.items.length > 0"
+          v-if="items.length > 0"
           class="px-6 py-4 border-t border-[--color-border-warm] space-y-3 bg-surface-page"
         >
           <div class="flex justify-between text-sm">
             <span class="text-bark-light">{{ $t('cart.subtotal') }}</span>
-            <span class="font-semibold text-bark">€{{ cartStore.subtotal.toFixed(2) }}</span>
+            <span class="font-semibold text-bark">{{ formatPrice(subtotal) }}</span>
           </div>
           <NuxtLink
             :to="localePath('/checkout')"
@@ -64,6 +64,8 @@
 
 <script setup lang="ts">
 const cartStore = useCartStore()
+const { items, subtotal } = storeToRefs(cartStore)
 const cartOpen = useState('cart-open', () => false)
 const localePath = useLocalePath()
+const { formatPrice } = useCurrency()
 </script>

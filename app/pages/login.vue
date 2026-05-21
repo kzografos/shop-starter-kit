@@ -238,7 +238,9 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: false })
+definePageMeta({ middleware: 'guest', layout: false })
+
+useSeoMeta({ title: () => t('seo.login.title') })
 
 const api = useApi()
 const authStore = useAuthStore()

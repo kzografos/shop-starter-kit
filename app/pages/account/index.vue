@@ -23,24 +23,24 @@
                 {{ $t('account.loyalty') }}
               </p>
               <p class="font-display text-5xl font-bold text-white mb-1">
-                {{ authStore.loyaltyPoints.toLocaleString() }}
+                {{ loyaltyPoints.toLocaleString() }}
               </p>
               <p class="text-sm text-white/60 mb-6">{{ $t('loyalty.points') }}</p>
 
               <!-- Progress bar -->
               <div class="max-w-sm">
                 <div class="flex justify-between text-xs text-white/50 mb-2">
-                  <span>{{ authStore.loyaltyPoints }} {{ $t('loyalty.points') }}</span>
+                  <span>{{ loyaltyPoints }} {{ $t('loyalty.points') }}</span>
                   <span>3,000 {{ $t('loyalty.points') }}</span>
                 </div>
                 <div class="h-1.5 bg-white/20 rounded-full overflow-hidden">
                   <div
                     class="h-full bg-terracotta rounded-full transition-all duration-500"
-                    :style="{ width: `${Math.min((authStore.loyaltyPoints / 3000) * 100, 100)}%` }"
+                    :style="{ width: `${Math.min((loyaltyPoints / 3000) * 100, 100)}%` }"
                   />
                 </div>
                 <p class="text-xs text-white/50 mt-2">
-                  {{ Math.max(3000 - authStore.loyaltyPoints, 0).toLocaleString() }}
+                  {{ Math.max(3000 - loyaltyPoints, 0).toLocaleString() }}
                   {{ $t('account.points_until_reward') }}
                 </p>
               </div>
@@ -66,13 +66,13 @@
             </div>
             <div class="text-center px-4">
               <p class="font-display text-2xl font-bold text-[--color-bark]">
-                {{ favouritesStore.ids.length }}
+                {{ ids.length }}
               </p>
               <p class="text-xs text-[--color-bark-light] mt-1">{{ $t('account.favourites') }}</p>
             </div>
             <div class="text-center px-4">
               <p class="font-display text-2xl font-bold text-[--color-bark]">
-                {{ authStore.loyaltyPoints.toLocaleString() }}
+                {{ loyaltyPoints.toLocaleString() }}
               </p>
               <p class="text-xs text-[--color-bark-light] mt-1">{{ $t('loyalty.points') }}</p>
             </div>
@@ -89,12 +89,14 @@ definePageMeta({ middleware: 'auth' })
 const api = useApi()
 const authStore = useAuthStore()
 const favouritesStore = useFavouritesStore()
+const { loyaltyPoints, profile } = storeToRefs(authStore)
+const { ids } = storeToRefs(favouritesStore)
 const localePath = useLocalePath()
 
 const displayName = computed(() => {
-  const name = authStore.profile?.full_name
+  const name = profile.value?.full_name
   if (name) return name.split(' ')[0]
-  const email = authStore.profile?.email || ''
+  const email = profile.value?.email || ''
   return email.split('@')[0]
 })
 

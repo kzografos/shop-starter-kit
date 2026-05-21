@@ -88,7 +88,7 @@
         </h3>
       </NuxtLink>
 
-      <p class="text-base font-bold text-bark mt-auto pt-2">€{{ Number(product.price).toFixed(2) }}</p>
+      <p class="text-base font-bold text-bark mt-auto pt-2">{{ formatPrice(product.price) }}</p>
     </div>
 
     <!-- Slide-in CTA -->
@@ -118,6 +118,7 @@ const props = defineProps<{ product: Product }>()
 
 const { locale, t } = useI18n()
 const localePath = useLocalePath()
+const { formatPrice } = useCurrency()
 const cartStore = useCartStore()
 const favouritesStore = useFavouritesStore()
 const authStore = useAuthStore()

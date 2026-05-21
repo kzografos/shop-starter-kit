@@ -62,7 +62,7 @@
           </div>
 
           <!-- Account dropdown (logged in) -->
-          <div v-if="authStore.isLoggedIn" ref="dropdownRef" class="relative">
+          <div v-if="isLoggedIn" ref="dropdownRef" class="relative">
             <button
               class="h-8 w-8 flex items-center justify-center rounded-full text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
               @click="userMenuOpen = !userMenuOpen"
@@ -88,7 +88,7 @@
                     <p class="text-sm font-semibold text-[--color-bark] truncate">
                       {{ displayName }}
                     </p>
-                    <p class="text-xs text-[--color-bark-light] truncate">{{ authStore.profile?.email }}</p>
+                    <p class="text-xs text-[--color-bark-light] truncate">{{ profile?.email }}</p>
                   </div>
                 </div>
               </div>
@@ -104,7 +104,7 @@
                   {{ t('nav.account') }}
                 </NuxtLink>
                 <NuxtLink
-                  v-if="authStore.isAdmin"
+                  v-if="isAdmin"
                   :to="localePath('/admin')"
                   class="flex items-center gap-3 px-4 py-2.5 text-sm text-[--color-bark] hover:bg-[--color-surface-page] transition-colors"
                   @click="userMenuOpen = false"
@@ -158,10 +158,10 @@
               :class="cartBouncing ? 'cart-bounce' : ''"
             />
             <span
-              v-if="cartStore.itemCount > 0"
+              v-if="itemCount > 0"
               class="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 flex items-center justify-center rounded-full bg-terracotta text-white text-[10px] font-bold px-1"
             >
-              {{ cartStore.itemCount }}
+              {{ itemCount }}
             </span>
           </button>
         </div>
@@ -234,7 +234,7 @@
         <div class="shrink-0 mt-auto">
           <div class="border-t border-[--color-border-soft] px-4">
             <NuxtLink
-              v-if="authStore.isLoggedIn"
+              v-if="isLoggedIn"
               :to="localePath('/account')"
               class="flex items-center justify-between py-4 text-base font-medium text-[--color-bark] hover:text-terracotta transition-colors"
               @click="mobileMenuOpen = false"
@@ -290,6 +290,8 @@ const { locale, setLocale, t } = useI18n()
 const localePath = useLocalePath()
 const authStore = useAuthStore()
 const cartStore = useCartStore()
+const { isLoggedIn, profile, isAdmin } = storeToRefs(authStore)
+const { itemCount } = storeToRefs(cartStore)
 const cartOpen = useState('cart-open', () => false)
 const router = useRouter()
 
@@ -298,9 +300,7 @@ const searchQuery = ref('')
 const scrolled = ref(false)
 const cartBouncing = ref(false)
 
-watch(
-  () => cartStore.itemCount,
-  () => {
+watch(itemCount, () => {
     cartBouncing.value = true
     setTimeout(() => {
       cartBouncing.value = false
@@ -360,14 +360,14 @@ watch(
 )
 
 const avatarInitial = computed(() => {
-  const name = authStore.profile?.full_name || authStore.profile?.email || '?'
+  const name = profile.value?.full_name || profile.value?.email || '?'
   return name[0].toUpperCase()
 })
 
 const displayName = computed(() => {
-  const name = authStore.profile?.full_name
+  const name = profile.value?.full_name
   if (name) return name.split(' ')[0]
-  const email = authStore.profile?.email || ''
+  const email = profile.value?.email || ''
   return email.split('@')[0]
 })
 </script>

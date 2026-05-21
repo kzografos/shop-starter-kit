@@ -17,6 +17,11 @@
           <USkeleton v-for="n in 3" :key="n" class="h-24 rounded-xl" />
         </div>
 
+        <!-- Error -->
+        <div v-else-if="error" class="text-center py-12 text-red-500">
+          {{ error }}
+        </div>
+
         <!-- Empty -->
         <div v-else-if="!orders || orders.length === 0" class="text-center py-20">
           <UIcon
@@ -132,8 +137,13 @@ const localePath = useLocalePath()
 const { locale } = useI18n()
 const router = useRouter()
 
+const error = ref<string | null>(null)
+
 const { data: orders, pending } = await useAsyncData('orders', () =>
-  api<Order[]>('/orders').catch(() => [] as Order[]),
+  api<Order[]>('/orders').catch(() => {
+    error.value = 'Failed to load. Please try again.'
+    return [] as Order[]
+  }),
   { server: false },
 )
 

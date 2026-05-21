@@ -87,5 +87,5 @@ onMounted(async () => {
   }
 })
 
-useSeoMeta({ title: 'Order Confirmed | PetShop CY' })
+useSeoMeta({ title: () => t('seo.order_confirmed.title') })
 </script>

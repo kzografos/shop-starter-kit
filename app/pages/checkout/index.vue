@@ -247,5 +247,5 @@ async function placeOrder() {
   }
 }
 
-useSeoMeta({ title: 'Checkout | PetShop CY' })
+useSeoMeta({ title: () => t('seo.checkout.title') })
 </script>

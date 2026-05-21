@@ -17,6 +17,11 @@
           <USkeleton v-for="n in 6" :key="n" class="aspect-3/4 rounded-2xl" />
         </div>
 
+        <!-- Error -->
+        <div v-else-if="error" class="text-center py-12 text-red-500">
+          {{ error }}
+        </div>
+
         <!-- Products -->
         <ProductGrid v-else-if="products && products.length > 0" :products="products" />
 
@@ -45,8 +50,13 @@ const api = useApi()
 const localePath = useLocalePath()
 const { t } = useI18n()
 
+const error = ref<string | null>(null)
+
 const { data: products, pending } = await useAsyncData('favourites', async () => {
-  const favs = await api<Array<{ product: Product }>>('/favourites').catch(() => [])
+  const favs = await api<Array<{ product: Product }>>('/favourites').catch(() => {
+    error.value = 'Failed to load. Please try again.'
+    return [] as Array<{ product: Product }>
+  })
   return favs.map((f) => f.product)
 }, { server: false })
 

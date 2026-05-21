@@ -2,12 +2,12 @@ import { defineStore, skipHydrate } from 'pinia'
 import type { Profile } from '~/types'
 
 export const useAuthStore = defineStore('auth', () => {
+  const api = useApi()
   const profile = ref<Profile | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
   async function fetchProfile() {
-    const api = useApi()
     loading.value = true
     error.value = null
     try {
@@ -21,7 +21,6 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function signOut() {
-    const api = useApi()
     await api('/auth/logout', { method: 'POST' }).catch(() => {})
     profile.value = null
   }

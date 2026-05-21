@@ -11,7 +11,7 @@
         {{ productName }}
       </p>
       <p class="text-sm text-terracotta font-semibold mt-0.5">
-        €{{ Number(item.product.price).toFixed(2) }}
+        {{ formatPrice(item.product.price) }}
       </p>
       <div class="flex items-center gap-2 mt-2">
         <button
@@ -49,6 +49,7 @@ const props = defineProps<{ item: CartItem }>()
 
 const { locale } = useI18n()
 const cartStore = useCartStore()
+const { formatPrice } = useCurrency()
 
 const productName = computed(() =>
   locale.value === 'el' ? props.item.product.name_el : props.item.product.name_en

@@ -63,7 +63,7 @@ export class ProductsService {
     const [products, total] = await this.prisma.$transaction([
       this.prisma.product.findMany({
         where,
-        include: { category: true },
+        include: { category: { select: { id: true, nameEl: true, nameEn: true, slug: true } } },
         orderBy,
         skip,
         take: PAGE_SIZE,
@@ -97,7 +97,17 @@ export class ProductsService {
 
     const product = await this.prisma.product.findUnique({
       where: { slug },
-      include: { category: { include: { parent: true } } },
+      include: {
+        category: {
+          select: {
+            id: true,
+            nameEl: true,
+            nameEn: true,
+            slug: true,
+            parent: { select: { id: true, slug: true, nameEl: true, nameEn: true } },
+          },
+        },
+      },
     })
     if (!product || !product.isActive) throw new NotFoundException('Product not found')
 
@@ -127,7 +137,7 @@ export class ProductsService {
           categoryId ? { categoryId } : {},
         ].filter((o) => Object.keys(o).length > 0),
       },
-      include: { category: true },
+      include: { category: { select: { id: true, nameEl: true, nameEn: true, slug: true } } },
       take: 4,
       orderBy: { createdAt: 'desc' },
     })
