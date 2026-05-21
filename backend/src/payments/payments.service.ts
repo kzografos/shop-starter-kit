@@ -73,6 +73,13 @@ export class PaymentsService {
     return { url: session.url }
   }
 
+  async verifySession(sessionId: string, userId: string) {
+    if (!sessionId) throw new BadRequestException('session_id is required')
+    const session = await this.stripe.checkout.sessions.retrieve(sessionId)
+    if (session.metadata?.user_id !== userId) throw new BadRequestException('Session not found')
+    return { status: session.payment_status }
+  }
+
   async handleWebhook(rawBody: Buffer, signature: string) {
     const secret = this.config.getOrThrow('STRIPE_WEBHOOK_SECRET')
     let event: Stripe.Event

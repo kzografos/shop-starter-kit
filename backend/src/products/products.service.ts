@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
+import { MinioService } from '../minio/minio.service'
 import { toCache } from '../common/utils/serialize'
 import { Prisma } from '@prisma/client'
 
@@ -11,7 +12,19 @@ export class ProductsService {
   constructor(
     private prisma: PrismaService,
     private redis: RedisService,
+    private minio: MinioService,
   ) {}
+
+  private isExternalUrl = (s: string) =>
+    s.startsWith('http://') || s.startsWith('https://')
+
+  private async resolveImageUrls(images: string[]): Promise<string[]> {
+    return Promise.all(
+      images.map((key) =>
+        this.isExternalUrl(key) ? key : this.minio.getPresignedUrl(key, 3600),
+      ),
+    )
+  }
 
   async findAll(query: {
     page?: number
@@ -75,8 +88,17 @@ export class ProductsService {
       this.prisma.product.count({ where }),
     ])
 
+    const resolved = await Promise.all(
+      products.map(async (p) => {
+        const images = p.images as string[]
+        const thumb = images[0]
+          ? [this.isExternalUrl(images[0]) ? images[0] : await this.minio.getPresignedUrl(images[0], 3600)]
+          : []
+        return { ...p, images: thumb }
+      })
+    )
     const result = {
-      products,
+      products: resolved,
       total,
       page,
       totalPages: Math.ceil(total / PAGE_SIZE),
@@ -96,8 +118,15 @@ export class ProductsService {
     })
     if (!product || !product.isActive) throw new NotFoundException('Product not found')
 
-    await this.redis.set(cacheKey, toCache(product), 60)
-    return product
+    const resolvedImages: string[] = []
+    for (const key of product.images as string[]) {
+      resolvedImages.push(
+        this.isExternalUrl(key) ? key : await this.minio.getPresignedUrl(key, 3600),
+      )
+    }
+    const resolved = { ...product, images: resolvedImages }
+    await this.redis.set(cacheKey, toCache(resolved), 60)
+    return resolved
   }
 
   async findRelated(brand: string | null, categoryId: string | null, excludeId: string) {
@@ -119,8 +148,17 @@ export class ProductsService {
       take: 4,
       orderBy: { createdAt: 'desc' },
     })
-    await this.redis.set(cacheKey, toCache(result), 60)
-    return result
+    const resolved = await Promise.all(
+      result.map(async (p) => {
+        const images = p.images as string[]
+        const thumb = images[0]
+          ? [this.isExternalUrl(images[0]) ? images[0] : await this.minio.getPresignedUrl(images[0], 3600)]
+          : []
+        return { ...p, images: thumb }
+      })
+    )
+    await this.redis.set(cacheKey, toCache(resolved), 60)
+    return resolved
   }
 
   async findBrands() {

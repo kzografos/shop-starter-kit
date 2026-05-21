@@ -1,5 +1,5 @@
 import {
-  IsArray, IsEnum, IsInt, IsNumber, IsObject,
+  IsArray, IsEnum, IsInt, IsObject,
   IsOptional, IsString, IsUUID, Min, ValidateNested,
 } from 'class-validator'
 import { Type } from 'class-transformer'
@@ -11,10 +11,6 @@ export class OrderItemDto {
   @IsInt()
   @Min(1)
   quantity: number
-
-  @IsNumber()
-  @Min(0)
-  unitPrice: number
 }
 
 export class ShippingAddressDto {

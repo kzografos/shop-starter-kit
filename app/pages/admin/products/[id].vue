@@ -60,15 +60,16 @@
           <!-- Preview grid -->
           <div v-if="form.images.length" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
             <div
-              v-for="(url, idx) in form.images"
-              :key="url"
+              v-for="(_, idx) in form.images"
+              :key="form.images[idx]"
               class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200"
             >
-              <img :src="url" :alt="`Image ${idx + 1}`" class="w-full h-full object-cover" >
+              <img v-if="previewUrls[idx]" :src="previewUrls[idx]" :alt="`Image ${idx + 1}`" class="w-full h-full object-cover" >
+              <div v-else class="w-full h-full bg-gray-100 flex items-center justify-center text-xs text-gray-400">{{ form.images[idx] }}</div>
               <button
                 type="button"
                 class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                @click="form.images.splice(idx, 1)"
+                @click="removeImage(idx)"
               >
                 <UIcon name="i-heroicons-trash" class="w-5 h-5 text-white" />
               </button>
@@ -127,12 +128,13 @@ async function uploadFiles(event: Event) {
     for (const file of Array.from(files)) {
       const fd = new FormData()
       fd.append('file', file)
-      const { url } = await $fetch<{ url: string }>(`${apiBase}/uploads/image`, {
+      const { key, url } = await $fetch<{ key: string; url: string }>(`${apiBase}/uploads/image`, {
         method: 'POST',
         credentials: 'include',
         body: fd,
       })
-      form.images.push(url)
+      form.images.push(key)
+      previewUrls.value.push(url)
     }
   } catch {
     uploadError.value = 'Upload failed'
@@ -143,6 +145,8 @@ async function uploadFiles(event: Event) {
 }
 
 const isNew = computed(() => route.params.id === 'new')
+
+const previewUrls = ref<string[]>([])
 
 const form = reactive({
   slug: '',
@@ -159,6 +163,11 @@ const form = reactive({
   is_active: true,
   images: [] as string[],
 })
+
+function removeImage(idx: number) {
+  form.images.splice(idx, 1)
+  previewUrls.value.splice(idx, 1)
+}
 
 const ageOptions = [
   { label: t('age.all'), value: 'all' },

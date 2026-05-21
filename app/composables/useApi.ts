@@ -1,6 +1,5 @@
-let refreshing: Promise<void> | null = null
-
 export const useApi = () => {
+  let refreshing: Promise<void> | null = null
   const { public: { apiBase } } = useRuntimeConfig()
 
   const call = async <T>(url: string, opts?: Parameters<typeof $fetch>[1]): Promise<T> => {

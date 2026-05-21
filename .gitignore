@@ -7,3 +7,6 @@ dist/
 backend/.env
 *.log
 .DS_Store
+
+# Claude Code
+.claude/

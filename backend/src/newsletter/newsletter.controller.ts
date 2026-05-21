@@ -1,11 +1,6 @@
-import { Controller, Post, Body, HttpCode } from '@nestjs/common'
+import { Controller, Post, Delete, Body, Query, HttpCode } from '@nestjs/common'
 import { NewsletterService } from './newsletter.service'
-import { IsEmail } from 'class-validator'
-
-class SubscribeDto {
-  @IsEmail()
-  email: string
-}
+import { SubscribeDto } from './dto/subscribe.dto'
 
 @Controller('newsletter')
 export class NewsletterController {
@@ -15,5 +10,11 @@ export class NewsletterController {
   @HttpCode(200)
   subscribe(@Body() dto: SubscribeDto) {
     return this.newsletter.subscribe(dto.email)
+  }
+
+  @Delete('unsubscribe')
+  @HttpCode(200)
+  unsubscribe(@Query('email') email: string) {
+    return this.newsletter.unsubscribe(email)
   }
 }

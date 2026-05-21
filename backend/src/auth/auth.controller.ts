@@ -2,6 +2,7 @@ import {
   Controller, Post, Get, Body, Res, Req,
   UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common'
+import { Throttle } from '@nestjs/throttler'
 import { Request, Response } from 'express'
 import { AuthService } from './auth.service'
 import { RegisterDto } from './dto/register.dto'
@@ -34,6 +35,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     return this.auth.refresh(req.cookies?.refresh_token, res)
@@ -46,6 +48,7 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.auth.forgotPassword(dto.email)

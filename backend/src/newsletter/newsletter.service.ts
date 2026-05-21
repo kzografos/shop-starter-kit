@@ -13,4 +13,13 @@ export class NewsletterService {
     })
     return { ok: true }
   }
+
+  async unsubscribe(email: string) {
+    try {
+      await this.prisma.newsletterSubscriber.delete({ where: { email } })
+    } catch {
+      // record not found — ignore
+    }
+    return { ok: true }
+  }
 }

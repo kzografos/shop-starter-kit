@@ -1,8 +1,9 @@
 import {
-  Controller, Post, Body, Headers, Req,
+  Controller, Post, Get, Query, Body, Headers, Req,
   UseGuards, RawBodyRequest, HttpCode,
 } from '@nestjs/common'
 import { Request } from 'express'
+import { SkipThrottle } from '@nestjs/throttler'
 import { PaymentsService } from './payments.service'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
@@ -32,7 +33,17 @@ export class PaymentsController {
     )
   }
 
+  @Get('verify-session')
+  @UseGuards(JwtAuthGuard)
+  verifySession(
+    @Query('session_id') sessionId: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.payments.verifySession(sessionId, user.id)
+  }
+
   @Post('webhook')
+  @SkipThrottle()
   @HttpCode(200)
   webhook(
     @Req() req: RawBodyRequest<Request>,

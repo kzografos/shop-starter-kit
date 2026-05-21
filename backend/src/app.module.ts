@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
+import { APP_GUARD } from '@nestjs/core'
 import { ConfigModule } from '@nestjs/config'
-import { ThrottlerModule } from '@nestjs/throttler'
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { LoggerModule } from 'nestjs-pino'
 import * as Joi from 'joi'
 import { PrismaModule } from './prisma/prisma.module'
@@ -48,7 +49,7 @@ import { UploadsModule } from './uploads/uploads.module'
         redact: ['req.headers.cookie', 'req.headers.authorization'],
       },
     }),
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
+    ThrottlerModule.forRoot({ throttlers: [{ ttl: 60000, limit: 10 }] }),
     PrismaModule,
     RedisModule,
     MailModule,
@@ -66,5 +67,6 @@ import { UploadsModule } from './uploads/uploads.module'
     MinioModule,
     UploadsModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}
