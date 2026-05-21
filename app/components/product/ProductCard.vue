@@ -5,12 +5,16 @@
     <!-- Image -->
     <NuxtLink :to="localePath(`/products/${product.slug}`)" class="block relative overflow-hidden">
       <div class="aspect-square bg-cream-pale">
-        <img
-          :src="product.images[0] || '/placeholder.svg'"
-          :alt="productName"
-          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        <NuxtImg
+          :src="product.images[0]"
+          :alt="product.name_el || product.name_en"
+          width="400"
+          height="400"
+          format="webp"
+          quality="80"
           loading="lazy"
-          @error="(e: Event) => ((e.target as HTMLImageElement).src = '/placeholder.svg')"
+          fit="cover"
+          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
       </div>
 

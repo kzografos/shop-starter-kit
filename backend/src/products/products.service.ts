@@ -4,6 +4,7 @@ import { RedisService } from '../redis/redis.service'
 import { MinioService } from '../minio/minio.service'
 import { toCache } from '../common/utils/serialize'
 import { Prisma } from '@prisma/client'
+import { QueryProductsDto } from './dto/query-products.dto'
 
 const PAGE_SIZE = 12
 
@@ -18,70 +19,52 @@ export class ProductsService {
   private isExternalUrl = (s: string) =>
     s.startsWith('http://') || s.startsWith('https://')
 
-  private async resolveImageUrls(images: string[]): Promise<string[]> {
-    return Promise.all(
-      images.map((key) =>
-        this.isExternalUrl(key) ? key : this.minio.getPresignedUrl(key, 3600),
-      ),
-    )
-  }
+  async findAll(query: QueryProductsDto) {
+    const { page: pageParam, categories, brand, minPrice, maxPrice, animalType, search, sort } = query
 
-  async findAll(query: {
-    page?: number
-    category?: string
-    categories?: string[]
-    brand?: string
-    animalAge?: string
-    search?: string
-    priceMin?: number
-    priceMax?: number
-  }) {
     const cacheKey = `products:list:${JSON.stringify(query)}`
     const cached = await this.redis.get(cacheKey)
     if (cached) return JSON.parse(cached)
 
-    const page = Math.max(1, query.page ?? 1)
+    const page = Math.max(1, pageParam ?? 1)
     const skip = (page - 1) * PAGE_SIZE
 
     const where: Prisma.ProductWhereInput = { isActive: true }
 
-    // Category: resolve slug → parent + children IDs
-    const slugs = query.categories?.length
-      ? query.categories
-      : query.category
-        ? [query.category]
-        : []
-
+    const slugs = categories?.length ? categories : []
     if (slugs.length) {
-      const allIds: string[] = []
-      for (const slug of slugs) {
-        const parent = await this.prisma.category.findUnique({
-          where: { slug },
-          include: { children: { select: { id: true } } },
-        })
-        if (parent) allIds.push(parent.id, ...parent.children.map((c) => c.id))
-      }
+      const categories = await this.prisma.category.findMany({
+        where: { slug: { in: slugs } },
+        select: { id: true, children: { select: { id: true } } },
+      })
+      const allIds = categories.flatMap((c) => [c.id, ...c.children.map((ch) => ch.id)])
       if (allIds.length) where.categoryId = { in: allIds }
     }
 
-    if (query.brand) where.brand = query.brand
-    if (query.animalAge) where.animalAge = query.animalAge as any
-    if (query.priceMin !== undefined) where.price = { ...where.price as object, gte: query.priceMin }
-    if (query.priceMax !== undefined) where.price = { ...where.price as object, lte: query.priceMax }
+    if (brand?.length) where.brand = { in: brand }
+    if (animalType) where.animalAge = animalType as any
+    if (minPrice !== undefined) where.price = { ...where.price as object, gte: minPrice }
+    if (maxPrice !== undefined) where.price = { ...where.price as object, lte: maxPrice }
 
-    if (query.search) {
-      const term = query.search.trim()
+    if (search) {
+      const term = search.trim()
       where.OR = [
         { nameEl: { contains: term, mode: 'insensitive' } },
         { nameEn: { contains: term, mode: 'insensitive' } },
       ]
     }
 
+    let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: 'desc' }
+    if (sort === 'price_asc') orderBy = { price: 'asc' }
+    else if (sort === 'price_desc') orderBy = { price: 'desc' }
+    else if (sort === 'name_asc') orderBy = { nameEn: 'asc' }
+    else if (sort === 'name_desc') orderBy = { nameEn: 'desc' }
+
     const [products, total] = await this.prisma.$transaction([
       this.prisma.product.findMany({
         where,
         include: { category: true },
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip,
         take: PAGE_SIZE,
       }),

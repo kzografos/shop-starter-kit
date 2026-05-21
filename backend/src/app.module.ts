@@ -49,7 +49,7 @@ import { UploadsModule } from './uploads/uploads.module'
         redact: ['req.headers.cookie', 'req.headers.authorization'],
       },
     }),
-    ThrottlerModule.forRoot({ throttlers: [{ ttl: 60000, limit: 10 }] }),
+    ThrottlerModule.forRoot({ throttlers: [{ ttl: 60000, limit: 100 }] }),
     PrismaModule,
     RedisModule,
     MailModule,

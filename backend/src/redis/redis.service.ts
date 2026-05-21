@@ -23,7 +23,18 @@ export class RedisService {
   }
 
   async delPattern(pattern: string): Promise<void> {
-    const keys = await this.client.keys(pattern)
-    if (keys.length) await this.client.del(...keys)
+    const stream = this.client.scanStream({ match: pattern, count: 100 })
+    const pipeline = this.client.pipeline()
+
+    await new Promise<void>((resolve, reject) => {
+      stream.on('data', (keys: string[]) => {
+        if (keys.length) keys.forEach(k => pipeline.del(k))
+      })
+      stream.on('end', async () => {
+        await pipeline.exec()
+        resolve()
+      })
+      stream.on('error', reject)
+    })
   }
 }

@@ -13,8 +13,12 @@ export function useProducts(page: Ref<number>) {
   const filtersStore = useFiltersStore()
   const { public: { apiBase } } = useRuntimeConfig()
 
+  const key = computed(() =>
+    `products-${JSON.stringify(filtersStore.$state)}-${page.value}`,
+  )
+
   const { data, pending, error } = useAsyncData<{ products: Product[]; total: number }>(
-    'products',
+    () => key.value,
     async () => {
       const params = new URLSearchParams()
       params.set('page', String(page.value))
@@ -35,17 +39,6 @@ export function useProducts(page: Ref<number>) {
         { credentials: 'include' },
       )
       return { products: res.products, total: res.total }
-    },
-    {
-      server: false,
-      watch: [
-        page,
-        () => [...filtersStore.selectedAnimals],
-        () => [...filtersStore.selectedBrands],
-        () => filtersStore.priceMin,
-        () => filtersStore.priceMax,
-        () => filtersStore.search,
-      ],
     },
   )
 
