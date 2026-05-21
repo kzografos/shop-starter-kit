@@ -86,6 +86,8 @@ export class OrdersService {
             productId: item.productId,
             quantity: item.quantity,
             unitPrice: Number(product.price),
+            productName: product.nameEl || product.nameEn,
+            productPrice: Number(product.price),
           },
         })
       }

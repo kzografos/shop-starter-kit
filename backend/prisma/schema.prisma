@@ -146,12 +146,14 @@ model Order {
 }
 
 model OrderItem {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId   String   @map("order_id") @db.Uuid
-  productId String?  @map("product_id") @db.Uuid
-  quantity  Int
-  unitPrice Decimal  @db.Decimal(10, 2) @map("unit_price")
-  createdAt DateTime @default(now()) @map("created_at")
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId      String   @map("order_id") @db.Uuid
+  productId    String?  @map("product_id") @db.Uuid
+  quantity     Int
+  unitPrice    Decimal  @db.Decimal(10, 2) @map("unit_price")
+  productName  String   @map("product_name")
+  productPrice Decimal  @db.Decimal(10, 2) @map("product_price")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
@@ -222,7 +224,7 @@ enum LoyaltyType {
 // ─── Favourites ──────────────────────────────────────────────
 
 model Favourite {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   userId    String   @map("user_id") @db.Uuid
   productId String   @map("product_id") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
@@ -237,7 +239,7 @@ model Favourite {
 // ─── Newsletter ──────────────────────────────────────────────
 
 model NewsletterSubscriber {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   email     String   @unique
   createdAt DateTime @default(now()) @map("created_at")
 

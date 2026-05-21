@@ -1,6 +1,6 @@
 import {
-  IsArray, IsEnum, IsInt, IsObject,
-  IsOptional, IsString, IsUUID, Min, ValidateNested,
+  ArrayMinSize, IsArray, IsEnum, IsInt, IsNotEmpty, IsObject,
+  IsOptional, IsString, IsUUID, Min, ValidateIf, ValidateNested,
 } from 'class-validator'
 import { Type } from 'class-transformer'
 
@@ -14,15 +14,16 @@ export class OrderItemDto {
 }
 
 export class ShippingAddressDto {
-  @IsString() fullName: string
-  @IsString() address: string
-  @IsString() city: string
-  @IsString() postalCode: string
-  @IsString() phone: string
+  @IsString() @IsNotEmpty() fullName: string
+  @IsString() @IsNotEmpty() address: string
+  @IsString() @IsNotEmpty() city: string
+  @IsString() @IsNotEmpty() postalCode: string
+  @IsString() @IsNotEmpty() phone: string
 }
 
 export class CreateOrderDto {
   @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items: OrderItemDto[]
@@ -33,7 +34,7 @@ export class CreateOrderDto {
   @IsEnum(['STRIPE', 'CASH_ON_PICKUP', 'CARD_ON_PICKUP'])
   paymentMethod: 'STRIPE' | 'CASH_ON_PICKUP' | 'CARD_ON_PICKUP'
 
-  @IsOptional()
+  @ValidateIf(o => o.fulfillmentType === 'SHIPPING')
   @IsObject()
   @ValidateNested()
   @Type(() => ShippingAddressDto)

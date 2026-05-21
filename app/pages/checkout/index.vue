@@ -208,7 +208,6 @@ async function placeOrder() {
         items: cartStore.items.map(i => ({
           productId: i.product.id,
           quantity: i.quantity,
-          unitPrice: Number(i.product.price),
         })),
         fulfillmentType: form.fulfillment_type.toUpperCase(),
         paymentMethod: form.payment_method.toUpperCase(),

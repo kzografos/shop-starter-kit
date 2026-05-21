@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common'
@@ -17,8 +18,7 @@ interface RefreshPayload {
   jti: string
 }
 
-const REFRESH_TTL_S = 60 * 60 * 24 * 7   // 7 days
-const RESET_TTL_S   = 60 * 60             // 1 hour
+const RESET_TTL_S = 60 * 60  // 1 hour
 const COOKIE_OPTS = {
   httpOnly: true,
   sameSite: 'lax' as const,
@@ -28,6 +28,8 @@ const COOKIE_OPTS = {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name)
+
   constructor(
     private users: UsersService,
     private jwt: JwtService,
@@ -127,6 +129,7 @@ export class AuthService {
     const jti = randomUUID()
     const accessExpires  = this.config.get('JWT_ACCESS_EXPIRES',  '15m')
     const refreshExpires = this.config.get('JWT_REFRESH_EXPIRES', '7d')
+    const refreshTtlS    = this.parseTtlToSeconds(refreshExpires)
 
     const accessToken = this.jwt.sign(
       { sub: user.id, email: user.email, role: user.role },
@@ -138,11 +141,27 @@ export class AuthService {
       { secret: this.config.getOrThrow('JWT_REFRESH_SECRET'), expiresIn: refreshExpires },
     )
 
-    await this.redis.set(`refresh:${user.id}:${jti}`, '1', REFRESH_TTL_S)
+    await this.redis.set(`refresh:${user.id}:${jti}`, '1', refreshTtlS)
 
     res.cookie('access_token', accessToken, { ...COOKIE_OPTS, maxAge: 15 * 60 * 1000 })
-    res.cookie('refresh_token', refreshToken, { ...COOKIE_OPTS, maxAge: REFRESH_TTL_S * 1000 })
+    res.cookie('refresh_token', refreshToken, { ...COOKIE_OPTS, maxAge: refreshTtlS * 1000 })
 
     return { user: await this.users.findById(user.id) }
+  }
+
+  private parseTtlToSeconds(ttl: string): number {
+    const DEFAULT = 60 * 60 * 24 * 7
+    if (!ttl) {
+      this.logger.warn('JWT_REFRESH_EXPIRES missing — defaulting to 7d')
+      return DEFAULT
+    }
+    const match = ttl.match(/^(\d+)(d|h|m|s)$/)
+    if (!match) {
+      this.logger.warn(`JWT_REFRESH_EXPIRES "${ttl}" unparseable — defaulting to 7d`)
+      return DEFAULT
+    }
+    const n = parseInt(match[1], 10)
+    const multipliers: Record<string, number> = { d: 86400, h: 3600, m: 60, s: 1 }
+    return n * multipliers[match[2]]
   }
 }
