@@ -42,6 +42,14 @@
             {{ $t('cart.continue_shopping') }}
           </NuxtLink>
         </div>
+
+        <!-- Guest → offer account creation (paid order auto-links + earns points on signup) -->
+        <GuestAccountCTA
+          v-if="!isLoggedIn && guestEmail"
+          :email="guestEmail"
+          @done="clearGuestEmail"
+          @skip="clearGuestEmail"
+        />
       </template>
     </div>
   </div>
@@ -58,34 +66,50 @@ const api = useApi()
 
 const verifying = ref(true)
 const errorMessage = ref<string | null>(null)
+const guestEmail = ref('')
 
 onMounted(async () => {
   const sessionId = route.query.session_id as string | undefined
+  const orderId = route.query.order_id as string | undefined
 
-  if (!sessionId) {
+  // Neither = direct/invalid visit.
+  if (!sessionId && !orderId) {
     errorMessage.value = t('checkout.session_id_missing')
     verifying.value = false
     return
   }
 
   try {
-    const { status } = await api<{ status: string }>('/payments/verify-session', {
-      query: { session_id: sessionId },
-    })
-
-    if (status !== 'paid') {
-      errorMessage.value = t('checkout.payment_not_completed')
-      return
+    // Stripe path: confirm payment actually completed. Non-Stripe (pickup/cash)
+    // orders arrive with order_id and are already confirmed server-side.
+    if (sessionId) {
+      const { status } = await api<{ status: string }>('/payments/verify-session', {
+        query: { session_id: sessionId },
+      })
+      if (status !== 'paid') {
+        errorMessage.value = t('checkout.payment_not_completed')
+        return
+      }
     }
 
     cartStore.clear()
     await authStore.fetchProfile()
+    // Guest checkout: pick up the email stored at checkout to offer account creation.
+    // Do NOT clear it here — a language switch re-mounts this page and must still find it.
+    if (!isLoggedIn.value) {
+      guestEmail.value = localStorage.getItem('guest_checkout_email') ?? ''
+    }
   } catch {
     errorMessage.value = t('checkout.verification_failed')
   } finally {
     verifying.value = false
   }
 })
+
+function clearGuestEmail() {
+  guestEmail.value = ''
+  localStorage.removeItem('guest_checkout_email')
+}
 
 useSeoMeta({ title: () => t('seo.order_confirmed.title') })
 </script>

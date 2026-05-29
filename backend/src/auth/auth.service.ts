@@ -11,6 +11,7 @@ import { Response } from 'express'
 import { UsersService } from '../users/users.service'
 import { RedisService } from '../redis/redis.service'
 import { MailService } from '../mail/mail.service'
+import { PrismaService } from '../prisma/prisma.service'
 import type { JwtPayload } from './strategies/jwt.strategy'
 import type { GoogleProfile } from './strategies/google.strategy'
 
@@ -37,12 +38,47 @@ export class AuthService {
     private redis: RedisService,
     private mail: MailService,
     private config: ConfigService,
+    private prisma: PrismaService,
   ) {}
+
+  // Attaches any guest orders placed with this email to the (now authenticated) user,
+  // and awards loyalty for those already paid. Called on register / login / Google login.
+  private async linkGuestOrders(userId: string, email: string) {
+    const orders = await this.prisma.order.findMany({
+      where: { guestEmail: email, userId: null },
+      select: { id: true, total: true, paymentStatus: true },
+    })
+    if (orders.length === 0) return
+
+    const settings = await this.prisma.setting.findMany()
+    const earnRate = parseFloat(settings.find((s) => s.key === 'loyalty_earn_rate')?.value ?? '100')
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.order.updateMany({
+        where: { guestEmail: email, userId: null },
+        data: { userId },
+      })
+      let points = 0
+      for (const o of orders) {
+        if (o.paymentStatus !== 'PAID') continue
+        const earned = Math.floor(Number(o.total) * earnRate)
+        if (earned <= 0) continue
+        points += earned
+        await tx.loyaltyTransaction.create({
+          data: { userId, orderId: o.id, pointsDelta: earned, type: 'EARN' },
+        })
+      }
+      if (points > 0) {
+        await tx.user.update({ where: { id: userId }, data: { loyaltyPoints: { increment: points } } })
+      }
+    })
+  }
 
   // ─── Register ──────────────────────────────────────────────
 
   async register(email: string, password: string, fullName: string | undefined, res: Response) {
     const user = await this.users.create(email, password, fullName)
+    await this.linkGuestOrders(user.id, user.email)
     return this.issueTokens(user, res)
   }
 
@@ -55,6 +91,7 @@ export class AuthService {
     const valid = await this.users.verifyPassword(user, password)
     if (!valid) throw new UnauthorizedException('Invalid credentials')
 
+    await this.linkGuestOrders(user.id, user.email)
     const safe = await this.users.findById(user.id)
     return this.issueTokens(safe!, res)
   }
@@ -83,6 +120,7 @@ export class AuthService {
       })
     }
 
+    await this.linkGuestOrders(user.id, user.email)
     return this.issueTokens(user, res)
   }
 

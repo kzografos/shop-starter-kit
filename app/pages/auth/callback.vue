@@ -2,7 +2,7 @@
   <div class="min-h-screen flex items-center justify-center bg-surface-page">
     <div class="text-center">
       <UIcon name="i-heroicons-arrow-path" class="w-10 h-10 text-terracotta animate-spin mx-auto mb-4" />
-      <p class="text-[--color-bark-light]">{{ $t('auth.signing_in') }}</p>
+      <p class="text-[--color-bark-light]">{{ $t('login.signing_in') }}</p>
     </div>
   </div>
 </template>

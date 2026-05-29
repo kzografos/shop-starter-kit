@@ -5,19 +5,7 @@
 
     <CheckoutSteps :current-step="2" />
 
-    <div v-if="success" class="text-center py-20">
-      <UIcon name="i-heroicons-check-circle" class="w-20 h-20 text-green-500 mx-auto mb-4" />
-      <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ $t('checkout.success_title') }}</h2>
-      <p class="text-gray-600 mb-8">{{ $t('checkout.success_message') }}</p>
-      <UButton
-        v-if="authStore.isLoggedIn"
-        :label="$t('nav.account')"
-        :to="localePath('/account/orders')"
-      />
-      <UButton v-else :label="$t('cart.continue_shopping')" :to="localePath('/products')" />
-    </div>
-
-    <div v-else-if="cartStore.items.length === 0" class="text-center py-20">
+    <div v-if="cartStore.items.length === 0" class="text-center py-20">
       <p class="text-gray-500 mb-4">{{ $t('cart.empty') }}</p>
       <UButton :label="$t('cart.continue_shopping')" :to="localePath('/products')" />
     </div>
@@ -167,7 +155,6 @@ const authStore = useAuthStore()
 const { locale, t } = useI18n()
 const localePath = useLocalePath()
 const loading = ref(false)
-const success = ref(false)
 const usePoints = ref(false)
 const orderError = ref('')
 
@@ -225,6 +212,10 @@ async function placeOrder() {
     orderError.value = t('checkout.email_required')
     return
   }
+  // Remember the guest email so the Stripe success page can offer account creation.
+  if (isGuest.value && import.meta.client) {
+    localStorage.setItem('guest_checkout_email', form.guest_email.trim())
+  }
   loading.value = true
   orderError.value = ''
   try {
@@ -264,9 +255,9 @@ async function placeOrder() {
       })
       window.location.href = url
     } else {
-      cartStore.clear()
-      await authStore.fetchProfile()
-      success.value = true
+      // Pickup/cash orders are confirmed immediately → go to the shared success page
+      // (handles confirmation UI + guest account offer; survives reloads/language switch).
+      await navigateTo({ path: localePath('/checkout/success'), query: { order_id: order.id } })
     }
   } catch (e: unknown) {
     orderError.value = e instanceof Error ? e.message : 'Something went wrong'
