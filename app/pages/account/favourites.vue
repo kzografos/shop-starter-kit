@@ -52,13 +52,13 @@ const { t } = useI18n()
 
 const error = ref<string | null>(null)
 
-const { data: products, pending } = await useAsyncData('favourites', async () => {
+const { data: products, pending } = useAsyncData('favourites', async () => {
   const favs = await api<Array<{ product: Product }>>('/favourites').catch(() => {
     error.value = 'Failed to load. Please try again.'
     return [] as Array<{ product: Product }>
   })
   return favs.map((f) => f.product)
-}, { server: false })
+}, { server: false, lazy: true })
 
 useSeoMeta({ title: () => `${t('favourites.title')} | PetShop CY` })
 </script>

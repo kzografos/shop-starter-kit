@@ -2,6 +2,8 @@ import {
   Controller, Post, Get, Body, Res, Req,
   UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
+import { ConfigService } from '@nestjs/config'
 import { Throttle } from '@nestjs/throttler'
 import { Request, Response } from 'express'
 import { AuthService } from './auth.service'
@@ -11,10 +13,32 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto'
 import { ResetPasswordDto } from './dto/reset-password.dto'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
 import { CurrentUser } from './decorators/current-user.decorator'
+import type { GoogleProfile } from './strategies/google.strategy'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private auth: AuthService) {}
+  constructor(
+    private auth: AuthService,
+    private config: ConfigService,
+  ) {}
+
+  // ─── Google OAuth ──────────────────────────────────────────
+
+  // Step 1: redirect the browser to Google's consent screen.
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  googleAuth() {
+    // Guard handles the redirect; nothing to do here.
+  }
+
+  // Step 2: Google redirects back here. Guard populates req.user with the profile.
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleCallback(@Req() req: Request, @Res() res: Response) {
+    await this.auth.googleLogin(req.user as GoogleProfile, res)
+    const frontend = this.config.get<string>('NUXT_URL', 'http://localhost:3000').split(',')[0].trim()
+    res.redirect(`${frontend}/auth/callback`)
+  }
 
   @Post('register')
   register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {

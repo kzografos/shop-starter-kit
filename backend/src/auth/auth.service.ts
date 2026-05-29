@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service'
 import { RedisService } from '../redis/redis.service'
 import { MailService } from '../mail/mail.service'
 import type { JwtPayload } from './strategies/jwt.strategy'
+import type { GoogleProfile } from './strategies/google.strategy'
 
 interface RefreshPayload {
   sub: string
@@ -56,6 +57,33 @@ export class AuthService {
 
     const safe = await this.users.findById(user.id)
     return this.issueTokens(safe!, res)
+  }
+
+  // ─── Google OAuth ──────────────────────────────────────────
+
+  async googleLogin(profile: GoogleProfile, res: Response) {
+    // 1. Known Google identity → log in.
+    let user = await this.users.findByGoogleId(profile.googleId)
+
+    // 2. Same verified email on an existing account → auto-link.
+    if (!user) {
+      const existing = await this.users.findByEmail(profile.email)
+      if (existing) {
+        user = await this.users.linkGoogle(existing.id, profile.googleId, profile.avatarUrl)
+      }
+    }
+
+    // 3. New user → create a passwordless Google account.
+    if (!user) {
+      user = await this.users.createOAuthUser({
+        email: profile.email,
+        fullName: profile.fullName,
+        googleId: profile.googleId,
+        avatarUrl: profile.avatarUrl,
+      })
+    }
+
+    return this.issueTokens(user, res)
   }
 
   // ─── Logout ────────────────────────────────────────────────

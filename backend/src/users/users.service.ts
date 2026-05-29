@@ -25,6 +25,36 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } })
   }
 
+  async findByGoogleId(googleId: string) {
+    return this.prisma.user.findUnique({ where: { googleId } })
+  }
+
+  // Creates a passwordless user authenticated via an OAuth provider.
+  async createOAuthUser(data: {
+    email: string
+    fullName?: string
+    googleId: string
+    avatarUrl?: string
+  }) {
+    return this.prisma.user.create({
+      data: {
+        email: data.email,
+        fullName: data.fullName,
+        googleId: data.googleId,
+        avatarUrl: data.avatarUrl,
+        provider: 'google',
+      },
+    })
+  }
+
+  // Links a Google identity to an existing (e.g. password) account — auto-link by verified email.
+  async linkGoogle(id: string, googleId: string, avatarUrl?: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { googleId, avatarUrl: avatarUrl ?? undefined },
+    })
+  }
+
   async create(email: string, password: string, fullName?: string) {
     const existing = await this.findByEmail(email)
     if (existing) throw new ConflictException('Email already registered')
@@ -65,7 +95,9 @@ export class UsersService {
     })
   }
 
-  async verifyPassword(user: { passwordHash: string }, password: string) {
+  async verifyPassword(user: { passwordHash: string | null }, password: string) {
+    // OAuth-only accounts have no password — reject password login.
+    if (!user.passwordHash) return false
     return bcrypt.compare(password, user.passwordHash)
   }
 

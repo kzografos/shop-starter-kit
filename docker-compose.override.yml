@@ -1,0 +1,13 @@
+# Local dev overrides — auto-loaded by `docker compose up` (NOT loaded when you
+# pass explicit -f files, e.g. production uses
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up
+#
+# nginx is HTTPS-only and needs real SSL certs (Let's Encrypt) that don't exist
+# locally, so we move it behind a profile here. It won't start by default.
+# Access the app directly at http://localhost:3000 (Nuxt) / :3001 (API).
+#
+# If you ever want nginx locally, generate self-signed certs into
+# docker/nginx/ssl/ and run:  docker compose --profile with-nginx up
+services:
+  nginx:
+    profiles: ["with-nginx"]

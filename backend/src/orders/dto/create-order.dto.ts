@@ -1,5 +1,5 @@
 import {
-  ArrayMinSize, IsArray, IsEnum, IsInt, IsNotEmpty, IsObject,
+  ArrayMinSize, IsArray, IsEmail, IsEnum, IsInt, IsNotEmpty, IsObject,
   IsOptional, IsString, IsUUID, Min, ValidateIf, ValidateNested,
 } from 'class-validator'
 import { Type } from 'class-transformer'
@@ -48,4 +48,9 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   notes?: string
+
+  // Required for guest checkout (no JWT). Where the order confirmation is sent.
+  @IsOptional()
+  @IsEmail()
+  guestEmail?: string
 }

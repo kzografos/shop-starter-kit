@@ -195,18 +195,23 @@ const { public: { apiBase } } = useRuntimeConfig()
 const selectedImage = ref(0)
 const qty = ref(1)
 
-const { data: product } = await useAsyncData(`product-${route.params.slug}`, async () => {
-  const data = await $fetch<Product>(`${apiBase}/products/${route.params.slug}`, { credentials: 'include' })
-    .catch(() => null)
-  if (!data) throw createError({ statusCode: 404, fatal: true })
-  return data
-}, { server: false })
+const { data: product, status } = useAsyncData(`product-${route.params.slug}`, () =>
+  $fetch<Product>(`${apiBase}/products/${route.params.slug}`, { credentials: 'include' }).catch(() => null),
+  { server: false, lazy: true },
+)
 
-const { data: relatedProducts } = await useAsyncData(`related-${route.params.slug}`, async () => {
+// 404 reactively once the client fetch settles (lazy can't throw synchronously in setup).
+watch([status, product], ([s, p]) => {
+  if (s === 'success' && !p) {
+    showError({ statusCode: 404, statusMessage: 'Product not found', fatal: true })
+  }
+}, { immediate: true })
+
+const { data: relatedProducts } = useAsyncData(`related-${route.params.slug}`, async () => {
   if (!product.value) return []
   return $fetch<Product[]>(`${apiBase}/products/${route.params.slug}/related`, { credentials: 'include' })
     .catch(() => [] as Product[])
-}, { server: false })
+}, { server: false, lazy: true, watch: [product] })
 
 const productName = computed(() =>
   locale.value === 'el' ? product.value?.name_el : product.value?.name_en

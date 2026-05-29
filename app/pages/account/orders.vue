@@ -139,12 +139,12 @@ const router = useRouter()
 
 const error = ref<string | null>(null)
 
-const { data: orders, pending } = await useAsyncData('orders', () =>
+const { data: orders, pending } = useAsyncData('orders', () =>
   api<Order[]>('/orders').catch(() => {
     error.value = 'Failed to load. Please try again.'
     return [] as Order[]
   }),
-  { server: false },
+  { server: false, lazy: true },
 )
 
 const expandedOrders = ref<Set<string>>(new Set())

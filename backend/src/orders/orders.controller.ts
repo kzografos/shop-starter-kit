@@ -2,27 +2,32 @@ import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common'
 import { OrdersService } from './orders.service'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
 
 @Controller('orders')
-@UseGuards(JwtAuthGuard)
 export class OrdersController {
   constructor(private orders: OrdersService) {}
 
+  // Guests and logged-in users can both place orders.
   @Post()
+  @UseGuards(OptionalJwtAuthGuard)
   create(
     @Body() dto: CreateOrderDto,
-    @CurrentUser() user: { id: string; email: string },
+    @CurrentUser() user: { id: string; email: string } | undefined,
   ) {
-    return this.orders.create(user.id, user.email, dto)
+    return this.orders.create(user?.id ?? null, user?.email ?? null, dto)
   }
 
+  // Order history requires login.
   @Get()
+  @UseGuards(JwtAuthGuard)
   findAll(@CurrentUser() user: { id: string }) {
     return this.orders.findByUser(user.id)
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.orders.findOneForUser(id, user.id)
   }

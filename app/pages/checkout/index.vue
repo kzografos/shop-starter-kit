@@ -9,7 +9,12 @@
       <UIcon name="i-heroicons-check-circle" class="w-20 h-20 text-green-500 mx-auto mb-4" />
       <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ $t('checkout.success_title') }}</h2>
       <p class="text-gray-600 mb-8">{{ $t('checkout.success_message') }}</p>
-      <UButton :label="$t('nav.account')" :to="localePath('/account/orders')" />
+      <UButton
+        v-if="authStore.isLoggedIn"
+        :label="$t('nav.account')"
+        :to="localePath('/account/orders')"
+      />
+      <UButton v-else :label="$t('cart.continue_shopping')" :to="localePath('/products')" />
     </div>
 
     <div v-else-if="cartStore.items.length === 0" class="text-center py-20">
@@ -20,6 +25,22 @@
     <div v-else class="grid lg:grid-cols-5 gap-8">
       <!-- Left: form -->
       <div class="lg:col-span-3 space-y-8">
+        <!-- Contact (guest checkout) -->
+        <UCard v-if="isGuest">
+          <template #header>
+            <h2 class="font-semibold">{{ $t('checkout.contact') }}</h2>
+          </template>
+          <UFormField :label="$t('checkout.email')" :hint="$t('checkout.email_hint')">
+            <UInput v-model="form.guest_email" type="email" autocomplete="email" class="w-full" />
+          </UFormField>
+          <p class="mt-3 text-sm text-[--color-bark-light]">
+            {{ $t('checkout.have_account') }}
+            <NuxtLink :to="{ path: localePath('/login'), query: { redirect: localePath('/checkout') } }" class="text-terracotta font-medium hover:underline">
+              {{ $t('header.login') }}
+            </NuxtLink>
+          </p>
+        </UCard>
+
         <!-- Fulfillment type -->
         <UCard>
           <template #header>
@@ -140,8 +161,6 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
-
 const { public: { apiBase } } = useRuntimeConfig()
 const cartStore = useCartStore()
 const authStore = useAuthStore()
@@ -153,6 +172,7 @@ const usePoints = ref(false)
 const orderError = ref('')
 
 const form = reactive({
+  guest_email: '',
   fulfillment_type: 'shipping' as 'shipping' | 'pickup',
   payment_method: 'stripe' as 'stripe' | 'cash_on_pickup' | 'card_on_pickup',
   notes: '',
@@ -164,6 +184,9 @@ const form = reactive({
     phone: '',
   },
 })
+
+const isGuest = computed(() => !authStore.isLoggedIn)
+const emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.guest_email.trim()))
 
 const paymentOptions = computed(() => {
   const options = [{ value: 'stripe', label: t('checkout.payment_online') }]
@@ -198,6 +221,10 @@ const total = computed(() =>
 )
 
 async function placeOrder() {
+  if (isGuest.value && !emailValid.value) {
+    orderError.value = t('checkout.email_required')
+    return
+  }
   loading.value = true
   orderError.value = ''
   try {
@@ -220,6 +247,7 @@ async function placeOrder() {
         } : undefined,
         loyaltyPointsToRedeem: pointsToRedeem.value,
         notes: form.notes || undefined,
+        guestEmail: isGuest.value ? form.guest_email.trim() : undefined,
       },
     })
 

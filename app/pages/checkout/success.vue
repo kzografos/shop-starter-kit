@@ -30,6 +30,7 @@
 
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
           <UButton
+            v-if="isLoggedIn"
             :label="$t('nav.account')"
             :to="localePath('/account/orders')"
             icon="i-heroicons-clipboard-document-list"
@@ -47,12 +48,11 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
-
 const { t } = useI18n()
 const localePath = useLocalePath()
 const cartStore = useCartStore()
 const authStore = useAuthStore()
+const { isLoggedIn } = storeToRefs(authStore)
 const route = useRoute()
 const api = useApi()
 

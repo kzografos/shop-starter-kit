@@ -135,9 +135,9 @@ definePageMeta({ middleware: 'auth' })
 const api = useApi()
 const authStore = useAuthStore()
 
-const { data: transactions, pending } = await useAsyncData('loyalty-transactions', () =>
+const { data: transactions, pending } = useAsyncData('loyalty-transactions', () =>
   api<LoyaltyTransaction[]>('/profile/loyalty').catch(() => [] as LoyaltyTransaction[]),
-  { server: false },
+  { server: false, lazy: true },
 )
 
 onMounted(() => authStore.fetchProfile())

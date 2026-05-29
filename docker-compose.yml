@@ -76,6 +76,9 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-petshop-images}
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
       NUXT_URL: ${NUXT_URL:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:3001/auth/google/callback}
       PORT: 3001
     ports:
       - "3001:3001"

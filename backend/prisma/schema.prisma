@@ -22,9 +22,12 @@ model Setting {
 model User {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email         String    @unique
-  passwordHash  String    @map("password_hash")
+  passwordHash  String?   @map("password_hash")
   fullName      String?   @map("full_name")
   phone         String?
+  googleId      String?   @unique @map("google_id")
+  provider      String    @default("local")
+  avatarUrl     String?   @map("avatar_url")
   loyaltyPoints Int       @default(0) @map("loyalty_points")
   role          UserRole  @default(CUSTOMER)
   createdAt     DateTime  @default(now()) @map("created_at")
@@ -121,6 +124,7 @@ enum AnimalAge {
 model Order {
   id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId                String?       @map("user_id") @db.Uuid
+  guestEmail            String?       @map("guest_email")
   status                OrderStatus   @default(PENDING)
   fulfillmentType       FulfillmentType @map("fulfillment_type")
   paymentMethod         PaymentMethod @map("payment_method")

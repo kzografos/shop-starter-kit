@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import Stripe from 'stripe'
 
@@ -15,12 +16,14 @@ export class PaymentsService {
     this.stripe = new Stripe(config.getOrThrow('STRIPE_SECRET_KEY'))
   }
 
-  async createCheckoutSession(orderId: string, userId: string, successUrl: string, cancelUrl: string) {
-    const order = await this.prisma.order.findFirst({
-      where: { id: orderId, userId },
+  async createCheckoutSession(orderId: string, userId: string | null, successUrl: string, cancelUrl: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
       include: { items: { include: { product: true } } },
     })
     if (!order) throw new BadRequestException('Order not found')
+    // Owned orders require the owner; guest orders (userId null) are open to anyone with the id.
+    if (order.userId && order.userId !== userId) throw new BadRequestException('Order not found')
     if (order.paymentMethod !== 'STRIPE') throw new BadRequestException('Not a Stripe order')
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = order.items.map((item) => ({
@@ -62,7 +65,7 @@ export class PaymentsService {
       discounts,
       success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: { order_id: orderId, user_id: userId },
+      metadata: { order_id: orderId, user_id: userId ?? '' },
     })
 
     await this.prisma.order.update({
@@ -73,10 +76,12 @@ export class PaymentsService {
     return { url: session.url }
   }
 
-  async verifySession(sessionId: string, userId: string) {
+  async verifySession(sessionId: string, userId: string | null) {
     if (!sessionId) throw new BadRequestException('session_id is required')
     const session = await this.stripe.checkout.sessions.retrieve(sessionId)
-    if (session.metadata?.user_id !== userId) throw new BadRequestException('Session not found')
+    const sessionUserId = session.metadata?.user_id || null
+    // Owned sessions require the owner; guest sessions are open to anyone with the id.
+    if (sessionUserId && sessionUserId !== userId) throw new BadRequestException('Session not found')
     return { status: session.payment_status }
   }
 
@@ -94,8 +99,8 @@ export class PaymentsService {
 
     const session = event.data.object as Stripe.Checkout.Session
     const orderId = session.metadata?.order_id
-    const userId  = session.metadata?.user_id
-    if (!orderId || !userId) return { received: true }
+    const userId  = session.metadata?.user_id || null  // empty string = guest order
+    if (!orderId) return { received: true }
 
     const order = await this.prisma.order.findUnique({ where: { id: orderId } })
     if (!order) return { received: true }
@@ -108,11 +113,8 @@ export class PaymentsService {
       return { received: true }
     }
 
-    const settings = await this.prisma.setting.findMany()
-    const earnRate = parseFloat(settings.find((s) => s.key === 'loyalty_earn_rate')?.value ?? '100')
-    const pointsEarned = Math.floor(Number(order.total) * earnRate)
-
-    await this.prisma.$transaction([
+    // Always confirm the order. Award loyalty only for logged-in buyers.
+    const writes: Prisma.PrismaPromise<unknown>[] = [
       this.prisma.order.update({
         where: { id: orderId },
         data: {
@@ -121,14 +123,24 @@ export class PaymentsService {
           stripePaymentIntentId: session.payment_intent as string,
         },
       }),
-      this.prisma.loyaltyTransaction.create({
-        data: { userId, orderId, pointsDelta: pointsEarned, type: 'EARN' },
-      }),
-      this.prisma.user.update({
-        where: { id: userId },
-        data: { loyaltyPoints: { increment: pointsEarned } },
-      }),
-    ])
+    ]
+
+    if (userId) {
+      const settings = await this.prisma.setting.findMany()
+      const earnRate = parseFloat(settings.find((s) => s.key === 'loyalty_earn_rate')?.value ?? '100')
+      const pointsEarned = Math.floor(Number(order.total) * earnRate)
+      writes.push(
+        this.prisma.loyaltyTransaction.create({
+          data: { userId, orderId, pointsDelta: pointsEarned, type: 'EARN' },
+        }),
+        this.prisma.user.update({
+          where: { id: userId },
+          data: { loyaltyPoints: { increment: pointsEarned } },
+        }),
+      )
+    }
+
+    await this.prisma.$transaction(writes)
 
     return { received: true }
   }

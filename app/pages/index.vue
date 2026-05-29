@@ -259,10 +259,10 @@ const stats = [
   { value: '€50+', labelKey: 'hero.stat_shipping' },
 ]
 
-const { data: categories, pending } = await useAsyncData('root-categories', async () => {
+const { data: categories, pending } = useAsyncData('root-categories', async () => {
   const tree = await $fetch<Category[]>(`${apiBase}/categories`, { credentials: 'include' }).catch(() => [])
   return tree.filter((c) => !c.parent_id)
-}, { server: false })
+}, { server: false, lazy: true })
 
 const catImages: Record<string, string> = {
   dogs: '/categories/dog.png',

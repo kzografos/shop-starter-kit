@@ -11,20 +11,30 @@ export class OrdersService {
     private mail: MailService,
   ) {}
 
-  async create(userId: string, userEmail: string, dto: CreateOrderDto) {
+  async create(userId: string | null, userEmail: string | null, dto: CreateOrderDto) {
+    // Guest checkout: must supply an email for the order confirmation.
+    const guestEmail = userId ? null : dto.guestEmail
+    if (!userId && !guestEmail)
+      throw new BadRequestException('Email is required to place an order as a guest')
+    const confirmationEmail = userEmail ?? guestEmail!
+    // Capture as const so TS narrows it inside the transaction closure below.
+    const uid = userId
+
     // Load settings
     const settings = await this.prisma.setting.findMany()
     const s = Object.fromEntries(settings.map((r) => [r.key, parseFloat(r.value)]))
 
-    // Load user for loyalty check
-    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } })
+    // Load user for loyalty check (logged-in only)
+    const user = userId
+      ? await this.prisma.user.findUniqueOrThrow({ where: { id: userId } })
+      : null
 
-    // Validate loyalty points
-    const pointsToRedeem = dto.loyaltyPointsToRedeem ?? 0
+    // Validate loyalty points — guests cannot redeem
+    const pointsToRedeem = user ? (dto.loyaltyPointsToRedeem ?? 0) : 0
     if (pointsToRedeem > 0) {
       if (pointsToRedeem < s.loyalty_min_redeem)
         throw new BadRequestException(`Minimum ${s.loyalty_min_redeem} points to redeem`)
-      if (pointsToRedeem > user.loyaltyPoints)
+      if (pointsToRedeem > user!.loyaltyPoints)
         throw new BadRequestException('Insufficient loyalty points')
     }
 
@@ -57,6 +67,7 @@ export class OrdersService {
       const newOrder = await tx.order.create({
         data: {
           userId,
+          guestEmail,
           fulfillmentType: dto.fulfillmentType,
           paymentMethod: dto.paymentMethod,
           subtotal,
@@ -92,27 +103,31 @@ export class OrdersService {
         })
       }
 
-      // Loyalty: redeem
-      if (pointsToRedeem > 0) {
+      // Loyalty: redeem (logged-in only — guests can't redeem)
+      if (uid && pointsToRedeem > 0) {
         await tx.loyaltyTransaction.create({
-          data: { userId, orderId: newOrder.id, pointsDelta: -pointsToRedeem, type: 'REDEEM' },
+          data: { userId: uid, orderId: newOrder.id, pointsDelta: -pointsToRedeem, type: 'REDEEM' },
         })
         await tx.user.update({
-          where: { id: userId },
+          where: { id: uid },
           data: { loyaltyPoints: { decrement: pointsToRedeem } },
         })
       }
 
-      // Loyalty: earn (for non-Stripe orders only — Stripe earns on webhook)
+      // Non-Stripe orders are settled immediately (cash/card on pickup).
+      // Stripe orders are confirmed on webhook instead.
       if (dto.paymentMethod !== 'STRIPE') {
-        const pointsEarned = Math.floor(total * s.loyalty_earn_rate)
-        await tx.loyaltyTransaction.create({
-          data: { userId, orderId: newOrder.id, pointsDelta: pointsEarned, type: 'EARN' },
-        })
-        await tx.user.update({
-          where: { id: userId },
-          data: { loyaltyPoints: { increment: pointsEarned } },
-        })
+        // Loyalty: earn (logged-in only — Stripe earns on webhook)
+        if (uid) {
+          const pointsEarned = Math.floor(total * s.loyalty_earn_rate)
+          await tx.loyaltyTransaction.create({
+            data: { userId: uid, orderId: newOrder.id, pointsDelta: pointsEarned, type: 'EARN' },
+          })
+          await tx.user.update({
+            where: { id: uid },
+            data: { loyaltyPoints: { increment: pointsEarned } },
+          })
+        }
         await tx.order.update({
           where: { id: newOrder.id },
           data: { status: 'CONFIRMED', paymentStatus: 'PAID' },
@@ -122,7 +137,7 @@ export class OrdersService {
       return newOrder
     })
 
-    this.mail.sendOrderConfirmation(userEmail, order.id).catch(() => null)
+    this.mail.sendOrderConfirmation(confirmationEmail, order.id).catch(() => null)
 
     return { id: order.id }
   }

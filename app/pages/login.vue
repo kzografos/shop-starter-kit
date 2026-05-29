@@ -240,13 +240,14 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'guest', layout: false })
 
-useSeoMeta({ title: () => t('seo.login.title') })
-
+const { t, locale: currentLocale, setLocale } = useI18n()
 const api = useApi()
 const authStore = useAuthStore()
 const localePath = useLocalePath()
 const route = useRoute()
-const { t, locale: currentLocale, setLocale } = useI18n()
+const { public: { apiBase } } = useRuntimeConfig()
+
+useSeoMeta({ title: () => t('seo.login.title') })
 
 const isLogin = ref(true)
 const loading = ref(false)
@@ -290,7 +291,15 @@ async function onSubmit() {
   }
 }
 
-async function signInWithGoogle() {
-  error.value = t('auth.google_unavailable') || 'Google sign-in not available'
+function signInWithGoogle() {
+  // Remember where to land after the Google round-trip (callback page reads this).
+  const redirectTo = route.query.redirect as string | undefined
+  if (import.meta.client) {
+    localStorage.setItem(
+      'post_login_redirect',
+      redirectTo && redirectTo.startsWith('/') ? redirectTo : localePath('/account'),
+    )
+  }
+  window.location.href = `${apiBase}/auth/google`
 }
 </script>

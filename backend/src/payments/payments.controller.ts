@@ -5,9 +5,9 @@ import {
 import { Request } from 'express'
 import { SkipThrottle } from '@nestjs/throttler'
 import { PaymentsService } from './payments.service'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
-import { IsString, IsUrl } from 'class-validator'
+import { IsString } from 'class-validator'
 
 class CreateCheckoutDto {
   @IsString() orderId: string
@@ -20,26 +20,26 @@ export class PaymentsController {
   constructor(private payments: PaymentsService) {}
 
   @Post('create-checkout')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalJwtAuthGuard)
   createCheckout(
     @Body() dto: CreateCheckoutDto,
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: { id: string } | undefined,
   ) {
     return this.payments.createCheckoutSession(
       dto.orderId,
-      user.id,
+      user?.id ?? null,
       dto.successUrl,
       dto.cancelUrl,
     )
   }
 
   @Get('verify-session')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalJwtAuthGuard)
   verifySession(
     @Query('session_id') sessionId: string,
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: { id: string } | undefined,
   ) {
-    return this.payments.verifySession(sessionId, user.id)
+    return this.payments.verifySession(sessionId, user?.id ?? null)
   }
 
   @Post('webhook')
