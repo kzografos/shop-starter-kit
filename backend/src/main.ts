@@ -26,8 +26,14 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter())
   app.useGlobalInterceptors(new SnakeCaseInterceptor())
 
+  const isDev = process.env.NODE_ENV !== 'production'
+  // Dev: allow any localhost port. Prod: explicit allow-list from NUXT_URL (comma-separated).
+  const allowedOrigins = (process.env.NUXT_URL || 'http://localhost:3000')
+    .split(',')
+    .map(o => o.trim())
+    .filter(Boolean)
   app.enableCors({
-    origin: process.env.NUXT_URL || 'http://localhost:3000',
+    origin: isDev ? /^http:\/\/localhost:\d+$/ : allowedOrigins,
     credentials: true,
   })
 

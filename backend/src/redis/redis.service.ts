@@ -1,40 +1,64 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import Redis from 'ioredis'
 import { REDIS_CLIENT } from './redis.constants'
 
 @Injectable()
 export class RedisService {
+  private readonly logger = new Logger(RedisService.name)
+
   constructor(@Inject(REDIS_CLIENT) private readonly client: Redis) {}
 
   async set(key: string, value: string, ttlSeconds: number): Promise<void> {
-    await this.client.set(key, value, 'EX', ttlSeconds)
+    try {
+      await this.client.set(key, value, 'EX', ttlSeconds)
+    } catch (err) {
+      this.logger.warn(`Redis set failed for key "${key}": ${err.message}`)
+    }
   }
 
   async get(key: string): Promise<string | null> {
-    return this.client.get(key)
+    try {
+      return await this.client.get(key)
+    } catch (err) {
+      this.logger.warn(`Redis get failed for key "${key}": ${err.message}`)
+      return null
+    }
   }
 
   async del(key: string): Promise<void> {
-    await this.client.del(key)
+    try {
+      await this.client.del(key)
+    } catch (err) {
+      this.logger.warn(`Redis del failed for key "${key}": ${err.message}`)
+    }
   }
 
   async exists(key: string): Promise<boolean> {
-    return (await this.client.exists(key)) === 1
+    try {
+      return (await this.client.exists(key)) === 1
+    } catch (err) {
+      this.logger.warn(`Redis exists failed for key "${key}": ${err.message}`)
+      return false
+    }
   }
 
   async delPattern(pattern: string): Promise<void> {
-    const stream = this.client.scanStream({ match: pattern, count: 100 })
-    const pipeline = this.client.pipeline()
+    try {
+      const stream = this.client.scanStream({ match: pattern, count: 100 })
+      const pipeline = this.client.pipeline()
 
-    await new Promise<void>((resolve, reject) => {
-      stream.on('data', (keys: string[]) => {
-        if (keys.length) keys.forEach(k => pipeline.del(k))
+      await new Promise<void>((resolve, reject) => {
+        stream.on('data', (keys: string[]) => {
+          if (keys.length) keys.forEach(k => pipeline.del(k))
+        })
+        stream.on('end', async () => {
+          await pipeline.exec()
+          resolve()
+        })
+        stream.on('error', reject)
       })
-      stream.on('end', async () => {
-        await pipeline.exec()
-        resolve()
-      })
-      stream.on('error', reject)
-    })
+    } catch (err) {
+      this.logger.warn(`Redis delPattern failed for pattern "${pattern}": ${err.message}`)
+    }
   }
 }
