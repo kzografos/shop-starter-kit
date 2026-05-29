@@ -201,6 +201,12 @@ docker compose up -d
 
 **Note:** This builds Docker images which takes a few minutes the first time. Use this option to test the production build locally.
 
+> ⚠️ **After changing backend code, Dockerfile, or `start.sh`, you must rebuild** — `docker compose up` alone reuses the stale image and your changes won't apply:
+> ```bash
+> docker compose up -d --build            # rebuild all
+> docker compose up -d --build backend    # rebuild only backend
+> ```
+
 ---
 
 ### Option B — Infrastructure in Docker, code runs locally (recommended for development)
@@ -281,7 +287,16 @@ Copy `.env.example` to `.env` and fill in all values.
 | `EMAIL_FROM`                  | Sender email address                    | ✅       |
 | `NUXT_PUBLIC_API_BASE`        | Backend API URL (public)                | ✅       |
 | `NUXT_PUBLIC_WHATSAPP_NUMBER` | WhatsApp contact number                 | ✅       |
-| `NUXT_URL`                    | Frontend URL (for CORS)                 | ✅       |
+| `NUXT_URL`                    | Frontend URL(s) for CORS (prod only)    | ✅       |
+
+### CORS behavior
+
+- **Development** (`NODE_ENV=development`): backend allows **any** `http://localhost:<port>` origin. `NUXT_URL` is ignored. This avoids breakage when Nuxt picks an alternate port (e.g. 3002 if 3000 is taken).
+- **Production** (`NODE_ENV=production`): backend allows **only** the origins in `NUXT_URL`. Supports multiple, comma-separated:
+  ```
+  NUXT_URL=https://petshopcyprus.com,http://localhost:3000
+  ```
+  Accessing via Nginx (port 80/443) is same-origin, so no CORS applies there.
 
 ---
 
