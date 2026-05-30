@@ -126,7 +126,7 @@
         <!-- Google OAuth -->
         <button
           type="button"
-          class="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-[--color-border-warm] bg-white text-[--color-bark] text-sm font-medium hover:bg-[--color-surface-page] transition-colors mb-5"
+          class="w-full flex items-center justify-center gap-3 px-4 h-14 rounded-xl border border-[--color-border-warm] bg-cream text-[--color-bark] text-base font-medium hover:bg-[--color-surface-card] hover:border-terracotta/50 transition-colors mb-5"
           @click="signInWithGoogle"
         >
           <svg viewBox="0 0 24 24" class="w-4 h-4 shrink-0">
@@ -158,7 +158,7 @@
         </div>
 
         <!-- Form -->
-        <form class="space-y-4" @submit.prevent="onSubmit">
+        <form class="space-y-5" @submit.prevent="onSubmit">
           <UFormField :label="$t('auth.email')" required>
             <UInput
               v-model="form.email"
@@ -166,7 +166,7 @@
               placeholder="you@example.com"
               autocomplete="email"
               required
-              class="w-full"
+              :class="inputClass"
             />
           </UFormField>
 
@@ -177,7 +177,7 @@
               placeholder="••••••••"
               :autocomplete="isLogin ? 'current-password' : 'new-password'"
               required
-              class="w-full"
+              :class="inputClass"
             />
           </UFormField>
 
@@ -202,6 +202,7 @@
             block
             :loading="loading"
             :label="isLogin ? $t('login.arrow_button') : $t('login.register_arrow_button')"
+            :ui="{ base: 'h-14 justify-center rounded-xl text-base' }"
           />
         </form>
 
@@ -247,6 +248,8 @@ const localePath = useLocalePath()
 const route = useRoute()
 const { public: { apiBase } } = useRuntimeConfig()
 
+const inputClass = useAuthInputClass()
+
 useSeoMeta({ title: () => t('seo.login.title') })
 
 const isLogin = ref(true)
@@ -285,7 +288,8 @@ async function onSubmit() {
     }
   } catch (err: unknown) {
     const msg = (err as { data?: { message?: string | string[] } })?.data?.message
-    error.value = Array.isArray(msg) ? msg[0] : (msg ?? 'An error occurred')
+    const resolved = (Array.isArray(msg) ? msg[0] : msg) ?? 'An error occurred'
+    error.value = String(resolved)
   } finally {
     loading.value = false
   }

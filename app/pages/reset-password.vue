@@ -1,22 +1,22 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-    <div class="w-full max-w-sm">
+  <div class="min-h-screen flex items-center justify-center px-4 py-12 bg-[--color-surface-page]">
+    <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <NuxtLink :to="localePath('/')">
-          <img src="/logo.svg" alt="PetShop CY" class="h-14 w-auto mx-auto mb-4" >
+          <img src="/logo.svg" alt="PetShop CY" class="h-12 w-auto mx-auto" >
         </NuxtLink>
       </div>
 
-      <UCard class="p-2">
-        <div class="text-center mb-6">
-          <h1 class="text-2xl font-bold text-gray-900">{{ $t('auth.reset_title') }}</h1>
-          <p class="text-sm text-gray-500 mt-1">{{ $t('auth.reset_desc') }}</p>
+      <div class="bg-[--color-surface-card] border border-[--color-border-warm] rounded-2xl p-8">
+        <div class="mb-6">
+          <h1 class="font-display text-2xl font-bold text-[--color-bark]">{{ $t('auth.reset_title') }}</h1>
+          <p class="text-sm text-[--color-bark-light] mt-2">{{ $t('auth.reset_desc') }}</p>
         </div>
 
         <!-- No valid session from email link -->
         <div v-if="!ready" class="text-center py-4">
-          <UIcon name="i-heroicons-exclamation-triangle" class="w-10 h-10 text-yellow-500 mx-auto mb-3" />
-          <p class="text-sm text-gray-500">{{ $t('auth.reset_invalid') }}</p>
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-10 h-10 text-[--color-warm-red] mx-auto mb-3" />
+          <p class="text-sm text-[--color-bark-light]">{{ $t('auth.reset_invalid') }}</p>
           <UButton
             :to="localePath('/forgot-password')"
             variant="ghost"
@@ -26,7 +26,7 @@
         </div>
 
         <!-- Password form -->
-        <form v-else class="space-y-4" @submit.prevent="onSubmit">
+        <form v-else class="space-y-5" @submit.prevent="onSubmit">
           <UFormField :label="$t('auth.new_password')" required>
             <UInput
               v-model="password"
@@ -34,7 +34,7 @@
               placeholder="••••••••"
               autocomplete="new-password"
               required
-              class="w-full"
+              :class="inputClass"
             />
           </UFormField>
 
@@ -45,7 +45,7 @@
               placeholder="••••••••"
               autocomplete="new-password"
               required
-              class="w-full"
+              :class="inputClass"
             />
           </UFormField>
 
@@ -58,9 +58,10 @@
             :loading="loading"
             :disabled="success"
             :label="$t('auth.reset_btn')"
+            :ui="{ base: 'h-14 justify-center rounded-xl text-base' }"
           />
         </form>
-      </UCard>
+      </div>
     </div>
   </div>
 </template>
@@ -73,6 +74,8 @@ const { t } = useI18n()
 const api = useApi()
 const localePath = useLocalePath()
 const route = useRoute()
+
+const inputClass = useAuthInputClass()
 
 const password = ref('')
 const confirm = ref('')

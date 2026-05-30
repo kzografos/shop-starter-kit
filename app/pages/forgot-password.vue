@@ -1,19 +1,19 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-    <div class="w-full max-w-sm">
+  <div class="min-h-screen flex items-center justify-center px-4 py-12 bg-[--color-surface-page]">
+    <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <NuxtLink :to="localePath('/')">
-          <img src="/logo.svg" alt="PetShop CY" class="h-14 w-auto mx-auto mb-4" >
+          <img src="/logo.svg" alt="PetShop CY" class="h-12 w-auto mx-auto" >
         </NuxtLink>
       </div>
 
-      <UCard class="p-2">
-        <div class="text-center mb-6">
-          <h1 class="text-2xl font-bold text-gray-900">{{ $t('auth.forgot_title') }}</h1>
-          <p class="text-sm text-gray-500 mt-1">{{ $t('auth.forgot_desc') }}</p>
+      <div class="bg-[--color-surface-card] border border-[--color-border-warm] rounded-2xl p-8">
+        <div class="mb-6">
+          <h1 class="font-display text-2xl font-bold text-[--color-bark]">{{ $t('auth.forgot_title') }}</h1>
+          <p class="text-sm text-[--color-bark-light] mt-2">{{ $t('auth.forgot_desc') }}</p>
         </div>
 
-        <form class="space-y-4" @submit.prevent="onSubmit">
+        <form class="space-y-5" @submit.prevent="onSubmit">
           <UFormField :label="$t('auth.email')" required>
             <UInput
               v-model="email"
@@ -21,7 +21,7 @@
               placeholder="you@example.com"
               autocomplete="email"
               required
-              class="w-full"
+              :class="inputClass"
             />
           </UFormField>
 
@@ -34,15 +34,16 @@
             :loading="loading"
             :disabled="sent"
             :label="$t('auth.forgot_btn')"
+            :ui="{ base: 'h-14 justify-center rounded-xl text-base' }"
           />
         </form>
 
-        <p class="text-sm text-center text-gray-500 mt-5">
-          <NuxtLink :to="localePath('/login')" class="text-primary-500 font-medium hover:underline">
+        <p class="text-sm text-center text-[--color-bark-light] mt-6">
+          <NuxtLink :to="localePath('/login')" class="text-terracotta font-medium hover:text-terracotta-dark transition-colors">
             ← {{ $t('auth.back_to_login') }}
           </NuxtLink>
         </p>
-      </UCard>
+      </div>
     </div>
   </div>
 </template>
@@ -54,6 +55,8 @@ const { t } = useI18n()
 
 const api = useApi()
 const localePath = useLocalePath()
+
+const inputClass = useAuthInputClass()
 
 const email = ref('')
 const loading = ref(false)
