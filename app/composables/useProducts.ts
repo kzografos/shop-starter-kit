@@ -23,14 +23,17 @@ export function useProducts(page: Ref<number>) {
       const params = new URLSearchParams()
       params.set('page', String(page.value))
 
-      if (filtersStore.selectedAnimals.length)
-        params.set('categories', filtersStore.selectedAnimals.join(','))
-      if (filtersStore.selectedBrands.length)
-        params.set('brand', filtersStore.selectedBrands[0])
+      // Array filters → repeated params (categories=a&categories=b) so the
+      // backend DTO receives a real array, not one comma-joined string.
+      for (const animal of filtersStore.selectedAnimals)
+        params.append('categories', animal)
+      for (const brand of filtersStore.selectedBrands)
+        params.append('brand', brand)
+      // Price params must match the backend DTO field names (minPrice/maxPrice).
       if (filtersStore.priceMin !== null)
-        params.set('priceMin', String(filtersStore.priceMin))
+        params.set('minPrice', String(filtersStore.priceMin))
       if (filtersStore.priceMax !== null)
-        params.set('priceMax', String(filtersStore.priceMax))
+        params.set('maxPrice', String(filtersStore.priceMax))
       if (filtersStore.search)
         params.set('search', filtersStore.search)
 
