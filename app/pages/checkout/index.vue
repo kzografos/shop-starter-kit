@@ -175,6 +175,13 @@ const form = reactive({
 const isGuest = computed(() => !authStore.isLoggedIn)
 const emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.guest_email.trim()))
 
+// All shipping fields required when shipping is selected.
+const shippingValid = computed(() => {
+  if (form.fulfillment_type !== 'shipping') return true
+  const a = form.shipping_address
+  return [a.full_name, a.address, a.city, a.postal_code, a.phone].every(v => v.trim().length > 0)
+})
+
 const paymentOptions = computed(() => {
   const options = [{ value: 'stripe', label: t('checkout.payment_online') }]
   if (form.fulfillment_type === 'pickup') {
@@ -210,6 +217,10 @@ const total = computed(() =>
 async function placeOrder() {
   if (isGuest.value && !emailValid.value) {
     orderError.value = t('checkout.email_required')
+    return
+  }
+  if (!shippingValid.value) {
+    orderError.value = t('checkout.shipping_required')
     return
   }
   // Remember the guest email so the Stripe success page can offer account creation.
@@ -260,7 +271,10 @@ async function placeOrder() {
       await navigateTo({ path: localePath('/checkout/success'), query: { order_id: order.id } })
     }
   } catch (e: unknown) {
-    orderError.value = e instanceof Error ? e.message : 'Something went wrong'
+    // Prefer the backend's validation message(s) over the raw "[POST] … 400" string.
+    const data = (e as { data?: { message?: string | string[] } })?.data
+    const msg = Array.isArray(data?.message) ? data.message[0] : data?.message
+    orderError.value = msg ?? t('checkout.order_failed')
   } finally {
     loading.value = false
   }

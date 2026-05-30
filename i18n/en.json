@@ -69,6 +69,8 @@
     "email": "Email",
     "email_hint": "We'll send your order confirmation here",
     "email_required": "Please enter a valid email address",
+    "shipping_required": "Please fill in all shipping details",
+    "order_failed": "Could not place your order. Please try again.",
     "have_account": "Already have an account?",
     "create_account_title": "Create your account",
     "create_account_subtitle": "Track this order and earn loyalty points on every purchase.",
