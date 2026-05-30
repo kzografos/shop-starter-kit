@@ -46,7 +46,10 @@
     <UModal v-model:open="showAuthModal">
       <template #content>
         <div class="p-6 text-center">
-          <UIcon name="i-heroicons-heart" class="w-10 h-10 text-terracotta mx-auto mb-4" />
+          <!-- Hero icon in a soft tinted circle -->
+          <div class="w-14 h-14 rounded-full bg-terracotta/10 flex items-center justify-center mx-auto mb-4">
+            <UIcon name="i-heroicons-heart" class="w-7 h-7 text-terracotta" />
+          </div>
           <h3 class="font-display text-xl font-bold text-bark mb-2">
             {{ $t('favourites.auth_title') }}
           </h3>
@@ -56,14 +59,14 @@
           <div class="flex gap-3 justify-center">
             <NuxtLink
               :to="localePath('/login')"
-              class="px-5 py-2.5 rounded-full bg-terracotta text-white text-sm font-semibold hover:bg-terracotta-dark transition-colors"
+              class="px-5 h-11 inline-flex items-center rounded-full bg-terracotta text-white text-sm font-semibold hover:bg-terracotta-dark transition-colors"
               @click="showAuthModal = false"
             >
               {{ $t('auth.login_btn') }}
             </NuxtLink>
             <NuxtLink
               :to="localePath('/login?tab=register')"
-              class="px-5 py-2.5 rounded-full border border-cream-pale text-bark text-sm font-semibold hover:border-terracotta transition-colors"
+              class="px-5 h-11 inline-flex items-center rounded-full border border-[--color-border-warm] text-bark text-sm font-semibold hover:border-terracotta hover:text-terracotta transition-colors"
               @click="showAuthModal = false"
             >
               {{ $t('auth.register_btn') }}
