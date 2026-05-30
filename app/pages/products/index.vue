@@ -22,17 +22,17 @@
 
           <!-- Mobile filters -->
           <div class="lg:hidden mb-4">
-            <UButton
-              icon="i-heroicons-adjustments-horizontal"
-              :label="$t('filters.title')"
-              variant="outline"
-              color="neutral"
+            <button
+              class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-cream border border-[--color-border-warm] text-sm font-medium text-bark hover:border-terracotta hover:text-terracotta transition-colors"
               @click="showMobileFilters = true"
-            />
+            >
+              <UIcon name="i-heroicons-adjustments-horizontal" class="w-4 h-4" />
+              {{ $t('filters.title') }}
+            </button>
           </div>
 
           <!-- Loading -->
-          <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-if="pending" class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             <USkeleton v-for="n in 8" :key="n" class="aspect-3/4 rounded-2xl" />
           </div>
 
@@ -54,7 +54,7 @@
           <!-- Pagination -->
           <div v-if="totalPages > 1" class="flex items-center justify-center gap-1 mt-10">
             <button
-              class="h-9 w-9 flex items-center justify-center rounded-lg border border-[--color-border-warm] text-[--color-bark-light] hover:border-terracotta hover:text-terracotta transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              class="h-11 w-11 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg border border-[--color-border-warm] text-[--color-bark-light] hover:border-terracotta hover:text-terracotta transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               :disabled="currentPage === 1"
               @click="currentPage--"
             >
@@ -64,13 +64,13 @@
             <template v-for="p in visiblePages" :key="p">
               <span
                 v-if="p === '...'"
-                class="h-9 w-9 flex items-center justify-center text-sm text-[--color-bark-light]"
+                class="h-11 w-11 sm:h-9 sm:w-9 flex items-center justify-center text-sm text-[--color-bark-light]"
               >
                 …
               </span>
               <button
                 v-else
-                class="h-9 w-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors border"
+                class="h-11 w-11 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors border"
                 :class="currentPage === p
                   ? 'bg-terracotta text-white border-terracotta'
                   : 'border-[--color-border-warm] text-[--color-bark] hover:border-terracotta hover:text-terracotta'"
@@ -81,7 +81,7 @@
             </template>
 
             <button
-              class="h-9 w-9 flex items-center justify-center rounded-lg border border-[--color-border-warm] text-[--color-bark-light] hover:border-terracotta hover:text-terracotta transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              class="h-11 w-11 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg border border-[--color-border-warm] text-[--color-bark-light] hover:border-terracotta hover:text-terracotta transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               :disabled="currentPage === totalPages"
               @click="currentPage++"
             >
@@ -93,14 +93,23 @@
     </div>
 
     <!-- Mobile filters slideover -->
-    <USlideover v-model:open="showMobileFilters" side="left">
+    <USlideover v-model:open="showMobileFilters" side="left" :ui="{ content: '!bg-cream' }">
       <template #content>
-        <div class="p-6">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="font-semibold text-lg">{{ $t('filters.title') }}</h3>
-            <UButton icon="i-heroicons-x-mark" variant="ghost" @click="showMobileFilters = false" />
+        <div class="flex flex-col h-full bg-cream">
+          <!-- Fixed header -->
+          <div class="flex items-center justify-between px-5 py-4 border-b border-[--color-border-warm] bg-cream shrink-0">
+            <h3 class="font-display font-bold text-lg text-bark">{{ $t('filters.title') }}</h3>
+            <button
+              class="h-9 w-9 flex items-center justify-center rounded-full text-bark-light hover:bg-cream-pale transition-colors"
+              @click="showMobileFilters = false"
+            >
+              <UIcon name="i-heroicons-x-mark" class="w-5 h-5" />
+            </button>
           </div>
-          <ProductFilters />
+          <!-- Scrollable body -->
+          <div class="flex-1 overflow-y-auto p-4">
+            <ProductFilters @applied="showMobileFilters = false" />
+          </div>
         </div>
       </template>
     </USlideover>

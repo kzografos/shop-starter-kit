@@ -61,8 +61,8 @@
             </button>
           </div>
 
-          <!-- Account dropdown (logged in) -->
-          <div v-if="isLoggedIn" ref="dropdownRef" class="relative">
+          <!-- Account dropdown (logged in) — desktop only; mobile uses the hamburger menu -->
+          <div v-if="isLoggedIn" ref="dropdownRef" class="relative hidden md:block">
             <button
               class="h-8 w-8 flex items-center justify-center rounded-full text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
               @click="userMenuOpen = !userMenuOpen"
@@ -127,11 +127,11 @@
             </div>
           </div>
 
-          <!-- Login button (logged out) -->
+          <!-- Login button (logged out) — desktop only; mobile uses the hamburger menu -->
           <NuxtLink
             v-else
             :to="localePath('/login')"
-            class="h-8 px-3 flex items-center rounded-full text-sm font-medium text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
+            class="h-8 px-3 hidden md:flex items-center rounded-full text-sm font-medium text-bark-light hover:text-bark hover:bg-cream-pale transition-all whitespace-nowrap"
           >
             {{ $t('header.login') }}
           </NuxtLink>

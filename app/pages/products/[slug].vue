@@ -30,7 +30,7 @@
         <!-- Images -->
         <div class="space-y-4">
           <div
-            class="aspect-square bg-cream-pale rounded-2xl overflow-hidden border border-[--color-border-warm]"
+            class="relative aspect-square bg-cream-pale rounded-2xl overflow-hidden border border-[--color-border-warm]"
           >
             <img
               :src="product.images[selectedImage] || '/placeholder.svg'"
@@ -38,6 +38,18 @@
               class="w-full h-full object-cover"
               @error="(e: Event) => ((e.target as HTMLImageElement).src = '/placeholder.svg')"
             />
+            <!-- Favourite (top-right) -->
+            <button
+              class="absolute top-3 right-3 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-white/85 backdrop-blur-sm shadow-sm hover:bg-white transition-all"
+              :aria-label="$t('favourites.title')"
+              @click="handleFavourite"
+            >
+              <UIcon
+                :name="isFav ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
+                class="w-5 h-5 transition-colors"
+                :class="isFav ? 'text-terracotta' : 'text-bark-light'"
+              />
+            </button>
           </div>
           <div v-if="product.images.length > 1" class="flex gap-2 flex-wrap">
             <button
@@ -112,24 +124,24 @@
             </span>
           </div>
 
-          <!-- Quantity + Add to Cart + Favourite -->
-          <div v-if="product.stock > 0" class="flex items-center gap-3">
+          <!-- Quantity + Add to Cart -->
+          <div v-if="product.stock > 0" class="space-y-3">
             <div
-              class="flex items-center border border-[--color-border-warm] rounded-xl overflow-hidden bg-[--color-surface-card]"
+              class="flex items-center w-fit border border-[--color-border-warm] rounded-xl overflow-hidden bg-[--color-surface-card]"
             >
               <button
-                class="px-3 py-2.5 hover:bg-[--color-surface-page] transition-colors disabled:opacity-40 text-[--color-bark]"
+                class="px-4 py-3 hover:bg-[--color-surface-page] transition-colors disabled:opacity-40 text-[--color-bark]"
                 :disabled="qty <= 1"
                 @click="qty--"
               >
                 −
               </button>
               <span
-                class="px-4 py-2.5 font-semibold text-[--color-bark] min-w-12 text-center border-x border-[--color-border-warm]"
+                class="px-5 py-3 font-semibold text-[--color-bark] min-w-12 text-center border-x border-[--color-border-warm]"
                 >{{ qty }}</span
               >
               <button
-                class="px-3 py-2.5 hover:bg-[--color-surface-page] transition-colors disabled:opacity-40 text-[--color-bark]"
+                class="px-4 py-3 hover:bg-[--color-surface-page] transition-colors disabled:opacity-40 text-[--color-bark]"
                 :disabled="qty >= product.stock"
                 @click="qty++"
               >
@@ -138,21 +150,11 @@
             </div>
 
             <button
-              class="flex-1 py-2.5 px-6 rounded-xl bg-terracotta text-white font-semibold text-sm hover:bg-terracotta-dark transition-colors"
+              class="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-terracotta text-white font-semibold text-sm whitespace-nowrap hover:bg-terracotta-dark transition-colors"
               @click="addToCart"
             >
+              <UIcon name="i-heroicons-shopping-bag" class="w-5 h-5" />
               {{ $t('product.add_to_cart') }}
-            </button>
-
-            <button
-              class="w-11 h-11 flex items-center justify-center rounded-xl border border-[--color-border-warm] hover:border-terracotta bg-[--color-surface-card] transition-colors"
-              @click="handleFavourite"
-            >
-              <UIcon
-                :name="isFav ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
-                class="w-5 h-5 transition-colors"
-                :class="isFav ? 'text-terracotta' : 'text-[--color-bark-light]'"
-              />
             </button>
           </div>
 

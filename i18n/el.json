@@ -42,6 +42,7 @@
   },
   "product": {
     "add_to_cart": "Προσθήκη στο Καλάθι",
+    "add_short": "Προσθήκη",
     "out_of_stock": "Εξαντλήθηκε",
     "in_stock": "Διαθέσιμο",
     "quantity": "Ποσότητα",

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative h-screen overflow-hidden grid grid-cols-1 lg:grid-cols-2 bg-[--color-surface-page]"
+    class="relative min-h-screen grid grid-cols-1 lg:grid-cols-2 lg:h-screen lg:overflow-hidden bg-[--color-surface-page]"
   >
     <!-- Language switcher -->
     <div class="absolute top-4 right-6 z-10 flex items-center gap-2">
@@ -75,7 +75,7 @@
 
     <!-- Right panel: form -->
     <div
-      class="flex flex-col items-center justify-center px-6 py-12 h-screen overflow-y-auto bg-[--color-surface-page] lg:bg-[--color-surface-card]"
+      class="flex flex-col items-center justify-center px-6 py-12 lg:h-screen lg:overflow-y-auto bg-[--color-surface-page] lg:bg-[--color-surface-card]"
     >
       <!-- Mobile logo -->
       <div class="lg:hidden mb-8">
@@ -227,9 +227,9 @@
 
         <NuxtLink
           :to="localePath('/products')"
-          class="flex items-center justify-center gap-1.5 text-xs text-[--color-bark-light] hover:text-[--color-bark] transition-colors mt-2"
+          class="flex items-center justify-center gap-1.5 text-sm text-[--color-bark-light] hover:text-[--color-bark] transition-colors mt-5 mb-2"
         >
-          <UIcon name="i-heroicons-arrow-left" class="w-3 h-3" />
+          <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
           {{ $t('login.continue_browsing') }}
         </NuxtLink>
       </div>

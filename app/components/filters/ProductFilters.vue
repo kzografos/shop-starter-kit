@@ -154,6 +154,8 @@
 </template>
 
 <script setup lang="ts">
+const emit = defineEmits<{ applied: [] }>()
+
 const filtersStore = useFiltersStore()
 const { locale } = useI18n()
 const { public: { apiBase } } = useRuntimeConfig()
@@ -202,6 +204,7 @@ function applyFilters() {
   filtersStore.selectedBrands = [...localBrands.value]
   filtersStore.priceMin = localPriceMin.value > PRICE_ABS_MIN ? localPriceMin.value : null
   filtersStore.priceMax = localPriceMax.value < PRICE_ABS_MAX ? localPriceMax.value : null
+  emit('applied')
 }
 
 function resetAll() {

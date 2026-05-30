@@ -29,14 +29,15 @@
       </div>
     </NuxtLink>
 
-    <!-- Favourite button -->
+    <!-- Favourite button — larger tap target on mobile (≈40px) -->
     <button
-      class="absolute top-2.5 right-2.5 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-all duration-150"
+      class="absolute top-2 right-2 z-10 w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-all duration-150"
+      :aria-label="$t('favourites.title')"
       @click.prevent="handleFavourite"
     >
       <UIcon
         :name="isFav ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
-        class="w-4 h-4 transition-colors duration-150"
+        class="w-5 h-5 sm:w-4 sm:h-4 transition-colors duration-150"
         :class="isFav ? 'text-terracotta' : 'text-bark-light'"
       />
     </button>
@@ -96,7 +97,7 @@
       class="px-4 pb-4 opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-200"
     >
       <button
-        class="w-full py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200"
+        class="w-full h-10 flex items-center justify-center gap-1.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors duration-200"
         :class="
           product.stock === 0
             ? 'bg-cream-pale text-bark-light cursor-not-allowed'
@@ -105,7 +106,8 @@
         :disabled="product.stock === 0"
         @click.prevent="addToCart"
       >
-        {{ product.stock === 0 ? $t('product.out_of_stock') : $t('product.add_to_cart') }}
+        <UIcon v-if="product.stock !== 0" name="i-heroicons-shopping-bag" class="w-4 h-4" />
+        {{ product.stock === 0 ? $t('product.out_of_stock') : $t('product.add_short') }}
       </button>
     </div>
   </div>
