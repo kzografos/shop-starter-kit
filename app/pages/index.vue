@@ -29,8 +29,8 @@
           </NuxtLink>
         </div>
 
-        <!-- Stats row -->
-        <div class="flex gap-8 flex-wrap mt-8 pt-8 border-t border-white/20">
+        <!-- Stats — 2×2 grid on mobile (balanced), inline row from sm up -->
+        <div class="grid grid-cols-2 gap-x-8 gap-y-6 sm:flex sm:gap-8 sm:flex-wrap mt-8 pt-8 border-t border-white/20">
           <div v-for="stat in stats" :key="stat.labelKey" class="flex flex-col">
             <span class="text-2xl font-bold font-display text-white">{{ stat.value }}</span>
             <span class="text-xs text-white/60 mt-0.5">{{ $t(stat.labelKey) }}</span>
