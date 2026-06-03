@@ -245,5 +245,5 @@ function addToCart() {
   cartOpen.value = true
 }
 
-useSeoMeta({ title: () => `${productName.value} | PetShop CY` })
+useSeoMeta({ title: () => productName.value })
 </script>

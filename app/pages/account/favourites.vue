@@ -60,5 +60,5 @@ const { data: products, pending } = useAsyncData('favourites', async () => {
   return favs.map((f) => f.product)
 }, { server: false, lazy: true })
 
-useSeoMeta({ title: () => `${t('favourites.title')} | PetShop CY` })
+useSeoMeta({ title: () => t('favourites.title') })
 </script>

@@ -113,7 +113,7 @@ function goToBrand(brandName: string) {
 }
 
 useSeoMeta({
-  title: `${t('brands.title')} | PetShop CY`,
+  title: t('brands.title'),
   description: t('brands.subtitle'),
 })
 </script>

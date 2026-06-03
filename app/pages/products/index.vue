@@ -118,6 +118,7 @@
 
 <script setup lang="ts">
 
+const { t } = useI18n()
 const filtersStore = useFiltersStore()
 const showMobileFilters = ref(false)
 
@@ -222,5 +223,5 @@ onMounted(async () => {
   filtersStore.selectedAnimals = [animalSlug]
 })
 
-useSeoMeta({ title: 'Προϊόντα | PetShop CY' })
+useSeoMeta({ title: () => t('products.title') })
 </script>

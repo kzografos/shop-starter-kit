@@ -42,7 +42,7 @@
       <div class="hidden lg:block">
         <img
           src="/hero-image.png"
-          alt="PetShop CY"
+          alt="Mike Animal Show Pet Shop"
           class="w-full h-full object-cover object-center"
         />
       </div>
@@ -283,8 +283,9 @@ function catImage(slug: string): string | undefined {
 }
 
 useSeoMeta({
-  title: 'PetShop CY — Το Pet Shop σας στην Κύπρο',
-  description:
-    'Τροφές, αξεσουάρ και περιποίηση για σκύλους, γάτες, πουλιά και τρωκτικά. Αποστολή σε όλη την Κύπρο.',
+  // Title omitted → global template renders the brand name (language-neutral) on the homepage.
+  description: () => locale.value === 'el'
+    ? 'Τροφές, αξεσουάρ και περιποίηση για σκύλους, γάτες, πουλιά και τρωκτικά. Παράδοση στη Λάρνακα και σε όλη την Κύπρο.'
+    : 'Pet food, accessories and grooming for dogs, cats, birds and rodents. Delivery in Larnaca and across Cyprus.',
 })
 </script>

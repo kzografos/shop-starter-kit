@@ -230,14 +230,16 @@
     "phone_label": "Phone",
     "email_label": "Email",
     "hours_label": "Opening Hours",
-    "hours_weekdays": "Mon – Fri",
+    "hours_weekdays": "Mon–Tue, Thu–Fri",
+    "hours_wednesday": "Wednesday",
     "hours_saturday": "Saturday",
     "hours_sunday": "Sunday",
     "closed": "Closed",
     "map_title": "Store location map"
   },
   "footer": {
-    "description": "Your favourite pet shop in Cyprus. Food, accessories and grooming for every pet.",
+    "description": "Your local pet shop in Larnaca, Cyprus. Food, accessories and grooming for every pet — delivered to your door.",
+    "rights": "All rights reserved.",
     "links": "Links",
     "contact": "Info",
     "shipping_info": "Shipping €5 | Free from €50 | Cyprus only",
@@ -331,11 +333,11 @@
     "verified": "Verified purchase"
   },
   "seo": {
-    "login": { "title": "Login | PetShop CY" },
-    "forgot_password": { "title": "Forgot Password | PetShop CY" },
-    "reset_password": { "title": "Reset Password | PetShop CY" },
-    "checkout": { "title": "Checkout | PetShop CY" },
-    "order_confirmed": { "title": "Order Confirmed | PetShop CY" },
-    "payment_cancelled": { "title": "Payment Cancelled | PetShop CY" }
+    "login": { "title": "Login" },
+    "forgot_password": { "title": "Forgot Password" },
+    "reset_password": { "title": "Reset Password" },
+    "checkout": { "title": "Checkout" },
+    "order_confirmed": { "title": "Order Confirmed" },
+    "payment_cancelled": { "title": "Payment Cancelled" }
   }
 }

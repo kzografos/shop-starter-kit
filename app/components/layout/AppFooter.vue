@@ -41,7 +41,7 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
           <!-- Brand -->
           <div class="md:col-span-1">
-            <img src="/logo.svg" alt="PetShop CY" class="h-9 w-auto mb-4 brightness-0 invert opacity-80" >
+            <img src="/logo.svg" :alt="BUSINESS.legalName" class="h-9 w-auto mb-4 brightness-0 invert opacity-80" >
             <p class="text-sm leading-relaxed">{{ $t('footer.description') }}</p>
           </div>
 
@@ -83,7 +83,7 @@
         </div>
 
         <div class="mt-10 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-cream/40">
-          <span>© {{ new Date().getFullYear() }} PetShop CY. All rights reserved.</span>
+          <span>© {{ new Date().getFullYear() }} {{ BUSINESS.legalName }}. {{ $t('footer.rights') }}</span>
           <span class="flex items-center gap-1">
             <UIcon name="i-heroicons-heart" class="w-3 h-3 text-terracotta" />
             Made with love in Cyprus
@@ -95,6 +95,8 @@
 </template>
 
 <script setup lang="ts">
+import { BUSINESS } from '~/utils/business'
+
 const { public: { apiBase } } = useRuntimeConfig()
 const localePath = useLocalePath()
 const { t } = useI18n()

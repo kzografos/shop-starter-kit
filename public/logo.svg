@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 40" fill="none">
   <!-- Paw icon -->
   <circle cx="16" cy="20" r="7" fill="#f97316"/>
   <circle cx="8" cy="11" r="4" fill="#f97316"/>
   <circle cx="24" cy="11" r="4" fill="#f97316"/>
   <circle cx="6" cy="20" r="3" fill="#f97316"/>
   <circle cx="26" cy="20" r="3" fill="#f97316"/>
-  <!-- Text -->
-  <text x="36" y="26" font-family="system-ui, sans-serif" font-weight="700" font-size="18" fill="#1f2937">PetShop</text>
-  <text x="117" y="26" font-family="system-ui, sans-serif" font-weight="700" font-size="18" fill="#f97316">CY</text>
+  <!-- Wordmark -->
+  <text x="40" y="26" font-family="system-ui, sans-serif" font-weight="700" font-size="17" fill="#1f2937">Mike Animal</text>
+  <text x="158" y="26" font-family="system-ui, sans-serif" font-weight="700" font-size="17" fill="#f97316">Show</text>
 </svg>

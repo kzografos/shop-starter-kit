@@ -13,7 +13,7 @@
               <path d="M7.5 17c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4c0 1.5-1.5 2.5-2 2.5-1.5 0-1.5-1-2.5-1s-1 1-2.5 1c-.5 0-2-1-2-2.5z"/>
             </svg>
           </div>
-          <div class="admin-logo-text">PetShop CY</div>
+          <div class="admin-logo-text">Mike Animal Show</div>
           <span class="admin-pill">Admin</span>
         </div>
         <NuxtLink :to="localePath('/')" class="admin-back-link">

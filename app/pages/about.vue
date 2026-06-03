@@ -105,5 +105,5 @@ onMounted(() => {
   cardRefs.forEach(el => el && cardObs.observe(el))
 })
 
-useSeoMeta({ title: `${t('nav.about')} | PetShop CY` })
+useSeoMeta({ title: () => t('nav.about') })
 </script>

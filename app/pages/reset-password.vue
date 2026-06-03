@@ -3,7 +3,7 @@
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <NuxtLink :to="localePath('/')">
-          <img src="/logo.svg" alt="PetShop CY" class="h-12 w-auto mx-auto" >
+          <img src="/logo.svg" alt="Mike Animal Show Pet Shop" class="h-12 w-auto mx-auto" >
         </NuxtLink>
       </div>
 

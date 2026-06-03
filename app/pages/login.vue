@@ -34,7 +34,7 @@
         <NuxtLink :to="localePath('/')">
           <img
             src="/logo.svg"
-            alt="PetShop CY"
+            alt="Mike Animal Show Pet Shop"
             class="h-14 w-auto hover:opacity-80 transition-opacity"
           />
         </NuxtLink>
@@ -79,7 +79,7 @@
     >
       <!-- Mobile logo -->
       <div class="lg:hidden mb-8">
-        <img src="/logo.svg" alt="PetShop CY" class="h-12 w-auto mx-auto" />
+        <img src="/logo.svg" alt="Mike Animal Show Pet Shop" class="h-12 w-auto mx-auto" />
       </div>
 
       <div class="w-full max-w-105 min-h-130 flex flex-col">

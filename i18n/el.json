@@ -230,14 +230,16 @@
     "phone_label": "Τηλέφωνο",
     "email_label": "Email",
     "hours_label": "Ώρες Λειτουργίας",
-    "hours_weekdays": "Δευτ – Παρ",
+    "hours_weekdays": "Δευτ–Τρι, Πέμ–Παρ",
+    "hours_wednesday": "Τετάρτη",
     "hours_saturday": "Σάββατο",
     "hours_sunday": "Κυριακή",
     "closed": "Κλειστά",
     "map_title": "Χάρτης τοποθεσίας καταστήματος"
   },
   "footer": {
-    "description": "Το αγαπημένο σας pet shop στην Κύπρο. Τροφές, αξεσουάρ και περιποίηση για κάθε κατοικίδιο.",
+    "description": "Το τοπικό σας pet shop στη Λάρνακα, Κύπρος. Τροφές, αξεσουάρ και περιποίηση για κάθε κατοικίδιο — με παράδοση στην πόρτα σας.",
+    "rights": "Με επιφύλαξη παντός δικαιώματος.",
     "links": "Σύνδεσμοι",
     "contact": "Πληροφορίες",
     "shipping_info": "Αποστολή €5 | Δωρεάν από €50 | Μόνο Κύπρος",
@@ -331,11 +333,11 @@
     "verified": "Επαληθευμένη αγορά"
   },
   "seo": {
-    "login": { "title": "Σύνδεση | PetShop CY" },
-    "forgot_password": { "title": "Ξέχασα τον Κωδικό | PetShop CY" },
-    "reset_password": { "title": "Επαναφορά Κωδικού | PetShop CY" },
-    "checkout": { "title": "Ολοκλήρωση Αγοράς | PetShop CY" },
-    "order_confirmed": { "title": "Επιβεβαίωση Παραγγελίας | PetShop CY" },
-    "payment_cancelled": { "title": "Ακύρωση Πληρωμής | PetShop CY" }
+    "login": { "title": "Σύνδεση" },
+    "forgot_password": { "title": "Ξέχασα τον Κωδικό" },
+    "reset_password": { "title": "Επαναφορά Κωδικού" },
+    "checkout": { "title": "Ολοκλήρωση Αγοράς" },
+    "order_confirmed": { "title": "Επιβεβαίωση Παραγγελίας" },
+    "payment_cancelled": { "title": "Ακύρωση Πληρωμής" }
   }
 }

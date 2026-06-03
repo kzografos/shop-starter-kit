@@ -74,11 +74,12 @@ export default defineNuxtConfig({
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
     resendApiKey: process.env.RESEND_API_KEY,
-    emailFrom: process.env.EMAIL_FROM || 'PetShop CY <orders@petshopcyprus.com>',
+    emailFrom: process.env.EMAIL_FROM || 'Mike Animal Show <orders@yourdomain.com>',
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-      whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || '35799000000',
+      whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || '35799584273',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
     },
   },
 

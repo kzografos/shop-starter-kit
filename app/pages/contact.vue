@@ -26,7 +26,14 @@
             </div>
             <div>
               <div class="font-semibold text-bark text-sm mb-0.5">{{ item.label }}</div>
-              <div class="text-bark-light text-sm whitespace-pre-line leading-relaxed">{{ item.value }}</div>
+              <a
+                v-if="item.href"
+                :href="item.href"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-bark-light text-sm whitespace-pre-line leading-relaxed hover:text-terracotta transition-colors"
+              >{{ item.value }}</a>
+              <div v-else class="text-bark-light text-sm whitespace-pre-line leading-relaxed">{{ item.value }}</div>
             </div>
           </div>
 
@@ -42,17 +49,10 @@
             <div class="flex-1">
               <div class="font-semibold text-bark text-sm mb-2">{{ $t('contact.hours_label') }}</div>
               <div class="space-y-1 text-sm">
-                <div class="flex justify-between">
-                  <span class="text-bark-light">{{ $t('contact.hours_weekdays') }}</span>
-                  <span class="font-medium text-bark">09:00 – 19:00</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-bark-light">{{ $t('contact.hours_saturday') }}</span>
-                  <span class="font-medium text-bark">10:00 – 17:00</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-bark-light">{{ $t('contact.hours_sunday') }}</span>
-                  <span class="font-medium text-terracotta">{{ $t('contact.closed') }}</span>
+                <div v-for="row in hours" :key="row.key" class="flex justify-between">
+                  <span class="text-bark-light">{{ $t(`contact.hours_${row.key}`) }}</span>
+                  <span v-if="row.value" class="font-medium text-bark">{{ row.value }}</span>
+                  <span v-else class="font-medium text-terracotta">{{ $t('contact.closed') }}</span>
                 </div>
               </div>
             </div>
@@ -83,10 +83,12 @@
 </template>
 
 <script setup lang="ts">
+import { BUSINESS } from '~/utils/business'
+
 const { t } = useI18n()
 
-const STORE_LAT = 34.6786
-const STORE_LON = 33.0413
+const STORE_LAT = BUSINESS.geo.lat
+const STORE_LON = BUSINESS.geo.lon
 
 const mapUrl = computed(() => {
   const margin = 0.008
@@ -94,15 +96,18 @@ const mapUrl = computed(() => {
   return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${STORE_LAT},${STORE_LON}`
 })
 
+const addressValue = `${BUSINESS.address.street}\n${BUSINESS.address.postalCode} ${BUSINESS.address.city}, ${BUSINESS.address.countryName}`
+const hours = BUSINESS.displayHours
+
 const allContactItems = computed(() => [
-  { icon: 'i-heroicons-map-pin', label: t('contact.address_label'), value: t('contact.address_value') },
-  { icon: 'i-heroicons-phone', label: t('contact.phone_label'), value: '+357 25 000 000' },
-  { icon: 'i-heroicons-envelope', label: t('contact.email_label'), value: 'info@petshopcyprus.com' },
+  { icon: 'i-heroicons-map-pin', label: t('contact.address_label'), value: addressValue, href: undefined as string | undefined },
+  { icon: 'i-heroicons-phone', label: t('contact.phone_label'), value: BUSINESS.phoneDisplay, href: `tel:${BUSINESS.phone}` },
+  { icon: 'i-heroicons-chat-bubble-left-right', label: 'WhatsApp', value: BUSINESS.phoneDisplay, href: `https://wa.me/${BUSINESS.whatsapp}` },
 ])
 
-// Scroll fade-in — 3 contact items + 1 hours card = 4 total
+// Scroll fade-in — contact items + 1 hours card
 const cardRefs: Element[] = []
-const visibleCards = ref([false, false, false, false])
+const visibleCards = ref(Array(allContactItems.value.length + 1).fill(false))
 
 onMounted(() => {
   const obs = new IntersectionObserver((entries) => {
@@ -119,5 +124,5 @@ onMounted(() => {
   cardRefs.forEach(el => el && obs.observe(el))
 })
 
-useSeoMeta({ title: `${t('nav.contact')} | PetShop CY` })
+useSeoMeta({ title: `${t('nav.contact')} | ${BUSINESS.legalName}` })
 </script>

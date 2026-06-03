@@ -1,7 +1,7 @@
 {
   "name": "petshop-backend",
   "version": "1.0.0",
-  "description": "PetShop CY — NestJS API",
+  "description": "Mike Animal Show Pet Shop — NestJS API",
   "private": true,
   "scripts": {
     "build": "nest build",

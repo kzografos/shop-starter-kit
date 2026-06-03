@@ -9,7 +9,7 @@
       <div class="flex items-center justify-between h-16 gap-4">
         <!-- Logo -->
         <NuxtLink :to="localePath('/')" class="shrink-0 flex items-center gap-2">
-          <img src="/logo.svg" alt="PetShop CY" class="h-9 w-auto" />
+          <img src="/logo.svg" :alt="BUSINESS.legalName" class="h-9 w-auto" />
         </NuxtLink>
 
         <!-- Desktop nav -->
@@ -204,7 +204,7 @@
         <!-- Close bar -->
         <div class="flex items-center justify-between px-4 py-4 border-b border-[--color-border-soft] shrink-0">
           <NuxtLink :to="localePath('/')" class="font-display font-bold text-[--color-bark] text-lg" @click="mobileMenuOpen = false">
-            PetShop CY
+            {{ BUSINESS.name }}
           </NuxtLink>
           <button class="h-8 w-8 flex items-center justify-center rounded-full hover:bg-cream-pale transition-colors" @click="mobileMenuOpen = false">
             <UIcon name="i-heroicons-x-mark" class="w-5 h-5 text-[--color-bark-light]" />
@@ -286,6 +286,8 @@
 </template>
 
 <script setup lang="ts">
+import { BUSINESS } from '~/utils/business'
+
 const { locale, setLocale, t } = useI18n()
 const localePath = useLocalePath()
 const authStore = useAuthStore()
