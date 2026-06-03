@@ -31,6 +31,36 @@
             </button>
           </div>
 
+          <!-- Active filter chips + result count -->
+          <div v-if="chips.length || !pending" class="flex items-center justify-between gap-4 mb-5 flex-wrap">
+            <TransitionGroup
+              tag="div"
+              name="chip"
+              class="flex items-center gap-2 flex-wrap min-h-7"
+            >
+              <button
+                v-for="chip in chips"
+                :key="chip.id"
+                class="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-surface-card border border-[--color-border-warm] text-xs font-medium text-bark hover:border-terracotta transition-colors"
+                @click="chip.remove()"
+              >
+                {{ chip.label }}
+                <UIcon name="i-heroicons-x-mark" class="w-3.5 h-3.5 text-bark-light" />
+              </button>
+              <button
+                v-if="chips.length"
+                key="__clear"
+                class="text-xs font-medium text-terracotta hover:text-terracotta-dark transition-colors px-2 py-1"
+                @click="filtersStore.reset()"
+              >
+                {{ $t('filters.reset') }}
+              </button>
+            </TransitionGroup>
+            <span v-if="!pending" class="text-sm text-bark-light shrink-0">
+              {{ total }} {{ $t('products.results') }}
+            </span>
+          </div>
+
           <!-- Loading -->
           <div v-if="pending" class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             <USkeleton v-for="n in 8" :key="n" class="aspect-3/4 rounded-2xl" />
@@ -118,9 +148,35 @@
 
 <script setup lang="ts">
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const filtersStore = useFiltersStore()
+const { formatPrice } = useCurrency()
 const showMobileFilters = ref(false)
+
+// Active-filter chips — removing one mutates the store → single refetch (no extra queries).
+const chips = computed(() => {
+  const out: Array<{ id: string; label: string; remove: () => void }> = []
+  const names = filtersStore.categoryNames
+  const nameOf = (slug: string) => {
+    const n = names.get(slug)
+    return n ? (locale.value === 'el' ? n.el : n.en) : slug
+  }
+  for (const a of filtersStore.selectedAnimals)
+    out.push({ id: `a-${a}`, label: nameOf(a), remove: () => { filtersStore.selectedAnimals = filtersStore.selectedAnimals.filter((x) => x !== a) } })
+  for (const tp of filtersStore.selectedTypes)
+    out.push({ id: `t-${tp}`, label: nameOf(tp), remove: () => { filtersStore.selectedTypes = filtersStore.selectedTypes.filter((x) => x !== tp) } })
+  for (const b of filtersStore.selectedBrands)
+    out.push({ id: `b-${b}`, label: b, remove: () => { filtersStore.selectedBrands = filtersStore.selectedBrands.filter((x) => x !== b) } })
+  if (filtersStore.priceMin !== null || filtersStore.priceMax !== null)
+    out.push({
+      id: 'price',
+      label: `${formatPrice(filtersStore.priceMin ?? 0)} – ${formatPrice(filtersStore.priceMax ?? 500)}`,
+      remove: () => { filtersStore.priceMin = null; filtersStore.priceMax = null },
+    })
+  if (filtersStore.onSale)
+    out.push({ id: 'sale', label: t('filters.on_sale'), remove: () => { filtersStore.onSale = false } })
+  return out
+})
 
 // Local ref for search input — decoupled from the store
 const searchQuery = ref(filtersStore.search ?? '')
@@ -143,10 +199,12 @@ const currentPage = ref(Number(route.query.page) || 1)
 watch(
   [
     () => filtersStore.selectedAnimals,
+    () => filtersStore.selectedTypes,
     () => filtersStore.selectedBrands,
     () => filtersStore.priceMin,
     () => filtersStore.priceMax,
     () => filtersStore.search,
+    () => filtersStore.onSale,
   ],
   () => { currentPage.value = 1 },
   { deep: true }
@@ -161,7 +219,7 @@ watch(currentPage, (page) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 
-const { products, pending, totalPages } = useProducts(currentPage)
+const { products, pending, total, totalPages } = useProducts(currentPage)
 
 // Sync filter store back to URL so clearing filters also clears the query param
 watch(
@@ -228,3 +286,16 @@ onMounted(async () => {
 
 useSeoMeta({ title: () => t('products.title') })
 </script>
+
+<style scoped>
+/* Filter chips add/remove animation */
+.chip-enter-active,
+.chip-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.chip-enter-from,
+.chip-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+</style>

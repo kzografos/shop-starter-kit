@@ -1,8 +1,12 @@
 import { defineStore } from 'pinia'
 
-interface CategoryNode {
+interface CategoryLeaf {
   slug: string
-  children?: { slug: string }[]
+  name_el: string
+  name_en: string
+}
+interface CategoryNode extends CategoryLeaf {
+  children?: CategoryLeaf[]
 }
 
 export const useFiltersStore = defineStore('filters', () => {
@@ -29,6 +33,16 @@ export const useFiltersStore = defineStore('filters', () => {
     const result = [...selectedTypes.value]
     for (const a of selectedAnimals.value) if (!animalsWithType.has(a)) result.push(a)
     return result
+  })
+
+  // slug → localized names, for filter chips.
+  const categoryNames = computed(() => {
+    const m = new Map<string, { el: string; en: string }>()
+    for (const p of tree.value) {
+      m.set(p.slug, { el: p.name_el, en: p.name_en })
+      for (const c of p.children ?? []) m.set(c.slug, { el: c.name_el, en: c.name_en })
+    }
+    return m
   })
 
   function reset() {
@@ -64,6 +78,7 @@ export const useFiltersStore = defineStore('filters', () => {
     onSale,
     tree,
     queryCategories,
+    categoryNames,
     hasActiveFilters,
     reset,
   }

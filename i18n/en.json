@@ -41,6 +41,7 @@
     "title": "All Products",
     "search": "Search...",
     "no_results": "No products found",
+    "results": "products",
     "loading": "Loading..."
   },
   "product": {

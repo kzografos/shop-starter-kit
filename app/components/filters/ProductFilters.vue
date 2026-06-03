@@ -69,10 +69,11 @@
       </div>
     </div>
 
-    <!-- Type (subcategories of selected animals) -->
-    <template v-if="availableTypes.length">
-      <div class="h-px bg-gray-100" />
-      <div>
+    <!-- Type (subcategories of selected animals) — animated reveal -->
+    <Transition name="type-reveal">
+      <div v-if="availableTypes.length" class="space-y-7">
+        <div class="h-px bg-gray-100" />
+        <div>
         <h3 class="font-semibold text-bark mb-4">{{ $t('filters.type') }}</h3>
         <div class="space-y-3">
           <label
@@ -109,8 +110,9 @@
             }}</span>
           </label>
         </div>
+        </div>
       </div>
-    </template>
+    </Transition>
 
     <div class="h-px bg-gray-100" />
 
@@ -389,12 +391,31 @@ onMounted(async () => {
   // Share the tree with the store so it can compute effective query categories.
   filtersStore.tree = catTree.map((c) => ({
     slug: c.slug,
-    children: (c.children ?? []).map((ch) => ({ slug: ch.slug })),
+    name_el: c.name_el,
+    name_en: c.name_en,
+    children: (c.children ?? []).map((ch) => ({ slug: ch.slug, name_el: ch.name_el, name_en: ch.name_en })),
   }))
 })
 </script>
 
 <style scoped>
+/* Type section reveal — slide + fade */
+.type-reveal-enter-active,
+.type-reveal-leave-active {
+  transition: max-height 0.3s ease, opacity 0.25s ease, margin-top 0.3s ease;
+  overflow: hidden;
+}
+.type-reveal-enter-from,
+.type-reveal-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+.type-reveal-enter-to,
+.type-reveal-leave-from {
+  max-height: 640px;
+  opacity: 1;
+}
+
 .range-thumb {
   position: absolute;
   inset: 0;
