@@ -29,6 +29,14 @@
       </div>
     </NuxtLink>
 
+    <!-- Sale badge -->
+    <span
+      v-if="onSale"
+      class="absolute top-2 left-2 z-10 bg-warm-red text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm"
+    >
+      −{{ discountPct }}%
+    </span>
+
     <!-- Favourite button — larger tap target on mobile (≈40px) -->
     <button
       class="absolute top-2 right-2 z-10 w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-all duration-150"
@@ -92,7 +100,10 @@
         </h3>
       </NuxtLink>
 
-      <p class="text-base font-bold text-bark mt-auto pt-2">{{ formatPrice(product.price) }}</p>
+      <div class="mt-auto pt-2 flex items-baseline gap-2">
+        <p class="text-base font-bold" :class="onSale ? 'text-warm-red' : 'text-bark'">{{ formatPrice(product.price) }}</p>
+        <p v-if="onSale" class="text-sm text-bark-light line-through">{{ formatPrice(product.compare_at_price!) }}</p>
+      </div>
     </div>
 
     <!-- Slide-in CTA -->
@@ -143,6 +154,15 @@ const displayName = computed(() => {
 })
 
 const isFav = computed(() => favouritesStore.isFavourite(props.product.id))
+
+const onSale = computed(() =>
+  props.product.compare_at_price != null && props.product.compare_at_price > props.product.price,
+)
+const discountPct = computed(() =>
+  onSale.value
+    ? Math.round((1 - props.product.price / props.product.compare_at_price!) * 100)
+    : 0,
+)
 
 function handleFavourite() {
   if (!authStore.isLoggedIn) {

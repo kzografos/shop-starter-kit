@@ -88,6 +88,7 @@ model Product {
   descriptionEl String?    @map("description_el")
   descriptionEn String?    @map("description_en")
   price         Decimal    @db.Decimal(10, 2)
+  compareAtPrice Decimal?  @db.Decimal(10, 2) @map("compare_at_price")
   stock         Int        @default(0)
   isActive      Boolean    @default(true) @map("is_active")
   categoryId    String?    @map("category_id") @db.Uuid

@@ -17,6 +17,7 @@ export interface Product {
   description_el: string | null
   description_en: string | null
   price: number
+  compare_at_price: number | null
   stock: number
   is_active: boolean
   category_id: string | null

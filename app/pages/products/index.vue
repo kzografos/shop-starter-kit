@@ -195,6 +195,9 @@ const visiblePages = computed(() => {
   return pages
 })
 
+// Deals deep-link: /products?onSale=true
+if (route.query.onSale === 'true') filtersStore.onSale = true
+
 // Sync ?category query param to filter store (client-side nav from homepage cards)
 onMounted(async () => {
   if (!route.query.category) return

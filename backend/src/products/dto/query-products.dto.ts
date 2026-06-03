@@ -1,4 +1,4 @@
-import { IsOptional, IsInt, Min, IsString, IsArray } from 'class-validator'
+import { IsOptional, IsInt, Min, IsString, IsArray, IsBoolean } from 'class-validator'
 import { Type, Transform } from 'class-transformer'
 
 export class QueryProductsDto {
@@ -43,4 +43,9 @@ export class QueryProductsDto {
   @IsOptional()
   @IsString()
   sort?: string
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  onSale?: boolean
 }

@@ -82,7 +82,13 @@
             </h1>
           </div>
 
-          <p class="text-4xl font-bold text-terracotta">€{{ Number(product.price).toFixed(2) }}</p>
+          <div class="flex items-baseline gap-3 flex-wrap">
+            <p class="text-4xl font-bold" :class="onSale ? 'text-warm-red' : 'text-terracotta'">€{{ Number(product.price).toFixed(2) }}</p>
+            <template v-if="onSale">
+              <p class="text-xl text-bark-light line-through">€{{ Number(product.compare_at_price).toFixed(2) }}</p>
+              <span class="bg-warm-red text-white text-sm font-bold px-2.5 py-1 rounded-full">−{{ discountPct }}%</span>
+            </template>
+          </div>
 
           <!-- Stock badge -->
           <div class="flex items-center gap-2">
@@ -214,6 +220,15 @@ const { data: relatedProducts } = useAsyncData(`related-${route.params.slug}`, a
   return $fetch<Product[]>(`${apiBase}/products/${route.params.slug}/related`, { credentials: 'include' })
     .catch(() => [] as Product[])
 }, { server: false, lazy: true, watch: [product] })
+
+const onSale = computed(() =>
+  !!product.value?.compare_at_price && product.value.compare_at_price > product.value.price,
+)
+const discountPct = computed(() =>
+  onSale.value
+    ? Math.round((1 - product.value!.price / product.value!.compare_at_price!) * 100)
+    : 0,
+)
 
 const productName = computed(() =>
   locale.value === 'el' ? product.value?.name_el : product.value?.name_en

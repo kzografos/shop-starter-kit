@@ -28,6 +28,9 @@
           <UFormField label="Τιμή (€)" required>
             <UInput v-model.number="form.price" type="number" step="0.01" min="0" class="w-full" />
           </UFormField>
+          <UFormField label="Αρχική τιμή / Compare-at (€)" help="Συμπληρώστε για να εμφανιστεί ως προσφορά (πρέπει να είναι μεγαλύτερη της τιμής).">
+            <UInput v-model.number="form.compare_at_price" type="number" step="0.01" min="0" class="w-full" />
+          </UFormField>
           <UFormField :label="$t('admin.stock')" required>
             <UInput v-model.number="form.stock" type="number" min="0" class="w-full" />
           </UFormField>
@@ -155,6 +158,7 @@ const form = reactive({
   description_el: '',
   description_en: '',
   price: 0,
+  compare_at_price: null as number | null,
   stock: 0,
   brand: '',
   package_size: '',

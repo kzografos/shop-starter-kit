@@ -25,8 +25,9 @@ export function useProducts(page: Ref<number>) {
 
       // Array filters → repeated params (categories=a&categories=b) so the
       // backend DTO receives a real array, not one comma-joined string.
-      for (const animal of filtersStore.selectedAnimals)
-        params.append('categories', animal)
+      // queryCategories narrows a parent to its picked subcategories (Type filter).
+      for (const slug of filtersStore.queryCategories)
+        params.append('categories', slug)
       for (const brand of filtersStore.selectedBrands)
         params.append('brand', brand)
       // Price params must match the backend DTO field names (minPrice/maxPrice).
@@ -36,6 +37,8 @@ export function useProducts(page: Ref<number>) {
         params.set('maxPrice', String(filtersStore.priceMax))
       if (filtersStore.search)
         params.set('search', filtersStore.search)
+      if (filtersStore.onSale)
+        params.set('onSale', 'true')
 
       const res = await $fetch<ProductsResponse>(
         `${apiBase}/products?${params.toString()}`,

@@ -30,6 +30,9 @@
     "categories_eyebrow": "Shop by category",
     "category_label": "Category",
     "explore": "Explore",
+    "deals_eyebrow": "Limited-time offers",
+    "deals_title": "Deals & Discounts",
+    "deals_all": "View all deals",
     "view_all": "View all",
     "featured": "Featured Products",
     "brands": "Brands we carry"
@@ -112,6 +115,7 @@
   "filters": {
     "title": "Filters",
     "animal": "Animal",
+    "type": "Type",
     "price": "Price",
     "brand": "Brand",
     "animal_age": "Animal Age",

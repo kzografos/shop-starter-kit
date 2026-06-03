@@ -28,6 +28,34 @@
       </div>
     </div>
 
+    <!-- Type (subcategories of selected animals) -->
+    <template v-if="availableTypes.length">
+      <div class="h-px bg-gray-100" />
+      <div>
+        <h3 class="font-semibold text-bark mb-4">{{ $t('filters.type') }}</h3>
+        <div class="space-y-3">
+          <label
+            v-for="type in availableTypes"
+            :key="type.slug"
+            class="flex items-center cursor-pointer group"
+            @click.prevent="toggleType(type.slug)"
+          >
+            <div
+              class="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors duration-150"
+              :class="localTypes.includes(type.slug)
+                ? 'bg-terracotta border-terracotta'
+                : 'border-gray-300 group-hover:border-terracotta/50'"
+            >
+              <svg v-if="localTypes.includes(type.slug)" class="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{{ type.name }}</span>
+          </label>
+        </div>
+      </div>
+    </template>
+
     <div class="h-px bg-gray-100" />
 
     <!-- Price range -->
@@ -163,34 +191,47 @@ const { public: { apiBase } } = useRuntimeConfig()
 const PRICE_ABS_MIN = 0
 const PRICE_ABS_MAX = 500
 
+interface TypeNode { slug: string; name: string }
+interface AnimalNode { slug: string; name: string; children: TypeNode[] }
+
 // Local staged state — only committed on Apply
 const localAnimals = ref<string[]>([...filtersStore.selectedAnimals])
+const localTypes = ref<string[]>([...filtersStore.selectedTypes])
 const localBrands = ref<string[]>([...filtersStore.selectedBrands])
 const localPriceMin = ref<number>(filtersStore.priceMin ?? PRICE_ABS_MIN)
 const localPriceMax = ref<number>(filtersStore.priceMax ?? PRICE_ABS_MAX)
 
-const animals = ref<Array<{ slug: string; name: string; count: number }>>([])
+const animals = ref<AnimalNode[]>([])
 const brands = ref<Array<{ name: string; count: number }>>([])
 
-// Sync local state when store is updated from outside (e.g. URL-based init)
-watch(
-  () => filtersStore.selectedAnimals,
-  (newAnimals) => {
-    localAnimals.value = [...newAnimals]
-  }
+// Subcategories ("Type") for the currently selected animals.
+const availableTypes = computed<TypeNode[]>(() =>
+  animals.value
+    .filter((a) => localAnimals.value.includes(a.slug))
+    .flatMap((a) => a.children),
 )
 
-watch(
-  () => filtersStore.selectedBrands,
-  (newBrands) => {
-    localBrands.value = [...newBrands]
-  }
-)
+// Sync local state when store is updated from outside (e.g. URL-based init)
+watch(() => filtersStore.selectedAnimals, (v) => { localAnimals.value = [...v] })
+watch(() => filtersStore.selectedTypes, (v) => { localTypes.value = [...v] })
+watch(() => filtersStore.selectedBrands, (v) => { localBrands.value = [...v] })
 
 function toggleAnimal(slug: string) {
   const idx = localAnimals.value.indexOf(slug)
-  if (idx === -1) localAnimals.value.push(slug)
-  else localAnimals.value.splice(idx, 1)
+  if (idx === -1) {
+    localAnimals.value.push(slug)
+  } else {
+    localAnimals.value.splice(idx, 1)
+    // Drop any selected types belonging to the deselected animal.
+    const childSlugs = animals.value.find((a) => a.slug === slug)?.children.map((c) => c.slug) ?? []
+    localTypes.value = localTypes.value.filter((t) => !childSlugs.includes(t))
+  }
+}
+
+function toggleType(slug: string) {
+  const idx = localTypes.value.indexOf(slug)
+  if (idx === -1) localTypes.value.push(slug)
+  else localTypes.value.splice(idx, 1)
 }
 
 function toggleBrand(name: string) {
@@ -201,6 +242,7 @@ function toggleBrand(name: string) {
 
 function applyFilters() {
   filtersStore.selectedAnimals = [...localAnimals.value]
+  filtersStore.selectedTypes = [...localTypes.value]
   filtersStore.selectedBrands = [...localBrands.value]
   filtersStore.priceMin = localPriceMin.value > PRICE_ABS_MIN ? localPriceMin.value : null
   filtersStore.priceMax = localPriceMax.value < PRICE_ABS_MAX ? localPriceMax.value : null
@@ -209,6 +251,7 @@ function applyFilters() {
 
 function resetAll() {
   localAnimals.value = []
+  localTypes.value = []
   localBrands.value = []
   localPriceMin.value = PRICE_ABS_MIN
   localPriceMax.value = PRICE_ABS_MAX
@@ -217,7 +260,8 @@ function resetAll() {
 
 onMounted(async () => {
   type BrandRow = { brand: string; count: number }
-  type CatTree = { id: string; slug: string; name_el: string; name_en: string; children: Array<{ id: string }> }
+  type CatChild = { slug: string; name_el: string; name_en: string }
+  type CatTree = { slug: string; name_el: string; name_en: string; children: CatChild[] }
 
   const [brandData, catTree] = await Promise.all([
     $fetch<BrandRow[]>(`${apiBase}/products/brands`, { credentials: 'include' }).catch(() => []),
@@ -226,13 +270,15 @@ onMounted(async () => {
 
   brands.value = brandData.map((r) => ({ name: r.brand, count: r.count }))
 
-  animals.value = catTree
-    .filter((c) => !c.children || true)
-    .map((c) => ({
-      slug: c.slug,
-      name: locale.value === 'el' ? c.name_el : c.name_en,
-      count: c.children?.length ?? 0,
-    }))
+  const name = (el: string, en: string) => (locale.value === 'el' ? el : en)
+  animals.value = catTree.map((c) => ({
+    slug: c.slug,
+    name: name(c.name_el, c.name_en),
+    children: (c.children ?? []).map((ch) => ({ slug: ch.slug, name: name(ch.name_el, ch.name_en) })),
+  }))
+
+  // Share the tree with the store so it can compute effective query categories.
+  filtersStore.tree = catTree.map((c) => ({ slug: c.slug, children: (c.children ?? []).map((ch) => ({ slug: ch.slug })) }))
 })
 </script>
 
