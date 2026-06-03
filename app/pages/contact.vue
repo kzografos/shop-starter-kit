@@ -47,7 +47,17 @@
               <UIcon name="i-heroicons-clock" class="w-5 h-5 text-white" />
             </div>
             <div class="flex-1">
-              <div class="font-semibold text-bark text-sm mb-2">{{ $t('contact.hours_label') }}</div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-bark text-sm">{{ $t('contact.hours_label') }}</span>
+                <span
+                  v-if="isOpen !== null"
+                  class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
+                  :class="isOpen ? 'bg-sage/20 text-sage-dark' : 'bg-warm-red/10 text-warm-red'"
+                >
+                  <span class="w-2 h-2 rounded-full" :class="isOpen ? 'bg-sage-dark' : 'bg-warm-red'" />
+                  {{ isOpen ? $t('contact.open_now') : $t('contact.closed_now') }}
+                </span>
+              </div>
               <div class="space-y-1 text-sm">
                 <div v-for="row in hours" :key="row.key" class="flex justify-between">
                   <span class="text-bark-light">{{ $t(`contact.hours_${row.key}`) }}</span>
@@ -98,6 +108,7 @@ const mapUrl = computed(() => {
 
 const addressValue = `${BUSINESS.address.street}\n${BUSINESS.address.postalCode} ${BUSINESS.address.city}, ${BUSINESS.address.countryName}`
 const hours = BUSINESS.displayHours
+const { isOpen } = useOpeningHours()
 
 const allContactItems = computed(() => [
   { icon: 'i-heroicons-map-pin', label: t('contact.address_label'), value: addressValue, href: undefined as string | undefined },

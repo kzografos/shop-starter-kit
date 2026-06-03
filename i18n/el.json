@@ -235,6 +235,8 @@
     "hours_saturday": "Σάββατο",
     "hours_sunday": "Κυριακή",
     "closed": "Κλειστά",
+    "open_now": "Ανοιχτά τώρα",
+    "closed_now": "Κλειστά τώρα",
     "map_title": "Χάρτης τοποθεσίας καταστήματος"
   },
   "footer": {

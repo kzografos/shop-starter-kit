@@ -235,6 +235,8 @@
     "hours_saturday": "Saturday",
     "hours_sunday": "Sunday",
     "closed": "Closed",
+    "open_now": "Open now",
+    "closed_now": "Closed now",
     "map_title": "Store location map"
   },
   "footer": {
