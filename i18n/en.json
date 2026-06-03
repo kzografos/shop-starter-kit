@@ -114,6 +114,7 @@
   },
   "filters": {
     "title": "Filters",
+    "on_sale": "On sale only",
     "animal": "Animal",
     "type": "Type",
     "price": "Price",
