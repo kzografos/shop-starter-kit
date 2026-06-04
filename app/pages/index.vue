@@ -76,13 +76,38 @@
           <USkeleton v-for="n in 4" :key="n" class="h-72 rounded-2xl" />
         </div>
 
-        <!-- Cards -->
-        <div v-else-if="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Cards — snapping carousel -->
+        <div v-else-if="categories" class="relative">
+          <!-- Prev arrow (desktop/tablet) -->
+          <button
+            class="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-cream border border-[--color-border-warm] shadow-md text-bark hover:border-terracotta hover:text-terracotta transition disabled:opacity-0 disabled:pointer-events-none"
+            :disabled="atStart"
+            aria-label="Previous categories"
+            @click="scrollByPage(-1)"
+          >
+            <UIcon name="i-heroicons-chevron-left" class="w-5 h-5" />
+          </button>
+          <!-- Next arrow -->
+          <button
+            class="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-cream border border-[--color-border-warm] shadow-md text-bark hover:border-terracotta hover:text-terracotta transition disabled:opacity-0 disabled:pointer-events-none"
+            :disabled="atEnd"
+            aria-label="Next categories"
+            @click="scrollByPage(1)"
+          >
+            <UIcon name="i-heroicons-chevron-right" class="w-5 h-5" />
+          </button>
+
+          <!-- Rail -->
+          <div
+            ref="railEl"
+            class="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-1"
+            @scroll.passive="updateRailState"
+          >
           <NuxtLink
             v-for="cat in categories"
             :key="cat.id"
             :to="localePath(`/products?category=${cat.slug}`)"
-            class="group relative rounded-2xl overflow-hidden h-64 md:h-80 block"
+            class="snap-start shrink-0 w-[78%] sm:w-[42%] lg:w-[22%] group relative rounded-2xl overflow-hidden h-64 md:h-80 block"
             :class="catConfig[cat.slug]?.bg ?? 'bg-forest'"
           >
             <!-- Animal image — large, bottom-right positioned -->
@@ -117,6 +142,19 @@
               </div>
             </div>
           </NuxtLink>
+          </div>
+
+          <!-- Dots -->
+          <div class="flex justify-center gap-2 mt-5">
+            <button
+              v-for="(cat, i) in categories"
+              :key="cat.id"
+              class="h-2 rounded-full transition-all duration-200"
+              :class="activeIndex === i ? 'w-6 bg-terracotta' : 'w-2 bg-[--color-border-warm] hover:bg-[--color-bark-light]'"
+              :aria-label="`Go to ${locale === 'el' ? cat.name_el : cat.name_en}`"
+              @click="scrollToCard(i)"
+            />
+          </div>
         </div>
 
       </div>
@@ -305,6 +343,8 @@ const catImages: Record<string, string> = {
   cats: '/categories/cat.png',
   birds: '/categories/bird.png',
   rodents: '/categories/rodent.png',
+  fish: '/categories/fish.png',
+  beds: '/categories/bed.png',
 }
 
 const catConfig: Record<string, { bg: string }> = {
@@ -312,11 +352,49 @@ const catConfig: Record<string, { bg: string }> = {
   cats: { bg: 'bg-terracotta' },
   birds: { bg: 'bg-sage-dark' },
   rodents: { bg: 'bg-bark' },
+  fish: { bg: 'bg-sage-dark' },
+  beds: { bg: 'bg-forest' },
 }
 
 function catImage(slug: string): string | undefined {
   return catImages[slug] ?? undefined
 }
+
+// ── Category carousel (native scroll-snap) ───────────────────
+const railEl = ref<HTMLElement | null>(null)
+const activeIndex = ref(0)
+const atStart = ref(true)
+const atEnd = ref(false)
+
+function updateRailState() {
+  const el = railEl.value
+  if (!el) return
+  atStart.value = el.scrollLeft <= 2
+  atEnd.value = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2
+  const cards = Array.from(el.children) as HTMLElement[]
+  let nearest = 0
+  let min = Infinity
+  cards.forEach((c, i) => {
+    const d = Math.abs(c.offsetLeft - el.scrollLeft)
+    if (d < min) { min = d; nearest = i }
+  })
+  activeIndex.value = nearest
+}
+
+function scrollToCard(i: number) {
+  const el = railEl.value
+  const card = el?.children[i] as HTMLElement | undefined
+  if (el && card) el.scrollTo({ left: card.offsetLeft, behavior: 'smooth' })
+}
+
+function scrollByPage(dir: number) {
+  const el = railEl.value
+  if (el) el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: 'smooth' })
+}
+
+// Recompute edge/active state once cards are rendered.
+watch(categories, () => nextTick(updateRailState))
+onMounted(() => nextTick(updateRailState))
 
 useSeoMeta({
   // Title omitted → global template renders the brand name (language-neutral) on the homepage.
@@ -325,3 +403,14 @@ useSeoMeta({
     : 'Pet food, accessories and grooming for dogs, cats, birds and rodents. Delivery in Larnaca and across Cyprus.',
 })
 </script>
+
+<style scoped>
+/* Hide the native scrollbar on the category rail (snap still works) */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+</style>
