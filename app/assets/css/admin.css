@@ -93,10 +93,10 @@
 }
 
 /* Themed form controls inside .ac-scope modals */
-.ac-scope .acf { display: flex; flex-direction: column; gap: 6px; }
-.ac-scope .acf > span { font-size: 13px; font-weight: 500; color: var(--ac-text); }
-.ac-scope .acf input,
-.ac-scope .acf select {
+.acf { display: flex; flex-direction: column; gap: 6px; }
+.acf > span { font-size: 13px; font-weight: 500; color: var(--ac-text); }
+.acf input,
+.acf select {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
@@ -107,10 +107,16 @@
   outline: none;
   font-family: inherit;
 }
-.ac-scope .acf input:focus,
-.ac-scope .acf select:focus { border-color: var(--ac-terracotta); }
-.ac-scope .acf input:disabled { opacity: 0.55; cursor: not-allowed; }
-.ac-scope .acf-hint { font-size: 12px; color: var(--ac-text-muted); }
+.acf input:focus,
+.acf select:focus { border-color: var(--ac-terracotta); }
+.acf input:disabled { opacity: 0.55; cursor: not-allowed; }
+.acf-hint { font-size: 12px; color: var(--ac-text-muted); }
+.ac-section-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--ac-terracotta-soft); color: var(--ac-terracotta); flex-shrink: 0;
+}
+
 .ac-scope-btn-ghost {
   padding: 9px 16px; border-radius: 10px; border: 1px solid var(--ac-card-border);
   background: transparent; color: var(--ac-text); font-weight: 500; font-size: 14px; cursor: pointer;

@@ -286,6 +286,36 @@ export class AdminService {
     return updated
   }
 
+  // ── Settings ───────────────────────────────────────────────
+
+  private readonly SETTING_KEYS = [
+    'shipping_cost',
+    'free_shipping_threshold',
+    'loyalty_earn_rate',
+    'loyalty_redeem_rate',
+    'loyalty_min_redeem',
+  ]
+
+  async getSettings() {
+    const rows = await this.prisma.setting.findMany()
+    return Object.fromEntries(rows.map((r) => [r.key, r.value]))
+  }
+
+  async updateSettings(body: Record<string, unknown>) {
+    const entries = Object.entries(body).filter(([k]) => this.SETTING_KEYS.includes(k))
+    for (const [key, value] of entries) {
+      const num = Number(value)
+      if (Number.isNaN(num) || num < 0)
+        throw new BadRequestException(`Invalid value for ${key}`)
+      await this.prisma.setting.upsert({
+        where: { key },
+        update: { value: String(num) },
+        create: { key, value: String(num) },
+      })
+    }
+    return this.getSettings()
+  }
+
   async deleteCategory(id: string) {
     const cat = await this.prisma.category.findUnique({
       where: { id },

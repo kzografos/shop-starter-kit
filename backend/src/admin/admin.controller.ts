@@ -89,4 +89,16 @@ export class AdminController {
   deleteCategory(@Param('id') id: string) {
     return this.admin.deleteCategory(id)
   }
+
+  // ── Settings ───────────────────────────────────────────────
+
+  @Get('settings')
+  settings() {
+    return this.admin.getSettings()
+  }
+
+  @Patch('settings')
+  updateSettings(@Body() body: Record<string, unknown>) {
+    return this.admin.updateSettings(body)
+  }
 }

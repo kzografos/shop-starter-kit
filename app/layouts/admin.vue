@@ -64,9 +64,13 @@
           <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.75 19c.5-3 3.5-4.75 6.25-4.75S15 16 15.5 19"/><circle cx="17" cy="9" r="2.5"/><path d="M19 14.75c1.5.5 2.5 1.5 2.5 3"/></svg>
           <span>Customers</span>
         </button>
-        <button class="admin-nav-item" style="opacity: 0.4; cursor: not-allowed;">
+        <button
+          class="admin-nav-item"
+          :class="{ active: isSettings }"
+          @click="navigateTo(localePath('/admin/settings'))"
+        >
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          <span>Settings</span>
+          <span>{{ $t('admin.settings') }}</span>
         </button>
       </div>
 
@@ -128,6 +132,7 @@ const isDashboard = computed(() => {
 const isProducts   = computed(() => route.path.includes('/admin/products'))
 const isCategories = computed(() => route.path.includes('/admin/categories'))
 const isOrders     = computed(() => route.path.includes('/admin/orders'))
+const isSettings   = computed(() => route.path.includes('/admin/settings'))
 
 // ── Page title / subtitle ───────────────────────────────────
 const pageInfo = computed(() => {
@@ -142,6 +147,8 @@ const pageInfo = computed(() => {
     return { title: 'Categories', sub: 'Organize your catalog — animals and their subcategories.' }
   if (isOrders.value)
     return { title: 'Orders', sub: 'Track and update customer orders.' }
+  if (isSettings.value)
+    return { title: 'Settings', sub: 'Shipping and loyalty configuration.' }
   return { title: 'Dashboard', sub: "Welcome back — here's what's happening at the shop today." }
 })
 
