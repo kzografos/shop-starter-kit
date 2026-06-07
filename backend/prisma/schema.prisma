@@ -250,3 +250,27 @@ model NewsletterSubscriber {
 
   @@map("newsletter_subscribers")
 }
+
+// ─── Notifications (admin) ───────────────────────────────────
+
+model Notification {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type      NotificationType
+  productId String?          @map("product_id") @db.Uuid
+  stock     Int?
+  meta      Json?
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([productId])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  LOW_STOCK    @map("low_stock")
+  OUT_OF_STOCK @map("out_of_stock")
+
+  @@map("notification_type")
+}

@@ -170,6 +170,13 @@ const editingId = ref<string | null>(null)
 function openCreate() { editingId.value = 'new'; drawerOpen.value = true }
 function openEdit(id: string) { editingId.value = id; drawerOpen.value = true }
 
+// Deep link from the notifications page: /admin/products?edit=<id>
+const route = useRoute()
+onMounted(() => {
+  const id = route.query.edit
+  if (typeof id === 'string' && id) openEdit(id)
+})
+
 type ProductRow = { id: string; name_el: string; brand: string; price: number; stock: number; is_active: boolean }
 type ProductsResponse = { products: ProductRow[]; total: number; page: number; totalPages: number }
 

@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { Decimal } from '@prisma/client/runtime/library'
 
@@ -9,6 +10,7 @@ export class OrdersService {
   constructor(
     private prisma: PrismaService,
     private mail: MailService,
+    private notifications: NotificationsService,
   ) {}
 
   async create(userId: string | null, userEmail: string | null, dto: CreateOrderDto) {
@@ -138,6 +140,15 @@ export class OrdersService {
     })
 
     this.mail.sendOrderConfirmation(confirmationEmail, order.id).catch(() => null)
+
+    // Fire-and-forget low-stock alerts for the products we just decremented.
+    for (const item of dto.items) {
+      const p = products.find((x) => x.id === item.productId)
+      if (p)
+        this.notifications
+          .checkStock({ id: p.id, stock: p.stock - item.quantity, nameEl: p.nameEl, nameEn: p.nameEn })
+          .catch(() => null)
+    }
 
     return { id: order.id }
   }

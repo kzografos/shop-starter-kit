@@ -78,6 +78,15 @@
         </button>
         <button
           class="admin-nav-item"
+          :class="{ active: isNotifications }"
+          @click="navigateTo(localePath('/admin/notifications'))"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span>{{ $t('admin.notifications') }}</span>
+          <span v-if="unread > 0" class="admin-nav-badge">{{ unread > 99 ? '99+' : unread }}</span>
+        </button>
+        <button
+          class="admin-nav-item"
           :class="{ active: isSettings }"
           @click="navigateTo(localePath('/admin/settings'))"
         >
@@ -116,11 +125,23 @@
     <!-- ── Main content area ───────────────────────────── -->
     <main class="admin-content" :data-theme="adminTheme">
       <!-- Topbar -->
-      <div class="admin-topbar">
+      <div class="admin-topbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
         <div>
           <h1 class="admin-page-title">{{ pageTitle }}</h1>
           <div class="admin-page-sub">{{ pageSub }}</div>
         </div>
+        <!-- Notifications bell -->
+        <button
+          class="admin-bell"
+          :title="$t('admin.notifications')"
+          @click="navigateTo(localePath('/admin/notifications'))"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <span v-if="unread > 0" class="admin-bell-badge">{{ unread > 99 ? '99+' : unread }}</span>
+        </button>
       </div>
       <!-- Page slot -->
       <div class="admin-page">
@@ -147,6 +168,18 @@ const isOrders     = computed(() => route.path.includes('/admin/orders'))
 const isSettings   = computed(() => route.path.includes('/admin/settings'))
 const isCustomers  = computed(() => route.path.includes('/admin/customers'))
 const isNewsletter = computed(() => route.path.includes('/admin/newsletter'))
+const isNotifications = computed(() => route.path.includes('/admin/notifications'))
+
+// ── Notifications (low-stock bell) ──────────────────────────
+const { unread, refreshCount } = useAdminNotifications()
+let notifTimer: ReturnType<typeof setInterval> | undefined
+onMounted(() => {
+  refreshCount()
+  notifTimer = setInterval(refreshCount, 60_000)
+})
+onBeforeUnmount(() => { if (notifTimer) clearInterval(notifTimer) })
+// Refresh as soon as the admin opens the notifications page (count may drop).
+watch(() => route.path, (p) => { if (p.includes('/admin/notifications')) refreshCount() })
 
 // ── Page title / subtitle ───────────────────────────────────
 const pageInfo = computed(() => {
@@ -167,6 +200,8 @@ const pageInfo = computed(() => {
     return { title: 'Customers', sub: 'Everyone who has registered at the shop.' }
   if (isNewsletter.value)
     return { title: 'Newsletter', sub: 'Subscribers to your mailing list.' }
+  if (isNotifications.value)
+    return { title: 'Notifications', sub: 'Low-stock and out-of-stock alerts.' }
   return { title: 'Dashboard', sub: "Welcome back — here's what's happening at the shop today." }
 })
 

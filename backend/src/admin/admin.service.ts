@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import { AnimalAge, OrderStatus, Prisma } from '@prisma/client'
 
 const STATUS_MAP: Record<string, OrderStatus> = {
@@ -25,6 +26,7 @@ export class AdminService {
   constructor(
     private prisma: PrismaService,
     private redis: RedisService,
+    private notifications: NotificationsService,
   ) {}
 
   async getStats() {
@@ -241,6 +243,7 @@ export class AdminService {
       },
     })
     await this.redis.delPattern('products:*')
+    await this.notifications.checkStock(product)
     return product
   }
 
@@ -265,6 +268,7 @@ export class AdminService {
       },
     })
     await this.redis.delPattern('products:*')
+    await this.notifications.checkStock(product)
     return product
   }
 
