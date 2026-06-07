@@ -69,55 +69,66 @@
       </div>
     </div>
 
-    <!-- Create / Edit modal (themed to match admin light/dark) -->
-    <UModal v-model:open="modalOpen" :ui="{ content: '!bg-transparent !ring-0 !shadow-none !p-0 sm:max-w-md' }">
+    <!-- Create / Edit slide-over (themed to match admin light/dark) -->
+    <USlideover v-model:open="modalOpen" side="right" :ui="{ content: '!bg-transparent !ring-0 !shadow-none !p-0 sm:max-w-md' }">
       <template #content>
         <div
           class="ac-scope"
           :data-theme="adminTheme"
-          style="background: var(--ac-card); color: var(--ac-text); border-radius: 16px; padding: 24px; box-shadow: 0 24px 60px rgba(0,0,0,0.35);"
+          style="display: flex; flex-direction: column; height: 100%; background: var(--ac-card); color: var(--ac-text);"
         >
-          <h3 style="font-family: Fraunces, serif; font-size: 18px; font-weight: 500; margin: 0 0 16px;">
-            {{ editing ? $t('admin.edit_category') : $t('admin.new_category') }}
-          </h3>
-          <form style="display: flex; flex-direction: column; gap: 14px;" @submit.prevent="save">
-            <label class="acf">
-              <span>{{ $t('admin.name_el') }} *</span>
-              <input v-model="form.name_el" type="text" />
-            </label>
-            <label class="acf">
-              <span>{{ $t('admin.name_en') }} *</span>
-              <input v-model="form.name_en" type="text" />
-            </label>
-            <label class="acf">
-              <span>Slug</span>
-              <input v-model="form.slug" type="text" :disabled="editing" @input="slugTouched = true" />
-              <span class="acf-hint">{{ editing ? $t('admin.slug_locked') : $t('admin.slug_help') }}</span>
-            </label>
-            <label class="acf">
-              <span>{{ $t('admin.parent_category') }}</span>
-              <select v-model="form.parent_id" :disabled="parentDisabled">
-                <option v-for="opt in parentOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-              </select>
-              <span v-if="parentDisabled" class="acf-hint">{{ $t('admin.parent_locked') }}</span>
-            </label>
-            <label class="acf">
-              <span>{{ $t('admin.sort_order') }}</span>
-              <input v-model.number="form.sort_order" type="number" min="0" />
-            </label>
+          <!-- Header -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--ac-card-border); flex-shrink: 0;">
+            <h3 style="font-family: Fraunces, serif; font-size: 19px; font-weight: 500; margin: 0;">
+              {{ editing ? $t('admin.edit_category') : $t('admin.new_category') }}
+            </h3>
+            <button class="ac-drawer-close" :aria-label="$t('common.cancel')" @click="modalOpen = false">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+          </div>
 
-            <p v-if="error" style="color: var(--ac-warm-red); font-size: 13px; margin: 0;">{{ error }}</p>
+          <!-- Body (scrollable) -->
+          <div style="flex: 1; overflow-y: auto; padding: 24px;">
+            <form id="category-drawer-form" style="display: flex; flex-direction: column; gap: 16px;" @submit.prevent="save">
+              <label class="acf">
+                <span>{{ $t('admin.name_el') }} *</span>
+                <input v-model="form.name_el" type="text" />
+              </label>
+              <label class="acf">
+                <span>{{ $t('admin.name_en') }} *</span>
+                <input v-model="form.name_en" type="text" />
+              </label>
+              <label class="acf">
+                <span>Slug</span>
+                <input v-model="form.slug" type="text" :disabled="editing" @input="slugTouched = true" />
+                <span class="acf-hint">{{ editing ? $t('admin.slug_locked') : $t('admin.slug_help') }}</span>
+              </label>
+              <label class="acf">
+                <span>{{ $t('admin.parent_category') }}</span>
+                <select v-model="form.parent_id" :disabled="parentDisabled">
+                  <option v-for="opt in parentOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+                <span v-if="parentDisabled" class="acf-hint">{{ $t('admin.parent_locked') }}</span>
+              </label>
+              <label class="acf">
+                <span>{{ $t('admin.sort_order') }}</span>
+                <input v-model.number="form.sort_order" type="number" min="0" />
+              </label>
 
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px;">
-              <button type="button" class="ac-scope-btn-ghost" @click="modalOpen = false">{{ $t('common.cancel') }}</button>
-              <button type="button" class="ac-scope-btn-primary" :disabled="saving" @click="save">
-                {{ saving ? '…' : (editing ? $t('common.save') : $t('common.create')) }}
-              </button>
-            </div>
-          </form>
+              <p v-if="error" style="color: var(--ac-warm-red); font-size: 13px; margin: 0;">{{ error }}</p>
+            </form>
+          </div>
+
+          <!-- Footer (sticky) -->
+          <div style="display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--ac-card-border); flex-shrink: 0;">
+            <button type="button" class="ac-scope-btn-ghost" @click="modalOpen = false">{{ $t('common.cancel') }}</button>
+            <button type="submit" form="category-drawer-form" class="ac-scope-btn-primary" :disabled="saving">
+              {{ saving ? '…' : (editing ? $t('common.save') : $t('common.create')) }}
+            </button>
+          </div>
         </div>
       </template>
-    </UModal>
+    </USlideover>
   </div>
 </template>
 

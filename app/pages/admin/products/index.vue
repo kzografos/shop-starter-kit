@@ -12,10 +12,10 @@
           Import CSV
         </button>
       </div>
-      <NuxtLink :to="localePath('/admin/products/new')" class="ac-btn-primary">
+      <button class="ac-btn-primary" @click="openCreate">
         <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
         {{ $t('admin.add_product') }}
-      </NuxtLink>
+      </button>
     </div>
 
     <!-- Table -->
@@ -57,7 +57,7 @@
           </tr>
           <tr v-for="p in products" :key="p.id">
             <td>
-              <NuxtLink :to="localePath(`/admin/products/${p.id}`)" class="ac-link-name">{{ p.name_el }}</NuxtLink>
+              <button class="ac-link-name" style="background: none; border: none; cursor: pointer; padding: 0; font: inherit; text-align: left;" @click="openEdit(p.id)">{{ p.name_el }}</button>
             </td>
             <td class="ac-muted">{{ p.brand || '—' }}</td>
             <td class="ac-mono">€{{ Number(p.price).toFixed(2) }}</td>
@@ -72,9 +72,9 @@
             </td>
             <td>
               <div class="ac-row-actions" style="justify-content: flex-end;">
-                <NuxtLink :to="localePath(`/admin/products/${p.id}`)" class="ac-row-action-btn" title="Edit">
+                <button class="ac-row-action-btn" title="Edit" @click="openEdit(p.id)">
                   <svg viewBox="0 0 24 24"><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                </NuxtLink>
+                </button>
                 <button class="ac-row-action-btn danger" title="Deactivate" @click="confirmDelete(p)">
                   <svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg>
                 </button>
@@ -121,6 +121,9 @@
         </div>
       </template>
     </UModal>
+
+    <!-- Create / edit drawer -->
+    <ProductDrawer v-model:open="drawerOpen" :product-id="editingId" @saved="refresh" />
   </div>
 </template>
 
@@ -154,14 +157,18 @@ const SortIcon = defineComponent({
 })
 
 const { public: { apiBase } } = useRuntimeConfig()
-const localePath = useLocalePath()
-const { t } = useI18n()
 const search = ref('')
 const page   = ref(1)
 const sortCol = ref<string>('')
 const sortDir = ref<'asc' | 'desc'>('asc')
 const showCsvUpload = ref(false)
 const csvFile = ref<File | null>(null)
+
+// Create / edit drawer
+const drawerOpen = ref(false)
+const editingId = ref<string | null>(null)
+function openCreate() { editingId.value = 'new'; drawerOpen.value = true }
+function openEdit(id: string) { editingId.value = id; drawerOpen.value = true }
 
 type ProductRow = { id: string; name_el: string; brand: string; price: number; stock: number; is_active: boolean }
 type ProductsResponse = { products: ProductRow[]; total: number; page: number; totalPages: number }

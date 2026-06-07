@@ -9,11 +9,7 @@
           <template v-else>€{{ Math.round(kpi.totalRevenue).toLocaleString('el-GR') }}</template>
         </div>
         <div>
-          <span class="ac-trend up">
-            <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-            +12.4%
-          </span>
-          <span class="ac-trend-sub">vs πέρυσι</span>
+          <span class="ac-trend-sub">όλων των εποχών</span>
         </div>
         <div class="ac-stat-icon" style="background: rgba(201,123,90,0.12); color: #C97B5A;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7a7 7 0 1 0 0 10"/><path d="M3 10h10M3 14h10"/></svg>
@@ -26,12 +22,13 @@
           <template v-if="loading"><span style="opacity: 0.3">—</span></template>
           <template v-else>€{{ Math.round(kpi.monthRevenue).toLocaleString('el-GR') }}</template>
         </div>
-        <div>
-          <span class="ac-trend up">
-            <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-            +8.2%
+        <div v-if="!loading">
+          <span class="ac-trend" :class="kpi.monthRevenueChange >= 0 ? 'up' : 'down'">
+            <svg v-if="kpi.monthRevenueChange >= 0" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            <svg v-else viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            {{ kpi.monthRevenueChange >= 0 ? '+' : '' }}{{ kpi.monthRevenueChange }}%
           </span>
-          <span class="ac-trend-sub">vs τον προηγ.</span>
+          <span class="ac-trend-sub">vs προηγ. μήνα</span>
         </div>
         <div class="ac-stat-icon" style="background: rgba(168,184,154,0.15); color: #A8B89A;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h6v6"/></svg>
@@ -45,11 +42,7 @@
           <template v-else>{{ kpi.totalCustomers.toLocaleString('el-GR') }}</template>
         </div>
         <div>
-          <span class="ac-trend up">
-            <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-            +18.6%
-          </span>
-          <span class="ac-trend-sub">vs πέρυσι</span>
+          <span class="ac-trend-sub">συνολικά εγγεγραμμένοι</span>
         </div>
         <div class="ac-stat-icon" style="background: rgba(90,143,201,0.12); color: #5A8FC9;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.75 19c.5-3 3.5-4.75 6.25-4.75S15 16 15.5 19"/><circle cx="17" cy="9" r="2.5"/><path d="M19 14.75c1.5.5 2.5 1.5 2.5 3"/></svg>
@@ -62,12 +55,13 @@
           <template v-if="loading"><span style="opacity: 0.3">—</span></template>
           <template v-else>{{ kpi.newCustomers }}</template>
         </div>
-        <div>
-          <span class="ac-trend down">
-            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-            -5.1%
+        <div v-if="!loading">
+          <span class="ac-trend" :class="kpi.newCustomersChange >= 0 ? 'up' : 'down'">
+            <svg v-if="kpi.newCustomersChange >= 0" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            <svg v-else viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            {{ kpi.newCustomersChange >= 0 ? '+' : '' }}{{ kpi.newCustomersChange }}%
           </span>
-          <span class="ac-trend-sub">vs τον προηγ.</span>
+          <span class="ac-trend-sub">vs προηγ. μήνα</span>
         </div>
         <div class="ac-stat-icon" style="background: rgba(212,162,76,0.15); color: #D4A24C;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.75 19c.5-3 3.5-4.75 6.25-4.75S15 16 15.5 19"/><path d="M19 8v6M16 11h6"/></svg>
@@ -250,7 +244,7 @@ const localePath = useLocalePath()
 
 const loading = ref(true)
 
-const kpi = reactive({ totalRevenue: 0, monthRevenue: 0, totalCustomers: 0, newCustomers: 0 })
+const kpi = reactive({ totalRevenue: 0, monthRevenue: 0, monthRevenueChange: 0, totalCustomers: 0, newCustomers: 0, newCustomersChange: 0 })
 const recentOrders = ref<Array<{ id: string; status: string; total: number }>>([])
 const revenueChartData = ref<{ 'Έσοδα': number }[]>([])
 const revenueDates = ref<string[]>([])
@@ -303,8 +297,10 @@ onMounted(async () => {
     const stats = await $fetch<{
       total_revenue: number
       month_revenue: number
+      month_revenue_change: number
       total_customers: number
       new_customers: number
+      new_customers_change: number
       recent_orders: Array<{ id: string; status: string; total: number }>
       last_30_days: Array<{ date: string; total: number }>
       order_status_breakdown: Array<{ status: string; count: number }>
@@ -314,8 +310,10 @@ onMounted(async () => {
 
     kpi.totalRevenue  = stats.total_revenue ?? 0
     kpi.monthRevenue  = stats.month_revenue ?? 0
+    kpi.monthRevenueChange = stats.month_revenue_change ?? 0
     kpi.totalCustomers = stats.total_customers ?? 0
     kpi.newCustomers  = stats.new_customers ?? 0
+    kpi.newCustomersChange = stats.new_customers_change ?? 0
 
     recentOrders.value  = stats.recent_orders ?? []
     topProducts.value   = stats.top_products ?? []

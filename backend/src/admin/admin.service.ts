@@ -32,6 +32,9 @@ export class AdminService {
     monthStart.setDate(1)
     monthStart.setHours(0, 0, 0, 0)
 
+    const prevMonthStart = new Date(monthStart)
+    prevMonthStart.setMonth(prevMonthStart.getMonth() - 1)
+
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
     thirtyDaysAgo.setHours(0, 0, 0, 0)
@@ -46,6 +49,8 @@ export class AdminService {
       statusGroups,
       orderItems,
       lowStock,
+      prevMonthRevenue,
+      prevMonthNewCustomers,
     ] = await Promise.all([
       this.prisma.order.aggregate({
         _sum: { total: true },
@@ -81,7 +86,20 @@ export class AdminService {
         take: 8,
         select: { id: true, nameEl: true, stock: true },
       }),
+      this.prisma.order.aggregate({
+        _sum: { total: true },
+        where: {
+          NOT: { status: OrderStatus.CANCELLED },
+          createdAt: { gte: prevMonthStart, lt: monthStart },
+        },
+      }),
+      this.prisma.user.count({
+        where: { role: 'CUSTOMER', createdAt: { gte: prevMonthStart, lt: monthStart } },
+      }),
     ])
+
+    const pctChange = (cur: number, prev: number) =>
+      prev > 0 ? Math.round(((cur - prev) / prev) * 1000) / 10 : cur > 0 ? 100 : 0
 
     const productMap = new Map<string, { name: string; units: number }>()
     for (const item of orderItems) {
@@ -95,8 +113,10 @@ export class AdminService {
     return {
       totalRevenue: Number(revenueAll._sum.total ?? 0),
       monthRevenue: Number(revenueMonth._sum.total ?? 0),
+      monthRevenueChange: pctChange(Number(revenueMonth._sum.total ?? 0), Number(prevMonthRevenue._sum.total ?? 0)),
       totalCustomers,
       newCustomers,
+      newCustomersChange: pctChange(newCustomers, prevMonthNewCustomers),
       recentOrders,
       last30Days: last30Orders.map((o) => ({
         date: o.createdAt.toISOString().slice(0, 10),
