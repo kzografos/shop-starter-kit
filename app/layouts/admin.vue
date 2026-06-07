@@ -42,6 +42,14 @@
         </button>
         <button
           class="admin-nav-item"
+          :class="{ active: isCategories }"
+          @click="navigateTo(localePath('/admin/categories'))"
+        >
+          <svg viewBox="0 0 24 24"><path d="M20.59 13.41 11 3.99H4v7l9.59 9.41a2 2 0 0 0 2.82 0l4.18-4.17a2 2 0 0 0 0-2.82Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
+          <span>{{ $t('admin.categories') }}</span>
+        </button>
+        <button
+          class="admin-nav-item"
           :class="{ active: isOrders }"
           @click="navigateTo(localePath('/admin/orders'))"
         >
@@ -117,8 +125,9 @@ const isDashboard = computed(() => {
   return p === '/admin' || p === '/el/admin' || p === '/en/admin'
 })
 
-const isProducts = computed(() => route.path.includes('/admin/products'))
-const isOrders   = computed(() => route.path.includes('/admin/orders'))
+const isProducts   = computed(() => route.path.includes('/admin/products'))
+const isCategories = computed(() => route.path.includes('/admin/categories'))
+const isOrders     = computed(() => route.path.includes('/admin/orders'))
 
 // ── Page title / subtitle ───────────────────────────────────
 const pageInfo = computed(() => {
@@ -129,6 +138,8 @@ const pageInfo = computed(() => {
       return { title: 'Products', sub: 'Edit product details.' }
     return { title: 'Products', sub: 'Manage inventory, pricing and availability.' }
   }
+  if (isCategories.value)
+    return { title: 'Categories', sub: 'Organize your catalog — animals and their subcategories.' }
   if (isOrders.value)
     return { title: 'Orders', sub: 'Track and update customer orders.' }
   return { title: 'Dashboard', sub: "Welcome back — here's what's happening at the shop today." }

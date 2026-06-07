@@ -3,6 +3,7 @@ import {
   Get,
   Patch,
   Post,
+  Delete,
   Body,
   Param,
   Query,
@@ -65,5 +66,27 @@ export class AdminController {
   @Patch('products/:id/deactivate')
   deactivateProduct(@Param('id') id: string) {
     return this.admin.deactivateProduct(id)
+  }
+
+  // ── Categories ─────────────────────────────────────────────
+
+  @Get('categories')
+  categories() {
+    return this.admin.getCategories()
+  }
+
+  @Post('categories')
+  createCategory(@Body() body: Record<string, unknown>) {
+    return this.admin.createCategory(body)
+  }
+
+  @Patch('categories/:id')
+  updateCategory(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    return this.admin.updateCategory(id, body)
+  }
+
+  @Delete('categories/:id')
+  deleteCategory(@Param('id') id: string) {
+    return this.admin.deleteCategory(id)
   }
 }

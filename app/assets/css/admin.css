@@ -69,6 +69,59 @@
   --ac-row-hover: rgba(255, 255, 255, 0.03);
 }
 
+/* ── Var-only scope for teleported UI (modals/toasts outside .admin-content) ── */
+.ac-scope {
+  --ac-terracotta: #C97B5A;
+  --ac-bg: #F8F9FA;
+  --ac-bg-tint: rgba(0, 0, 0, 0.02);
+  --ac-card: #FFFFFF;
+  --ac-card-border: #E5E7EB;
+  --ac-text: #14171F;
+  --ac-text-muted: #6B7280;
+  --ac-text-faint: #9CA3AF;
+  --ac-hairline: rgba(0, 0, 0, 0.06);
+}
+.ac-scope[data-theme="dark"] {
+  --ac-bg: #13161D;
+  --ac-bg-tint: rgba(255, 255, 255, 0.02);
+  --ac-card: #1C2030;
+  --ac-card-border: #2D3348;
+  --ac-text: #ECECF1;
+  --ac-text-muted: #8B92A5;
+  --ac-text-faint: #6B7280;
+  --ac-hairline: rgba(255, 255, 255, 0.06);
+}
+
+/* Themed form controls inside .ac-scope modals */
+.ac-scope .acf { display: flex; flex-direction: column; gap: 6px; }
+.ac-scope .acf > span { font-size: 13px; font-weight: 500; color: var(--ac-text); }
+.ac-scope .acf input,
+.ac-scope .acf select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ac-card-border);
+  background: var(--ac-bg);
+  color: var(--ac-text);
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+}
+.ac-scope .acf input:focus,
+.ac-scope .acf select:focus { border-color: var(--ac-terracotta); }
+.ac-scope .acf input:disabled { opacity: 0.55; cursor: not-allowed; }
+.ac-scope .acf-hint { font-size: 12px; color: var(--ac-text-muted); }
+.ac-scope-btn-ghost {
+  padding: 9px 16px; border-radius: 10px; border: 1px solid var(--ac-card-border);
+  background: transparent; color: var(--ac-text); font-weight: 500; font-size: 14px; cursor: pointer;
+}
+.ac-scope-btn-ghost:hover { background: var(--ac-bg-tint); }
+.ac-scope-btn-primary {
+  padding: 9px 18px; border-radius: 10px; border: none;
+  background: var(--ac-terracotta); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;
+}
+.ac-scope-btn-primary:disabled { opacity: 0.6; cursor: default; }
+
 .admin-back-link {
   display: inline-flex;
   align-items: center;
