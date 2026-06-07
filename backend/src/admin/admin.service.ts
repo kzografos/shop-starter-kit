@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
-import { AnimalAge, OrderStatus } from '@prisma/client'
+import { AnimalAge, OrderStatus, Prisma } from '@prisma/client'
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   pending: OrderStatus.PENDING,
@@ -148,6 +148,51 @@ export class AdminService {
       this.prisma.product.count({ where }),
     ])
     return { products, total, page, totalPages: Math.ceil(total / PAGE_SIZE) }
+  }
+
+  // ── Customers ──────────────────────────────────────────────
+
+  async getCustomers({ page = 1, search }: { page?: number; search?: string } = {}) {
+    const PAGE_SIZE = 20
+    const skip = (Math.max(1, page) - 1) * PAGE_SIZE
+    const where: Prisma.UserWhereInput = {
+      role: 'CUSTOMER',
+      ...(search
+        ? {
+            OR: [
+              { email: { contains: search, mode: 'insensitive' as const } },
+              { fullName: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    }
+    const [customers, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: PAGE_SIZE,
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          loyaltyPoints: true,
+          createdAt: true,
+          _count: { select: { orders: true } },
+        },
+      }),
+      this.prisma.user.count({ where }),
+    ])
+    return { customers, total, page, totalPages: Math.ceil(total / PAGE_SIZE) }
+  }
+
+  // ── Newsletter ─────────────────────────────────────────────
+
+  async getNewsletter() {
+    return this.prisma.newsletterSubscriber.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, email: true, createdAt: true },
+    })
   }
 
   async getProductById(id: string) {

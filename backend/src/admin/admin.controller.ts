@@ -90,6 +90,18 @@ export class AdminController {
     return this.admin.deleteCategory(id)
   }
 
+  // ── Customers + Newsletter ─────────────────────────────────
+
+  @Get('customers')
+  customers(@Query('page') page?: string, @Query('search') search?: string) {
+    return this.admin.getCustomers({ page: page ? parseInt(page, 10) : 1, search })
+  }
+
+  @Get('newsletter')
+  newsletter() {
+    return this.admin.getNewsletter()
+  }
+
   // ── Settings ───────────────────────────────────────────────
 
   @Get('settings')

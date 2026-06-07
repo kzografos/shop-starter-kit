@@ -60,9 +60,21 @@
 
       <div class="admin-nav-section">
         <span class="admin-nav-section-label">Workspace</span>
-        <button class="admin-nav-item" style="opacity: 0.4; cursor: not-allowed;">
+        <button
+          class="admin-nav-item"
+          :class="{ active: isCustomers }"
+          @click="navigateTo(localePath('/admin/customers'))"
+        >
           <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.75 19c.5-3 3.5-4.75 6.25-4.75S15 16 15.5 19"/><circle cx="17" cy="9" r="2.5"/><path d="M19 14.75c1.5.5 2.5 1.5 2.5 3"/></svg>
-          <span>Customers</span>
+          <span>{{ $t('admin.customers') }}</span>
+        </button>
+        <button
+          class="admin-nav-item"
+          :class="{ active: isNewsletter }"
+          @click="navigateTo(localePath('/admin/newsletter'))"
+        >
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          <span>{{ $t('admin.newsletter') }}</span>
         </button>
         <button
           class="admin-nav-item"
@@ -133,6 +145,8 @@ const isProducts   = computed(() => route.path.includes('/admin/products'))
 const isCategories = computed(() => route.path.includes('/admin/categories'))
 const isOrders     = computed(() => route.path.includes('/admin/orders'))
 const isSettings   = computed(() => route.path.includes('/admin/settings'))
+const isCustomers  = computed(() => route.path.includes('/admin/customers'))
+const isNewsletter = computed(() => route.path.includes('/admin/newsletter'))
 
 // ── Page title / subtitle ───────────────────────────────────
 const pageInfo = computed(() => {
@@ -149,6 +163,10 @@ const pageInfo = computed(() => {
     return { title: 'Orders', sub: 'Track and update customer orders.' }
   if (isSettings.value)
     return { title: 'Settings', sub: 'Shipping and loyalty configuration.' }
+  if (isCustomers.value)
+    return { title: 'Customers', sub: 'Everyone who has registered at the shop.' }
+  if (isNewsletter.value)
+    return { title: 'Newsletter', sub: 'Subscribers to your mailing list.' }
   return { title: 'Dashboard', sub: "Welcome back — here's what's happening at the shop today." }
 })
 
