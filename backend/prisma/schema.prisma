@@ -54,8 +54,10 @@ model RefreshToken {
 }
 
 enum UserRole {
-  CUSTOMER @map("customer")
-  ADMIN    @map("admin")
+  CUSTOMER      @map("customer")
+  ADMIN         @map("admin")
+  ACCOUNTANT    @map("accountant")
+  STOCK_MANAGER @map("stock_manager")
 
   @@map("user_role")
 }
@@ -89,6 +91,7 @@ model Product {
   descriptionEn String?    @map("description_en")
   price         Decimal    @db.Decimal(10, 2)
   compareAtPrice Decimal?  @db.Decimal(10, 2) @map("compare_at_price")
+  cost          Decimal?   @db.Decimal(10, 2)
   stock         Int        @default(0)
   isActive      Boolean    @default(true) @map("is_active")
   categoryId    String?    @map("category_id") @db.Uuid

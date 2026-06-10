@@ -2,11 +2,13 @@ import { Controller, Post, UploadedFile, UseGuards, UseInterceptors } from '@nes
 import { FileInterceptor } from '@nestjs/platform-express'
 import { memoryStorage } from 'multer'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { AdminGuard } from '../auth/guards/admin.guard'
+import { PermissionsGuard } from '../auth/guards/permissions.guard'
+import { RequirePermissions } from '../auth/decorators/permissions.decorator'
 import { UploadsService } from './uploads.service'
 
 @Controller('uploads')
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequirePermissions('manage:catalog')
 export class UploadsController {
   constructor(private uploadsService: UploadsService) {}
 

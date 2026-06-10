@@ -1247,6 +1247,127 @@ table.ac-data tr:hover .ac-row-actions { opacity: 1; }
 }
 .ac-notif-dot:hover { transform: scale(1.25); }
 
+/* ── Info tooltip ────────────────────────────────────────── */
+.ac-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
+  color: var(--ac-text-faint);
+  cursor: help;
+  vertical-align: middle;
+  outline: none;
+}
+.ac-info svg { width: 14px; height: 14px; }
+.ac-info:hover { color: var(--ac-terracotta); }
+.ac-info-pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  width: 230px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--ac-text);
+  color: var(--ac-bg);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: left;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 40;
+}
+.ac-info-pop::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--ac-text);
+}
+.ac-info:hover .ac-info-pop,
+.ac-info:focus .ac-info-pop {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Date range control ──────────────────────────────────── */
+.ac-daterange {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 14px 16px;
+}
+.ac-dr-presets { display: flex; flex-wrap: wrap; gap: 2px; }
+.ac-dr-custom { display: flex; align-items: center; gap: 8px; }
+.ac-dr-date {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--ac-hairline);
+  background: var(--ac-bg);
+  color: var(--ac-text);
+  font-size: 13px;
+  color-scheme: light;
+}
+.admin-content[data-theme="dark"] .ac-dr-date { color-scheme: dark; }
+.ac-dr-right { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+.ac-dr-compare {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--ac-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ac-dr-compare input { width: 15px; height: 15px; accent-color: var(--ac-terracotta); }
+
+/* ── Horizontal bar rows (brand / top sellers) ───────────── */
+.ac-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+.ac-bar-label {
+  width: 150px;
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--ac-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ac-bar-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 5px;
+  background: var(--ac-bg-tint);
+  overflow: hidden;
+}
+.ac-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--ac-terracotta), #d99a7e);
+  transition: width 0.4s ease;
+}
+.ac-bar-value {
+  width: 76px;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ac-text);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1200px) {
   .ac-stat-grid { grid-template-columns: repeat(2, 1fr); }

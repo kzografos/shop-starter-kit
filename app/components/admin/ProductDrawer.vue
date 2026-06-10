@@ -50,6 +50,11 @@
                 <input v-model.number="form.compare_at_price" type="number" step="0.01" min="0" />
               </label>
               <label class="acf">
+                <span>{{ $t('admin.cost') }} (€)</span>
+                <input v-model.number="form.cost" type="number" step="0.01" min="0" />
+                <span class="acf-hint">{{ $t('admin.cost_hint') }}</span>
+              </label>
+              <label class="acf">
                 <span>{{ $t('admin.stock') }} *</span>
                 <input v-model.number="form.stock" type="number" min="0" />
               </label>
@@ -155,7 +160,7 @@ const previewUrls = ref<string[]>([])
 
 const form = reactive({
   slug: '', name_el: '', name_en: '', description_el: '', description_en: '',
-  price: 0, compare_at_price: null as number | null, stock: 0,
+  price: 0, compare_at_price: null as number | null, cost: null as number | null, stock: 0,
   brand: '', package_size: '', animal_age: 'all', category_id: null as string | null,
   is_active: true, images: [] as string[],
 })
@@ -193,7 +198,7 @@ watch(() => form.name_en, (v) => {
 function resetForm() {
   Object.assign(form, {
     slug: '', name_el: '', name_en: '', description_el: '', description_en: '',
-    price: 0, compare_at_price: null, stock: 0, brand: '', package_size: '',
+    price: 0, compare_at_price: null, cost: null, stock: 0, brand: '', package_size: '',
     animal_age: 'all', category_id: null, is_active: true, images: [],
   })
   previewUrls.value = []

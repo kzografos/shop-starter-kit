@@ -1,10 +1,12 @@
 import { Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { AdminGuard } from '../auth/guards/admin.guard'
+import { PermissionsGuard } from '../auth/guards/permissions.guard'
+import { RequirePermissions } from '../auth/decorators/permissions.decorator'
 import { NotificationsService } from './notifications.service'
 
 @Controller('admin/notifications')
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequirePermissions('manage:inventory')
 export class NotificationsController {
   constructor(private notifications: NotificationsService) {}
 

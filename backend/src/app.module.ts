@@ -21,6 +21,8 @@ import { AdminModule } from './admin/admin.module'
 import { MinioModule } from './minio/minio.module'
 import { UploadsModule } from './uploads/uploads.module'
 import { NotificationsModule } from './notifications/notifications.module'
+import { AnalyticsModule } from './analytics/analytics.module'
+import { StaffModule } from './staff/staff.module'
 
 @Module({
   imports: [
@@ -68,6 +70,8 @@ import { NotificationsModule } from './notifications/notifications.module'
     MinioModule,
     UploadsModule,
     NotificationsModule,
+    AnalyticsModule,
+    StaffModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

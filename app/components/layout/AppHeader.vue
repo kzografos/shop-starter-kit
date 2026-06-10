@@ -104,7 +104,7 @@
                   {{ t('nav.account') }}
                 </NuxtLink>
                 <NuxtLink
-                  v-if="isAdmin"
+                  v-if="isStaff"
                   :to="localePath('/admin')"
                   class="flex items-center gap-3 px-4 py-2.5 text-sm text-[--color-bark] hover:bg-[--color-surface-page] transition-colors"
                   @click="userMenuOpen = false"
@@ -246,7 +246,19 @@
               <UIcon name="i-heroicons-chevron-right" class="w-4 h-4 opacity-40" />
             </NuxtLink>
             <NuxtLink
-              v-else
+              v-if="isLoggedIn && isStaff"
+              :to="localePath('/admin')"
+              class="flex items-center justify-between py-4 text-base font-medium text-[--color-bark] hover:text-terracotta transition-colors border-t border-[--color-border-soft]"
+              @click="mobileMenuOpen = false"
+            >
+              <span class="flex items-center gap-2">
+                <UIcon name="i-heroicons-cog-6-tooth" class="w-5 h-5" />
+                {{ $t('nav.admin') }}
+              </span>
+              <UIcon name="i-heroicons-chevron-right" class="w-4 h-4 opacity-40" />
+            </NuxtLink>
+            <NuxtLink
+              v-if="!isLoggedIn"
               :to="localePath('/login')"
               class="flex items-center justify-between py-4 text-base font-medium text-terracotta hover:text-terracotta-dark transition-colors"
               @click="mobileMenuOpen = false"
@@ -293,6 +305,8 @@ const localePath = useLocalePath()
 const authStore = useAuthStore()
 const cartStore = useCartStore()
 const { isLoggedIn, profile, isAdmin } = storeToRefs(authStore)
+const { isStaff } = usePermissions()
+void isAdmin // kept for backward compat; admin link now uses isStaff
 const { itemCount } = storeToRefs(cartStore)
 const cartOpen = useState('cart-open', () => false)
 const router = useRouter()

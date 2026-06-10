@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
 import { NotificationsService } from '../notifications/notifications.service'
-import { AnimalAge, OrderStatus, Prisma } from '@prisma/client'
+import { AnimalAge, OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   pending: OrderStatus.PENDING,
@@ -56,11 +56,11 @@ export class AdminService {
     ] = await Promise.all([
       this.prisma.order.aggregate({
         _sum: { total: true },
-        where: { NOT: { status: OrderStatus.CANCELLED } },
+        where: { paymentStatus: PaymentStatus.PAID },
       }),
       this.prisma.order.aggregate({
         _sum: { total: true },
-        where: { NOT: { status: OrderStatus.CANCELLED }, createdAt: { gte: monthStart } },
+        where: { paymentStatus: PaymentStatus.PAID, createdAt: { gte: monthStart } },
       }),
       this.prisma.user.count({ where: { role: 'CUSTOMER' } }),
       this.prisma.user.count({ where: { role: 'CUSTOMER', createdAt: { gte: monthStart } } }),
@@ -70,7 +70,7 @@ export class AdminService {
         select: { id: true, status: true, total: true, createdAt: true },
       }),
       this.prisma.order.findMany({
-        where: { NOT: { status: OrderStatus.CANCELLED }, createdAt: { gte: thirtyDaysAgo } },
+        where: { paymentStatus: PaymentStatus.PAID, createdAt: { gte: thirtyDaysAgo } },
         select: { createdAt: true, total: true },
       }),
       this.prisma.order.groupBy({ by: ['status'], _count: { _all: true } }),
@@ -91,7 +91,7 @@ export class AdminService {
       this.prisma.order.aggregate({
         _sum: { total: true },
         where: {
-          NOT: { status: OrderStatus.CANCELLED },
+          paymentStatus: PaymentStatus.PAID,
           createdAt: { gte: prevMonthStart, lt: monthStart },
         },
       }),
@@ -233,6 +233,7 @@ export class AdminService {
         descriptionEn: body.description_en as string | undefined,
         price: body.price as number,
         compareAtPrice: (body.compare_at_price as number | null) || null,
+        cost: (body.cost as number | null) || null,
         stock: body.stock as number,
         brand: body.brand as string | undefined,
         packageSize: body.package_size as string | undefined,
@@ -258,6 +259,7 @@ export class AdminService {
         descriptionEn: body.description_en as string | undefined,
         price: body.price as number,
         compareAtPrice: (body.compare_at_price as number | null) || null,
+        cost: (body.cost as number | null) || null,
         stock: body.stock as number,
         brand: body.brand as string | undefined,
         packageSize: body.package_size as string | undefined,

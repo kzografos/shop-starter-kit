@@ -25,6 +25,7 @@
       <!-- Nav -->
       <div class="admin-nav-section">
         <button
+          v-if="can('view:finance')"
           class="admin-nav-item"
           :class="{ active: isDashboard }"
           @click="navigateTo(localePath('/admin'))"
@@ -33,6 +34,16 @@
           <span>{{ $t('admin.dashboard') }}</span>
         </button>
         <button
+          v-if="can('view:finance')"
+          class="admin-nav-item"
+          :class="{ active: isAnalytics }"
+          @click="navigateTo(localePath('/admin/analytics'))"
+        >
+          <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 4-6"/></svg>
+          <span>{{ $t('admin.analytics') }}</span>
+        </button>
+        <button
+          v-if="can('view:catalog')"
           class="admin-nav-item"
           :class="{ active: isProducts }"
           @click="navigateTo(localePath('/admin/products'))"
@@ -41,6 +52,7 @@
           <span>{{ $t('admin.products') }}</span>
         </button>
         <button
+          v-if="can('view:catalog')"
           class="admin-nav-item"
           :class="{ active: isCategories }"
           @click="navigateTo(localePath('/admin/categories'))"
@@ -49,6 +61,7 @@
           <span>{{ $t('admin.categories') }}</span>
         </button>
         <button
+          v-if="can('view:orders')"
           class="admin-nav-item"
           :class="{ active: isOrders }"
           @click="navigateTo(localePath('/admin/orders'))"
@@ -56,27 +69,8 @@
           <svg viewBox="0 0 24 24"><path d="M3 4h2l2 12h12l2-8H7"/><circle cx="9" cy="20" r="1.25"/><circle cx="18" cy="20" r="1.25"/></svg>
           <span>{{ $t('admin.orders') }}</span>
         </button>
-      </div>
-
-      <div class="admin-nav-section">
-        <span class="admin-nav-section-label">Workspace</span>
         <button
-          class="admin-nav-item"
-          :class="{ active: isCustomers }"
-          @click="navigateTo(localePath('/admin/customers'))"
-        >
-          <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.75 19c.5-3 3.5-4.75 6.25-4.75S15 16 15.5 19"/><circle cx="17" cy="9" r="2.5"/><path d="M19 14.75c1.5.5 2.5 1.5 2.5 3"/></svg>
-          <span>{{ $t('admin.customers') }}</span>
-        </button>
-        <button
-          class="admin-nav-item"
-          :class="{ active: isNewsletter }"
-          @click="navigateTo(localePath('/admin/newsletter'))"
-        >
-          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-          <span>{{ $t('admin.newsletter') }}</span>
-        </button>
-        <button
+          v-if="can('manage:inventory')"
           class="admin-nav-item"
           :class="{ active: isNotifications }"
           @click="navigateTo(localePath('/admin/notifications'))"
@@ -85,7 +79,39 @@
           <span>{{ $t('admin.notifications') }}</span>
           <span v-if="unread > 0" class="admin-nav-badge">{{ unread > 99 ? '99+' : unread }}</span>
         </button>
+      </div>
+
+      <div v-if="hasWorkspace" class="admin-nav-section">
+        <span class="admin-nav-section-label">Workspace</span>
         <button
+          v-if="can('view:customers')"
+          class="admin-nav-item"
+          :class="{ active: isCustomers }"
+          @click="navigateTo(localePath('/admin/customers'))"
+        >
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.75 19c.5-3 3.5-4.75 6.25-4.75S15 16 15.5 19"/><circle cx="17" cy="9" r="2.5"/><path d="M19 14.75c1.5.5 2.5 1.5 2.5 3"/></svg>
+          <span>{{ $t('admin.customers') }}</span>
+        </button>
+        <button
+          v-if="can('manage:marketing')"
+          class="admin-nav-item"
+          :class="{ active: isNewsletter }"
+          @click="navigateTo(localePath('/admin/newsletter'))"
+        >
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          <span>{{ $t('admin.newsletter') }}</span>
+        </button>
+        <button
+          v-if="can('manage:staff')"
+          class="admin-nav-item"
+          :class="{ active: isStaffPage }"
+          @click="navigateTo(localePath('/admin/staff'))"
+        >
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.25"/><path d="M3 19c.4-3 3-4.75 6-4.75S14.6 16 15 19"/><path d="M16 3.5a3.25 3.25 0 0 1 0 6.5M18.5 19c-.2-2-1-3.4-2.5-4.3"/></svg>
+          <span>{{ $t('admin.staff') }}</span>
+        </button>
+        <button
+          v-if="can('manage:settings')"
           class="admin-nav-item"
           :class="{ active: isSettings }"
           @click="navigateTo(localePath('/admin/settings'))"
@@ -132,6 +158,7 @@
         </div>
         <!-- Notifications bell -->
         <button
+          v-if="can('manage:inventory')"
           class="admin-bell"
           :title="$t('admin.notifications')"
           @click="navigateTo(localePath('/admin/notifications'))"
@@ -162,6 +189,13 @@ const isDashboard = computed(() => {
   return p === '/admin' || p === '/el/admin' || p === '/en/admin'
 })
 
+const { can } = usePermissions()
+const isStaffPage  = computed(() => route.path.includes('/admin/staff'))
+const hasWorkspace = computed(() =>
+  can('view:customers') || can('manage:marketing') || can('manage:staff') || can('manage:settings'),
+)
+
+const isAnalytics  = computed(() => route.path.includes('/admin/analytics'))
 const isProducts   = computed(() => route.path.includes('/admin/products'))
 const isCategories = computed(() => route.path.includes('/admin/categories'))
 const isOrders     = computed(() => route.path.includes('/admin/orders'))
@@ -174,12 +208,13 @@ const isNotifications = computed(() => route.path.includes('/admin/notifications
 const { unread, refreshCount } = useAdminNotifications()
 let notifTimer: ReturnType<typeof setInterval> | undefined
 onMounted(() => {
+  if (!can('manage:inventory')) return // only inventory-capable staff get low-stock alerts
   refreshCount()
   notifTimer = setInterval(refreshCount, 60_000)
 })
 onBeforeUnmount(() => { if (notifTimer) clearInterval(notifTimer) })
 // Refresh as soon as the admin opens the notifications page (count may drop).
-watch(() => route.path, (p) => { if (p.includes('/admin/notifications')) refreshCount() })
+watch(() => route.path, (p) => { if (can('manage:inventory') && p.includes('/admin/notifications')) refreshCount() })
 
 // ── Page title / subtitle ───────────────────────────────────
 const pageInfo = computed(() => {
@@ -200,6 +235,8 @@ const pageInfo = computed(() => {
     return { title: 'Customers', sub: 'Everyone who has registered at the shop.' }
   if (isNewsletter.value)
     return { title: 'Newsletter', sub: 'Subscribers to your mailing list.' }
+  if (isAnalytics.value)
+    return { title: 'Analytics', sub: 'Sales, products and margins over any period.' }
   if (isNotifications.value)
     return { title: 'Notifications', sub: 'Low-stock and out-of-stock alerts.' }
   return { title: 'Dashboard', sub: "Welcome back — here's what's happening at the shop today." }

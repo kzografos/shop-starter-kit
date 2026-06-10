@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
 import { NotificationsService } from '../notifications/notifications.service'
+import { RedisService } from '../redis/redis.service'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { Decimal } from '@prisma/client/runtime/library'
 
@@ -11,6 +12,7 @@ export class OrdersService {
     private prisma: PrismaService,
     private mail: MailService,
     private notifications: NotificationsService,
+    private redis: RedisService,
   ) {}
 
   async create(userId: string | null, userEmail: string | null, dto: CreateOrderDto) {
@@ -140,6 +142,7 @@ export class OrdersService {
     })
 
     this.mail.sendOrderConfirmation(confirmationEmail, order.id).catch(() => null)
+    this.redis.delPattern('analytics:*').catch(() => null)
 
     // Fire-and-forget low-stock alerts for the products we just decremented.
     for (const item of dto.items) {

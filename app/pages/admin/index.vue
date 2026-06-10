@@ -3,7 +3,7 @@
     <!-- Stat cards -->
     <div class="ac-stat-grid">
       <div class="ac-card ac-stat">
-        <div class="ac-stat-label">Συνολικά Έσοδα</div>
+        <div class="ac-stat-label">Συνολικά Έσοδα<AdminInfo>{{ $t('admin.revenue_info') }}</AdminInfo></div>
         <div class="ac-stat-value">
           <template v-if="loading"><span style="opacity: 0.3">—</span></template>
           <template v-else>€{{ Math.round(kpi.totalRevenue).toLocaleString('el-GR') }}</template>
@@ -17,7 +17,7 @@
       </div>
 
       <div class="ac-card ac-stat">
-        <div class="ac-stat-label">Έσοδα Μήνα</div>
+        <div class="ac-stat-label">Έσοδα Μήνα<AdminInfo>{{ $t('admin.revenue_info') }}</AdminInfo></div>
         <div class="ac-stat-value">
           <template v-if="loading"><span style="opacity: 0.3">—</span></template>
           <template v-else>€{{ Math.round(kpi.monthRevenue).toLocaleString('el-GR') }}</template>
