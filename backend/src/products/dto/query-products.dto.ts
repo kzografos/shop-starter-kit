@@ -38,10 +38,6 @@ export class QueryProductsDto {
 
   @IsOptional()
   @IsString()
-  animalType?: string
-
-  @IsOptional()
-  @IsString()
   sort?: string
 
   @IsOptional()

@@ -1,4 +1,4 @@
-import { PrismaClient, AnimalAge } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -126,7 +126,7 @@ async function main() {
         descriptionEn: 'Complete food for adult medium breed dogs (11–25kg). Optimises digestive health with high-quality proteins.',
         price: 28.99, stock: 45, isActive: true,
         categoryId: dogFood.id, brand: 'Royal Canin',
-        animalAge: AnimalAge.ADULT, packageSize: '4kg', images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'hills-science-diet-adult-small-bites-2kg',
@@ -136,7 +136,7 @@ async function main() {
         descriptionEn: 'Scientifically formulated food for small breed adult dogs. Exceptional taste with chicken and barley.',
         price: 32.50, stock: 38, isActive: true,
         categoryId: dogFood.id, brand: 'Hills',
-        animalAge: AnimalAge.ADULT, packageSize: '2kg', images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'purina-pro-plan-puppy-medium-3kg',
@@ -146,7 +146,7 @@ async function main() {
         descriptionEn: 'Complete food for medium breed puppies. Enriched with DHA for healthy brain development.',
         price: 24.99, stock: 52, isActive: true,
         categoryId: dogFood.id, brand: 'Purina',
-        animalAge: AnimalAge.PUPPY, packageSize: '3kg', images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'acana-prairie-poultry-adult-6kg',
@@ -156,7 +156,7 @@ async function main() {
         descriptionEn: 'Biologically appropriate food with 60% free-run chicken, turkey, and eggs.',
         price: 55.00, stock: 28, isActive: true,
         categoryId: dogFood.id, brand: 'Acana',
-        animalAge: AnimalAge.ADULT, packageSize: '6kg', images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'orijen-original-dog-2kg',
@@ -166,7 +166,7 @@ async function main() {
         descriptionEn: 'Food with 85% meat from a variety of whole animals. Complete grain-free nutrition.',
         price: 45.00, stock: 33, isActive: true,
         categoryId: dogFood.id, brand: 'Orijen',
-        animalAge: AnimalAge.ALL, packageSize: '2kg', images: [IMGS.dog],
+        images: [IMGS.dog],
       },
 
       // ── Dog Treats (5) ────────────────────────────────────────
@@ -178,7 +178,7 @@ async function main() {
         descriptionEn: 'Clinically proven to reduce tartar build-up by up to 80%. Ideal for daily dental care.',
         price: 6.99, stock: 85, isActive: true,
         categoryId: dogTreats.id, brand: 'Pedigree',
-        animalAge: AnimalAge.ADULT, packageSize: '270g', images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'royal-canin-mini-treats-50g',
@@ -188,7 +188,7 @@ async function main() {
         descriptionEn: 'Small treats for small breed dogs. Perfect reward during training.',
         price: 8.50, stock: 70, isActive: true,
         categoryId: dogTreats.id, brand: 'Royal Canin',
-        animalAge: AnimalAge.ADULT, packageSize: '50g', images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'purina-bonio-original-350g',
@@ -198,7 +198,7 @@ async function main() {
         descriptionEn: 'Classic square biscuits with wheat and vegetables. Low in fat, perfect as a daily treat.',
         price: 5.99, stock: 90, isActive: true,
         categoryId: dogTreats.id, brand: 'Purina',
-        animalAge: AnimalAge.ADULT, packageSize: '350g', images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'hills-soft-chewy-dog-treats-200g',
@@ -208,7 +208,7 @@ async function main() {
         descriptionEn: 'Soft and chewy treats with natural flavours. Enriched with vitamins and minerals.',
         price: 9.99, stock: 60, isActive: true,
         categoryId: dogTreats.id, brand: 'Hills',
-        animalAge: AnimalAge.ADULT, packageSize: '200g', images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'acana-crunchy-treat-beef-100g',
@@ -218,7 +218,7 @@ async function main() {
         descriptionEn: 'Crunchy treats with freeze-dried beef. 65% whole meat ingredients, no artificial additives.',
         price: 12.50, stock: 55, isActive: true,
         categoryId: dogTreats.id, brand: 'Acana',
-        animalAge: AnimalAge.ALL, packageSize: '100g', images: [IMGS.dog],
+        images: [IMGS.dog],
       },
 
       // ── Dog Accessories (5) ───────────────────────────────────
@@ -230,7 +230,7 @@ async function main() {
         descriptionEn: 'Iconic natural rubber toy. Stuff with treats for endless entertainment.',
         price: 14.99, stock: 50, isActive: true,
         categoryId: dogAccessories.id, brand: 'Pedigree',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'leather-dog-collar-black-medium',
@@ -240,7 +240,7 @@ async function main() {
         descriptionEn: 'Durable leather collar with adjustable sizing. Comfortable for everyday use.',
         price: 18.50, stock: 42, isActive: true,
         categoryId: dogAccessories.id, brand: 'Royal Canin',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'retractable-dog-leash-5m',
@@ -250,7 +250,7 @@ async function main() {
         descriptionEn: 'Retractable 5-metre leash with ergonomic handle. Ideal for park walks.',
         price: 24.99, stock: 38, isActive: true,
         categoryId: dogAccessories.id, brand: 'Purina',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'stainless-steel-dog-bowl-1-5l',
@@ -260,7 +260,7 @@ async function main() {
         descriptionEn: 'Durable stainless steel bowl with non-slip base. Suitable for food and water.',
         price: 9.99, stock: 65, isActive: true,
         categoryId: dogAccessories.id, brand: 'Hills',
-        animalAge: AnimalAge.ALL, packageSize: '1.5L', images: [IMGS.dog],
+        images: [IMGS.dog],
       },
       {
         slug: 'dog-training-clicker',
@@ -270,7 +270,7 @@ async function main() {
         descriptionEn: 'Simple positive reinforcement training tool. Easy click with ergonomic grip.',
         price: 5.99, stock: 80, isActive: true,
         categoryId: dogAccessories.id, brand: 'Acana',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.dog],
+        images: [IMGS.dog],
       },
 
       // ── Cat Food (5) ──────────────────────────────────────────
@@ -282,7 +282,7 @@ async function main() {
         descriptionEn: 'Specially designed food for indoor cats. Reduces unpleasant litter odours.',
         price: 25.99, stock: 48, isActive: true,
         categoryId: catFood.id, brand: 'Royal Canin',
-        animalAge: AnimalAge.ADULT, packageSize: '2kg', images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'hills-science-diet-indoor-cat-1-6kg',
@@ -292,7 +292,7 @@ async function main() {
         descriptionEn: 'High-quality food for indoor cats. Controls weight and improves coat health.',
         price: 30.50, stock: 40, isActive: true,
         categoryId: catFood.id, brand: 'Hills',
-        animalAge: AnimalAge.ADULT, packageSize: '1.6kg', images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'whiskas-adult-chicken-1-9kg',
@@ -302,7 +302,7 @@ async function main() {
         descriptionEn: 'Tasty dry food for adult cats with chicken flavour. Rich in proteins and vitamins.',
         price: 12.99, stock: 72, isActive: true,
         categoryId: catFood.id, brand: 'Whiskas',
-        animalAge: AnimalAge.ADULT, packageSize: '1.9kg', images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'purina-one-adult-cat-chicken-1-5kg',
@@ -312,7 +312,7 @@ async function main() {
         descriptionEn: 'Food that visibly boosts health in 30 days. Chicken as the number one ingredient.',
         price: 18.50, stock: 58, isActive: true,
         categoryId: catFood.id, brand: 'Purina',
-        animalAge: AnimalAge.ADULT, packageSize: '1.5kg', images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'orijen-cat-kitten-1-8kg',
@@ -322,7 +322,7 @@ async function main() {
         descriptionEn: 'Grain-free food with 90% fish, chicken, and eggs. Ideal for cats of all life stages.',
         price: 42.00, stock: 30, isActive: true,
         categoryId: catFood.id, brand: 'Orijen',
-        animalAge: AnimalAge.ALL, packageSize: '1.8kg', images: [IMGS.cat],
+        images: [IMGS.cat],
       },
 
       // ── Cat Treats (5) ────────────────────────────────────────
@@ -334,7 +334,7 @@ async function main() {
         descriptionEn: 'Irresistible treats with a crunchy outside and soft inside. Chicken flavour.',
         price: 4.50, stock: 95, isActive: true,
         categoryId: catTreats.id, brand: 'Whiskas',
-        animalAge: AnimalAge.ADULT, packageSize: '60g', images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'royal-canin-hairball-cat-treats-50g',
@@ -344,7 +344,7 @@ async function main() {
         descriptionEn: 'Treats that help eliminate hairballs. Enriched with dietary fibre.',
         price: 8.99, stock: 68, isActive: true,
         categoryId: catTreats.id, brand: 'Royal Canin',
-        animalAge: AnimalAge.ADULT, packageSize: '50g', images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'purina-dentalife-cat-54g',
@@ -354,7 +354,7 @@ async function main() {
         descriptionEn: 'Cat dental treats. Clinically proven to reduce tartar build-up by up to 69%.',
         price: 5.50, stock: 78, isActive: true,
         categoryId: catTreats.id, brand: 'Purina',
-        animalAge: AnimalAge.ADULT, packageSize: '54g', images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'hills-soft-chewy-cat-treats-200g',
@@ -364,7 +364,7 @@ async function main() {
         descriptionEn: 'Soft treats with natural chicken flavour. Low in calories.',
         price: 9.50, stock: 62, isActive: true,
         categoryId: catTreats.id, brand: 'Hills',
-        animalAge: AnimalAge.ADULT, packageSize: '200g', images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'acana-premium-cat-treats-salmon-35g',
@@ -374,7 +374,7 @@ async function main() {
         descriptionEn: 'Freeze-dried treats made from fresh salmon. 100% natural ingredients, no preservatives.',
         price: 11.99, stock: 50, isActive: true,
         categoryId: catTreats.id, brand: 'Acana',
-        animalAge: AnimalAge.ALL, packageSize: '35g', images: [IMGS.cat],
+        images: [IMGS.cat],
       },
 
       // ── Cat Accessories (5) ───────────────────────────────────
@@ -386,7 +386,7 @@ async function main() {
         descriptionEn: 'Tall natural sisal scratching post. Stable base prevents tipping.',
         price: 22.50, stock: 35, isActive: true,
         categoryId: catAccessories.id, brand: 'Royal Canin',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'interactive-feather-wand-cat-toy',
@@ -396,7 +396,7 @@ async function main() {
         descriptionEn: 'Feather wand for interactive play. Stimulates natural hunting instincts.',
         price: 8.99, stock: 58, isActive: true,
         categoryId: catAccessories.id, brand: 'Whiskas',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'covered-cat-litter-box-with-filter',
@@ -406,7 +406,7 @@ async function main() {
         descriptionEn: 'Covered litter box with activated carbon filter for odour control. Easy access via door.',
         price: 34.99, stock: 28, isActive: true,
         categoryId: catAccessories.id, brand: 'Purina',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'stainless-steel-cat-bowl-set',
@@ -416,7 +416,7 @@ async function main() {
         descriptionEn: 'Set of two stainless steel bowls for food and water. Non-slip silicone base.',
         price: 11.50, stock: 55, isActive: true,
         categoryId: catAccessories.id, brand: 'Hills',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.cat],
+        images: [IMGS.cat],
       },
       {
         slug: 'foldable-pet-carrier-medium',
@@ -426,7 +426,7 @@ async function main() {
         descriptionEn: 'Lightweight foldable carrier. Airline approved for cabin travel.',
         price: 38.00, stock: 22, isActive: true,
         categoryId: catAccessories.id, brand: 'Acana',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.cat],
+        images: [IMGS.cat],
       },
 
       // ── Bird Food (5) ─────────────────────────────────────────
@@ -438,7 +438,7 @@ async function main() {
         descriptionEn: 'Complete seed mix for budgerigars. Contains millet, oats, and sunflower seeds.',
         price: 7.50, stock: 65, isActive: true,
         categoryId: birdFood.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: '1kg', images: [IMGS.bird],
+        images: [IMGS.bird],
       },
       {
         slug: 'versele-laga-prestige-canaries-1kg',
@@ -448,7 +448,7 @@ async function main() {
         descriptionEn: 'Excellent seed mix for canaries. Enriched with vitamins and minerals.',
         price: 8.50, stock: 58, isActive: true,
         categoryId: birdFood.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: '1kg', images: [IMGS.bird],
+        images: [IMGS.bird],
       },
       {
         slug: 'versele-laga-parrot-complete-750g',
@@ -458,7 +458,7 @@ async function main() {
         descriptionEn: 'Complete food for medium-sized parrots. Pellets with fruits and vegetables.',
         price: 12.99, stock: 45, isActive: true,
         categoryId: birdFood.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ADULT, packageSize: '750g', images: [IMGS.bird],
+        images: [IMGS.bird],
       },
       {
         slug: 'versele-laga-african-grey-750g',
@@ -468,7 +468,7 @@ async function main() {
         descriptionEn: 'Specially formulated food for African Grey parrots. Enriched with calcium and vitamin D3.',
         price: 14.50, stock: 38, isActive: true,
         categoryId: birdFood.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ADULT, packageSize: '750g', images: [IMGS.bird],
+        images: [IMGS.bird],
       },
       {
         slug: 'orlux-eggfood-dry-canaries-250g',
@@ -478,7 +478,7 @@ async function main() {
         descriptionEn: 'Protein-rich dry eggfood for canaries. Ideal during the breeding season.',
         price: 9.99, stock: 50, isActive: true,
         categoryId: birdFood.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: '250g', images: [IMGS.bird],
+        images: [IMGS.bird],
       },
 
       // ── Bird Accessories (5) ──────────────────────────────────
@@ -490,7 +490,7 @@ async function main() {
         descriptionEn: 'Set of three natural wooden perches in different diameters. Improves foot health.',
         price: 12.50, stock: 45, isActive: true,
         categoryId: birdAccessories.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.bird],
+        images: [IMGS.bird],
       },
       {
         slug: 'cuttlebone-mineral-block-2-pack',
@@ -500,7 +500,7 @@ async function main() {
         descriptionEn: 'Natural cuttlebone for birds. Provides calcium and helps beak wear.',
         price: 4.99, stock: 90, isActive: true,
         categoryId: birdAccessories.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: '2-pack', images: [IMGS.bird],
+        images: [IMGS.bird],
       },
       {
         slug: 'hanging-bird-bath',
@@ -510,7 +510,7 @@ async function main() {
         descriptionEn: 'Hanging bath for cage. Easy to fill and clean. Suitable for small birds.',
         price: 11.99, stock: 40, isActive: true,
         categoryId: birdAccessories.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.bird],
+        images: [IMGS.bird],
       },
       {
         slug: 'rainbow-swing-toy-birds',
@@ -520,7 +520,7 @@ async function main() {
         descriptionEn: 'Colourful swing made from natural wood and acrylic. Ideal for budgies and canaries.',
         price: 8.50, stock: 55, isActive: true,
         categoryId: birdAccessories.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.bird],
+        images: [IMGS.bird],
       },
       {
         slug: 'gravity-water-dispenser-bird-200ml',
@@ -530,7 +530,7 @@ async function main() {
         descriptionEn: 'Automatic water dispenser for bird cage. Keeps water clean and fresh.',
         price: 6.99, stock: 62, isActive: true,
         categoryId: birdAccessories.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: '200ml', images: [IMGS.bird],
+        images: [IMGS.bird],
       },
 
       // ── Rodent Food (5) ───────────────────────────────────────
@@ -542,7 +542,7 @@ async function main() {
         descriptionEn: 'Natural food for hamsters with seeds, grains, and dried vegetables.',
         price: 6.99, stock: 68, isActive: true,
         categoryId: rodentFood.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: '750g', images: [IMGS.rodent],
+        images: [IMGS.rodent],
       },
       {
         slug: 'versele-laga-gerbil-nature-400g',
@@ -552,7 +552,7 @@ async function main() {
         descriptionEn: 'Complete food for gerbils. Seed and grain mix with natural vegetables.',
         price: 5.50, stock: 55, isActive: true,
         categoryId: rodentFood.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: '400g', images: [IMGS.rodent],
+        images: [IMGS.rodent],
       },
       {
         slug: 'versele-laga-complete-rabbit-1kg',
@@ -562,7 +562,7 @@ async function main() {
         descriptionEn: 'Complete food for rabbits with hay, vegetables, and fruit. Rich in dietary fibre.',
         price: 8.99, stock: 50, isActive: true,
         categoryId: rodentFood.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ADULT, packageSize: '1kg', images: [IMGS.rodent],
+        images: [IMGS.rodent],
       },
       {
         slug: 'purina-friskies-guinea-pig-900g',
@@ -572,7 +572,7 @@ async function main() {
         descriptionEn: 'Complete food for guinea pigs enriched with vitamin C. Seed and grain mix.',
         price: 7.50, stock: 60, isActive: true,
         categoryId: rodentFood.id, brand: 'Purina',
-        animalAge: AnimalAge.ADULT, packageSize: '900g', images: [IMGS.rodent],
+        images: [IMGS.rodent],
       },
       {
         slug: 'vitakraft-menu-vital-rat-1kg',
@@ -582,7 +582,7 @@ async function main() {
         descriptionEn: 'Balanced food for rats with grains, seeds, and dried vegetables.',
         price: 9.99, stock: 48, isActive: true,
         categoryId: rodentFood.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ADULT, packageSize: '1kg', images: [IMGS.rodent],
+        images: [IMGS.rodent],
       },
 
       // ── Rodent Accessories (5) ────────────────────────────────
@@ -594,7 +594,7 @@ async function main() {
         descriptionEn: 'Silent exercise wheel for hamsters. Safe design without holes.',
         price: 13.50, stock: 42, isActive: true,
         categoryId: rodentAccessories.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.rodent],
+        images: [IMGS.rodent],
       },
       {
         slug: 'wooden-hideout-small-animal',
@@ -604,7 +604,7 @@ async function main() {
         descriptionEn: 'Natural wooden hideout for small animals. Ideal for hamsters, rats, and gerbils.',
         price: 11.99, stock: 48, isActive: true,
         categoryId: rodentAccessories.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: null, images: [IMGS.rodent],
+        images: [IMGS.rodent],
       },
       {
         slug: 'apple-wood-chew-sticks-100g',
@@ -614,7 +614,7 @@ async function main() {
         descriptionEn: 'Natural apple wood sticks for chewing. Help wear down teeth naturally.',
         price: 4.50, stock: 85, isActive: true,
         categoryId: rodentAccessories.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: '100g', images: [IMGS.rodent],
+        images: [IMGS.rodent],
       },
       {
         slug: 'small-animal-water-bottle-250ml',
@@ -624,7 +624,7 @@ async function main() {
         descriptionEn: 'Ball-sipper water bottle for cage. Prevents leaking and contamination.',
         price: 7.99, stock: 70, isActive: true,
         categoryId: rodentAccessories.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: '250ml', images: [IMGS.rodent],
+        images: [IMGS.rodent],
       },
       {
         slug: 'premium-bedding-nesting-20l',
@@ -634,7 +634,7 @@ async function main() {
         descriptionEn: 'Soft and absorbent bedding from natural fibres. Ideal for all small rodents.',
         price: 9.50, stock: 55, isActive: true,
         categoryId: rodentAccessories.id, brand: 'Versele-Laga',
-        animalAge: AnimalAge.ALL, packageSize: '20L', images: [IMGS.rodent],
+        images: [IMGS.rodent],
       },
     ],
   });

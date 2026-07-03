@@ -15,7 +15,6 @@ export const useFiltersStore = defineStore('filters', () => {
   const selectedBrands = ref<string[]>([])
   const priceMin = ref<number | null>(null)
   const priceMax = ref<number | null>(null)
-  const animalAge = ref<string | null>(null)
   const search = ref('')
   const onSale = ref(false)
   const tree = ref<CategoryNode[]>([])        // category tree, set by ProductFilters
@@ -51,7 +50,6 @@ export const useFiltersStore = defineStore('filters', () => {
     selectedBrands.value = []
     priceMin.value = null
     priceMax.value = null
-    animalAge.value = null
     search.value = ''
     onSale.value = false
   }
@@ -62,7 +60,6 @@ export const useFiltersStore = defineStore('filters', () => {
     selectedBrands.value.length > 0 ||
     priceMin.value !== null ||
     priceMax.value !== null ||
-    !!animalAge.value ||
     !!search.value ||
     onSale.value
   )
@@ -73,7 +70,6 @@ export const useFiltersStore = defineStore('filters', () => {
     selectedBrands,
     priceMin,
     priceMax,
-    animalAge,
     search,
     onSale,
     tree,

@@ -96,8 +96,6 @@ model Product {
   isActive      Boolean    @default(true) @map("is_active")
   categoryId    String?    @map("category_id") @db.Uuid
   brand         String?
-  animalAge     AnimalAge  @default(ALL) @map("animal_age")
-  packageSize   String?    @map("package_size")
   images        String[]   @default([])
   createdAt     DateTime   @default(now()) @map("created_at")
   updatedAt     DateTime   @default(now()) @updatedAt @map("updated_at")
@@ -111,16 +109,6 @@ model Product {
   @@index([isActive])
   @@index([slug])
   @@map("products")
-}
-
-enum AnimalAge {
-  PUPPY  @map("puppy")
-  KITTEN @map("kitten")
-  ADULT  @map("adult")
-  SENIOR @map("senior")
-  ALL    @map("all")
-
-  @@map("animal_age")
 }
 
 // ─── Orders ──────────────────────────────────────────────────

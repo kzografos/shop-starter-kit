@@ -69,16 +69,6 @@
                 <span>{{ $t('filters.brand') }}</span>
                 <input v-model="form.brand" type="text" />
               </label>
-              <label class="acf">
-                <span>{{ $t('filters.package_size') }}</span>
-                <input v-model="form.package_size" type="text" />
-              </label>
-              <label class="acf">
-                <span>{{ $t('filters.animal_age') }}</span>
-                <select v-model="form.animal_age">
-                  <option v-for="opt in ageOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                </select>
-              </label>
             </div>
 
             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
@@ -161,17 +151,9 @@ const previewUrls = ref<string[]>([])
 const form = reactive({
   slug: '', name_el: '', name_en: '', description_el: '', description_en: '',
   price: 0, compare_at_price: null as number | null, cost: null as number | null, stock: 0,
-  brand: '', package_size: '', animal_age: 'all', category_id: null as string | null,
+  brand: '', category_id: null as string | null,
   is_active: true, images: [] as string[],
 })
-
-const ageOptions = [
-  { label: t('age.all'), value: 'all' },
-  { label: t('age.puppy'), value: 'puppy' },
-  { label: t('age.kitten'), value: 'kitten' },
-  { label: t('age.adult'), value: 'adult' },
-  { label: t('age.senior'), value: 'senior' },
-]
 
 // Category options — flatten the tree (parents + indented children).
 type CatNode = { id: string; name_el: string; name_en: string; children?: CatNode[] }
@@ -198,8 +180,8 @@ watch(() => form.name_en, (v) => {
 function resetForm() {
   Object.assign(form, {
     slug: '', name_el: '', name_en: '', description_el: '', description_en: '',
-    price: 0, compare_at_price: null, cost: null, stock: 0, brand: '', package_size: '',
-    animal_age: 'all', category_id: null, is_active: true, images: [],
+    price: 0, compare_at_price: null, cost: null, stock: 0, brand: '',
+    category_id: null, is_active: true, images: [],
   })
   previewUrls.value = []
   error.value = ''
@@ -217,8 +199,6 @@ watch(open, async (isOpen) => {
       Object.assign(form, {
         ...data,
         images: (data.images as string[]) ?? [],
-        // animal_age comes back as the uppercase enum (e.g. "ALL") — the select uses lowercase.
-        animal_age: String(data.animal_age ?? 'all').toLowerCase(),
       })
       previewUrls.value = []
     }

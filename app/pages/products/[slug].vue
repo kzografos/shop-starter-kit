@@ -111,18 +111,6 @@
           <!-- Attribute pills -->
           <div class="flex flex-wrap gap-2">
             <span
-              v-if="product.package_size"
-              class="text-xs px-3 py-1 rounded-full bg-[--color-surface-card] border border-[--color-border-warm] text-[--color-bark-light] font-medium"
-            >
-              {{ product.package_size }}
-            </span>
-            <span
-              v-if="product.animal_age && product.animal_age !== 'all'"
-              class="text-xs px-3 py-1 rounded-full bg-[--color-surface-card] border border-[--color-border-warm] text-[--color-bark-light] font-medium capitalize"
-            >
-              {{ $t(`product.age_${product.animal_age}`) }}
-            </span>
-            <span
               v-if="product.category"
               class="text-xs px-3 py-1 rounded-full bg-[--color-surface-card] border border-[--color-border-warm] text-[--color-bark-light] font-medium"
             >

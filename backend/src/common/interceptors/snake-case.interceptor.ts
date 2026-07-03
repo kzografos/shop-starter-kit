@@ -5,7 +5,7 @@ import { map } from 'rxjs/operators'
 
 const ENUM_FIELDS = new Set([
   'status', 'payment_status', 'fulfillment_type', 'payment_method',
-  'animal_age', 'type', 'role', 'action',
+  'type', 'role', 'action',
 ])
 
 function toSnakeCase(str: string): string {

@@ -20,7 +20,7 @@ export class ProductsService {
     s.startsWith('http://') || s.startsWith('https://')
 
   async findAll(query: QueryProductsDto) {
-    const { page: pageParam, categories, brand, minPrice, maxPrice, animalType, search, sort, onSale } = query
+    const { page: pageParam, categories, brand, minPrice, maxPrice, search, sort, onSale } = query
 
     const cacheKey = `products:list:${JSON.stringify(query)}`
     const cached = await this.redis.get(cacheKey)
@@ -42,7 +42,6 @@ export class ProductsService {
     }
 
     if (brand?.length) where.brand = { in: brand }
-    if (animalType) where.animalAge = animalType as any
     if (minPrice !== undefined) where.price = { ...where.price as object, gte: minPrice }
     if (maxPrice !== undefined) where.price = { ...where.price as object, lte: maxPrice }
     // On sale = a "was" price that is higher than the current price.

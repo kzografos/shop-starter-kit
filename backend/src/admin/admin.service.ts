@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
 import { NotificationsService } from '../notifications/notifications.service'
-import { AnimalAge, OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
+import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   pending: OrderStatus.PENDING,
@@ -11,14 +11,6 @@ const STATUS_MAP: Record<string, OrderStatus> = {
   ready: OrderStatus.READY,
   completed: OrderStatus.COMPLETED,
   cancelled: OrderStatus.CANCELLED,
-}
-
-const AGE_MAP: Record<string, AnimalAge> = {
-  all: AnimalAge.ALL,
-  adult: AnimalAge.ADULT,
-  puppy: AnimalAge.PUPPY,
-  kitten: AnimalAge.KITTEN,
-  senior: AnimalAge.SENIOR,
 }
 
 @Injectable()
@@ -236,8 +228,6 @@ export class AdminService {
         cost: (body.cost as number | null) || null,
         stock: body.stock as number,
         brand: body.brand as string | undefined,
-        packageSize: body.package_size as string | undefined,
-        animalAge: AGE_MAP[body.animal_age as string] ?? AnimalAge.ALL,
         categoryId: (body.category_id as string | null) || null,
         isActive: body.is_active !== false,
         images: (body.images as string[]) ?? [],
@@ -262,8 +252,6 @@ export class AdminService {
         cost: (body.cost as number | null) || null,
         stock: body.stock as number,
         brand: body.brand as string | undefined,
-        packageSize: body.package_size as string | undefined,
-        animalAge: AGE_MAP[body.animal_age as string] ?? AnimalAge.ALL,
         categoryId: (body.category_id as string | null) || null,
         isActive: body.is_active as boolean,
         images: (body.images as string[]) ?? [],

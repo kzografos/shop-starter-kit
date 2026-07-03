@@ -22,8 +22,6 @@ export interface Product {
   is_active: boolean
   category_id: string | null
   brand: string | null
-  animal_age: 'puppy' | 'kitten' | 'adult' | 'senior' | 'all'
-  package_size: string | null
   images: string[]
   created_at: string
   updated_at: string

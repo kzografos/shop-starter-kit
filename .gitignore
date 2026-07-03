@@ -10,3 +10,8 @@ backend/.env
 
 # Claude Code
 .claude/
+
+# local throwaway artifacts
+mkadmin.js
+schema-dump.txt
+tree.txt

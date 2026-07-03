@@ -53,11 +53,7 @@
     "description": "Description",
     "brand": "Brand",
     "added": "Added to cart!",
-    "related": "Related Products",
-    "age_puppy": "Puppy",
-    "age_kitten": "Kitten",
-    "age_adult": "Adult",
-    "age_senior": "Senior"
+    "related": "Related Products"
   },
   "cart": {
     "title": "Shopping Cart",
@@ -120,18 +116,9 @@
     "type": "Type",
     "price": "Price",
     "brand": "Brand",
-    "animal_age": "Animal Age",
-    "package_size": "Package Size",
     "all": "All",
     "reset": "Reset Filters",
     "apply": "Apply Filters"
-  },
-  "age": {
-    "all": "All Ages",
-    "puppy": "Puppy",
-    "kitten": "Kitten",
-    "adult": "Adult",
-    "senior": "Senior"
   },
   "loyalty": {
     "points": "Points",

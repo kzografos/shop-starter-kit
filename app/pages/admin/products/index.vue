@@ -111,7 +111,7 @@
         <div style="padding: 24px;">
           <h3 style="font-family: Fraunces, serif; font-size: 18px; font-weight: 500; margin: 0 0 8px;">{{ $t('admin.import_csv') }}</h3>
           <p style="font-size: 13px; color: var(--ac-text-muted); margin-bottom: 16px;">
-            CSV format: slug, name_el, name_en, price, stock, brand, animal_age, category_slug
+            CSV format: slug, name_el, name_en, price, stock, brand, category_slug
           </p>
           <UInput type="file" accept=".csv" @change="handleCsvUpload" />
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
