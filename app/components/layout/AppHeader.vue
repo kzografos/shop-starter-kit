@@ -361,7 +361,6 @@ function switchLocale(lang: 'el' | 'en') {
 async function handleLogout() {
   userMenuOpen.value = false
   await authStore.signOut()
-  await navigateTo(localePath('/'))
 }
 
 const dropdownRef = ref<HTMLElement | null>(null)

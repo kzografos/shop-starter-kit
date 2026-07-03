@@ -3,6 +3,8 @@ import type { Profile } from '~/types'
 
 export const useAuthStore = defineStore('auth', () => {
   const api = useApi()
+  const router = useRouter()
+  const localePath = useLocalePath()
   const profile = ref<Profile | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -23,6 +25,9 @@ export const useAuthStore = defineStore('auth', () => {
   async function signOut() {
     await api('/auth/logout', { method: 'POST' }).catch(() => {})
     profile.value = null
+    // Redirect after session fully cleared so no protected route flashes.
+    const onAdmin = router.currentRoute.value.path.includes('/admin')
+    await navigateTo(localePath(onAdmin ? '/login' : '/'))
   }
 
   const isAdmin = computed(() => profile.value?.role === 'admin')
