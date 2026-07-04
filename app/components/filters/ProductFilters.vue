@@ -27,27 +27,27 @@
 
     <div class="h-px bg-gray-100" />
 
-    <!-- Animal -->
+    <!-- Category -->
     <div>
-      <h3 class="font-semibold text-bark mb-4">{{ $t('filters.animal') }}</h3>
+      <h3 class="font-semibold text-bark mb-4">{{ $t('filters.category') }}</h3>
       <div class="space-y-3">
         <label
-          v-for="animal in animals"
-          :key="animal.slug"
+          v-for="category in categories"
+          :key="category.slug"
           class="flex items-center justify-between cursor-pointer group"
-          @click.prevent="toggleAnimal(animal.slug)"
+          @click.prevent="toggleCategory(category.slug)"
         >
           <div class="flex items-center gap-3">
             <div
               class="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors duration-150"
               :class="
-                localAnimals.includes(animal.slug)
+                localCategories.includes(category.slug)
                   ? 'bg-terracotta border-terracotta'
                   : 'border-gray-300 group-hover:border-terracotta/50'
               "
             >
               <svg
-                v-if="localAnimals.includes(animal.slug)"
+                v-if="localCategories.includes(category.slug)"
                 class="w-3 h-3 text-white"
                 viewBox="0 0 12 12"
                 fill="none"
@@ -62,14 +62,14 @@
               </svg>
             </div>
             <span class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{{
-              animal.name
+              category.name
             }}</span>
           </div>
         </label>
       </div>
     </div>
 
-    <!-- Type (subcategories of selected animals) — animated reveal -->
+    <!-- Type (subcategories of selected categories) — animated reveal -->
     <Transition name="type-reveal">
       <div v-if="availableTypes.length" class="space-y-7">
         <div class="h-px bg-gray-100" />
@@ -274,7 +274,7 @@ interface TypeNode {
   slug: string
   name: string
 }
-interface AnimalNode {
+interface CategoryNode {
   slug: string
   name: string
   children: TypeNode[]
@@ -282,18 +282,18 @@ interface AnimalNode {
 
 // Local staged state — only committed on Apply
 const localOnSale = ref<boolean>(filtersStore.onSale)
-const localAnimals = ref<string[]>([...filtersStore.selectedAnimals])
+const localCategories = ref<string[]>([...filtersStore.selectedCategories])
 const localTypes = ref<string[]>([...filtersStore.selectedTypes])
 const localBrands = ref<string[]>([...filtersStore.selectedBrands])
 const localPriceMin = ref<number>(filtersStore.priceMin ?? PRICE_ABS_MIN)
 const localPriceMax = ref<number>(filtersStore.priceMax ?? PRICE_ABS_MAX)
 
-const animals = ref<AnimalNode[]>([])
+const categories = ref<CategoryNode[]>([])
 const brands = ref<Array<{ name: string; count: number }>>([])
 
-// Subcategories ("Type") for the currently selected animals.
+// Subcategories ("Type") for the currently selected categories.
 const availableTypes = computed<TypeNode[]>(() =>
-  animals.value.filter((a) => localAnimals.value.includes(a.slug)).flatMap((a) => a.children)
+  categories.value.filter((c) => localCategories.value.includes(c.slug)).flatMap((c) => c.children)
 )
 
 // Sync local state when store is updated from outside (e.g. URL-based init)
@@ -304,9 +304,9 @@ watch(
   }
 )
 watch(
-  () => filtersStore.selectedAnimals,
+  () => filtersStore.selectedCategories,
   (v) => {
-    localAnimals.value = [...v]
+    localCategories.value = [...v]
   }
 )
 watch(
@@ -322,14 +322,14 @@ watch(
   }
 )
 
-function toggleAnimal(slug: string) {
-  const idx = localAnimals.value.indexOf(slug)
+function toggleCategory(slug: string) {
+  const idx = localCategories.value.indexOf(slug)
   if (idx === -1) {
-    localAnimals.value.push(slug)
+    localCategories.value.push(slug)
   } else {
-    localAnimals.value.splice(idx, 1)
-    // Drop any selected types belonging to the deselected animal.
-    const childSlugs = animals.value.find((a) => a.slug === slug)?.children.map((c) => c.slug) ?? []
+    localCategories.value.splice(idx, 1)
+    // Drop any selected types belonging to the deselected category.
+    const childSlugs = categories.value.find((c) => c.slug === slug)?.children.map((c) => c.slug) ?? []
     localTypes.value = localTypes.value.filter((t) => !childSlugs.includes(t))
   }
 }
@@ -348,7 +348,7 @@ function toggleBrand(name: string) {
 
 function applyFilters() {
   filtersStore.onSale = localOnSale.value
-  filtersStore.selectedAnimals = [...localAnimals.value]
+  filtersStore.selectedCategories = [...localCategories.value]
   filtersStore.selectedTypes = [...localTypes.value]
   filtersStore.selectedBrands = [...localBrands.value]
   filtersStore.priceMin = localPriceMin.value > PRICE_ABS_MIN ? localPriceMin.value : null
@@ -358,7 +358,7 @@ function applyFilters() {
 
 function resetAll() {
   localOnSale.value = false
-  localAnimals.value = []
+  localCategories.value = []
   localTypes.value = []
   localBrands.value = []
   localPriceMin.value = PRICE_ABS_MIN
@@ -379,7 +379,7 @@ onMounted(async () => {
   brands.value = brandData.map((r) => ({ name: r.brand, count: r.count }))
 
   const name = (el: string, en: string) => (locale.value === 'el' ? el : en)
-  animals.value = catTree.map((c) => ({
+  categories.value = catTree.map((c) => ({
     slug: c.slug,
     name: name(c.name_el, c.name_en),
     children: (c.children ?? []).map((ch) => ({

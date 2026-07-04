@@ -226,7 +226,7 @@ const pageInfo = computed(() => {
     return { title: 'Products', sub: 'Manage inventory, pricing and availability.' }
   }
   if (isCategories.value)
-    return { title: 'Categories', sub: 'Organize your catalog — animals and their subcategories.' }
+    return { title: 'Categories', sub: 'Organize your catalog into categories and subcategories.' }
   if (isOrders.value)
     return { title: 'Orders', sub: 'Track and update customer orders.' }
   if (isSettings.value)

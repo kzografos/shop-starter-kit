@@ -161,8 +161,8 @@ const chips = computed(() => {
     const n = names.get(slug)
     return n ? (locale.value === 'el' ? n.el : n.en) : slug
   }
-  for (const a of filtersStore.selectedAnimals)
-    out.push({ id: `a-${a}`, label: nameOf(a), remove: () => { filtersStore.selectedAnimals = filtersStore.selectedAnimals.filter((x) => x !== a) } })
+  for (const c of filtersStore.selectedCategories)
+    out.push({ id: `c-${c}`, label: nameOf(c), remove: () => { filtersStore.selectedCategories = filtersStore.selectedCategories.filter((x) => x !== c) } })
   for (const tp of filtersStore.selectedTypes)
     out.push({ id: `t-${tp}`, label: nameOf(tp), remove: () => { filtersStore.selectedTypes = filtersStore.selectedTypes.filter((x) => x !== tp) } })
   for (const b of filtersStore.selectedBrands)
@@ -198,7 +198,7 @@ const currentPage = ref(Number(route.query.page) || 1)
 // Reset to page 1 when filters change
 watch(
   [
-    () => filtersStore.selectedAnimals,
+    () => filtersStore.selectedCategories,
     () => filtersStore.selectedTypes,
     () => filtersStore.selectedBrands,
     () => filtersStore.priceMin,
@@ -223,15 +223,15 @@ const { products, pending, total, totalPages } = useProducts(currentPage)
 
 // Sync filter store back to URL so clearing filters also clears the query param
 watch(
-  () => [...filtersStore.selectedAnimals],
-  (animals) => {
+  () => [...filtersStore.selectedCategories],
+  (categories) => {
     const query = { ...route.query }
-    if (animals.length === 0) {
+    if (categories.length === 0) {
       delete query.category
-    } else if (animals.length === 1) {
-      query.category = animals[0] as string
+    } else if (categories.length === 1) {
+      query.category = categories[0] as string
     } else {
-      // Multiple animals selected via sidebar — remove single-category param
+      // Multiple categories selected via sidebar — remove single-category param
       delete query.category
     }
     router.replace({ query })
@@ -277,11 +277,11 @@ onMounted(async () => {
   const cat = flat.find((c) => c.slug === slug)
   if (!cat) return
 
-  const animalSlug = cat.parent_id
+  const categorySlug = cat.parent_id
     ? (flat.find((c) => c.id === cat.parent_id)?.slug ?? slug)
     : slug
 
-  filtersStore.selectedAnimals = [animalSlug]
+  filtersStore.selectedCategories = [categorySlug]
 })
 
 useSeoMeta({ title: () => t('products.title') })

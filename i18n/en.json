@@ -16,14 +16,14 @@
     "logout": "Sign Out"
   },
   "home": {
-    "hero_label": "Cyprus' Favourite Pet Store",
-    "hero_title": "Everything your pet deserves.",
+    "hero_label": "Your Favourite Online Store",
+    "hero_title": "Everything you need.",
     "hero_title_accent": "Nothing less.",
-    "hero_subtitle": "Premium food, accessories and grooming for dogs, cats, birds and rodents. Free delivery across Cyprus.",
+    "hero_subtitle": "Quality products, accessories and essentials at great prices. Free delivery across Cyprus.",
     "shop_now": "Shop Now",
     "explore_brands": "Explore Brands",
-    "vet_approved": "Vet approved",
-    "badge_vet": "Vet approved",
+    "vet_approved": "Quality checked",
+    "badge_vet": "Quality checked",
     "badge_returns": "Free 30-day returns",
     "badge_shipping": "Free shipping over €50",
     "categories": "Categories",
@@ -112,7 +112,7 @@
   "filters": {
     "title": "Filters",
     "on_sale": "On sale only",
-    "animal": "Animal",
+    "category": "Category",
     "type": "Type",
     "price": "Price",
     "brand": "Brand",
@@ -199,13 +199,13 @@
   },
   "about": {
     "title": "About Us",
-    "subtitle": "Cyprus's favourite pet shop. Caring for your pets since 2018.",
+    "subtitle": "Your favourite online store. Serving customers online.",
     "story_title": "Our Story",
-    "story_p1": "We started with a simple vision: to create a place where every pet owner can find everything they need for their animal's health and happiness.",
+    "story_p1": "We started with a simple vision: to create a place where everyone can find everything they need in one place.",
     "story_p2": "Today we offer hundreds of products from the world's best brands, with fast delivery across Cyprus and expert customer service.",
     "values_title": "Why Choose Us",
-    "value1_title": "Love for Animals",
-    "value1_desc": "Every product is selected with your pet's health and wellbeing in mind.",
+    "value1_title": "Customer First",
+    "value1_desc": "Every product is selected with your needs and satisfaction in mind.",
     "value2_title": "Quality & Reliability",
     "value2_desc": "We work only with certified brands and trusted suppliers.",
     "value3_title": "Satisfaction Guarantee",
@@ -233,7 +233,7 @@
     "map_title": "Store location map"
   },
   "footer": {
-    "description": "Your local pet shop in Larnaca, Cyprus. Food, accessories and grooming for every pet — delivered to your door.",
+    "description": "Your local online store in Limassol, Cyprus. Quality products delivered to your door.",
     "rights": "All rights reserved.",
     "links": "Links",
     "contact": "Info",
@@ -241,9 +241,6 @@
     "shop": "Shop",
     "account_title": "Account",
     "info": "Info",
-    "dogs": "Dogs",
-    "cats": "Cats",
-    "birds": "Birds",
     "loyalty": "Loyalty Points"
   },
   "brands": {
@@ -258,7 +255,7 @@
   "newsletter": {
     "eyebrow": "Stay in the loop",
     "title": "News & Offers",
-    "subtitle": "Subscribe to receive exclusive deals, pet care tips and new product arrivals.",
+    "subtitle": "Subscribe to receive exclusive deals, tips and new product arrivals.",
     "placeholder": "Your email address",
     "cta": "Subscribe",
     "success": "You're subscribed! Thank you.",
@@ -412,7 +409,7 @@
     "inactive": "Inactive"
   },
   "hero": {
-    "tagline": "Cyprus' Favourite Pet Store",
+    "tagline": "Your Favourite Online Store",
     "stat_products": "Products",
     "stat_customers": "Customers",
     "stat_rating": "Rating",
@@ -421,7 +418,7 @@
   "login": {
     "welcome_back": "Welcome back,",
     "welcome_accent": "friend.",
-    "tagline": "Caring for your pets since 2018.",
+    "tagline": "Serving customers online.",
     "feature_orders": "Track your orders",
     "feature_points": "Redeem your loyalty points",
     "feature_reorder": "Quickly reorder your favourites",

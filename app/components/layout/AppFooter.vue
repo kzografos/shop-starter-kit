@@ -50,9 +50,6 @@
             <h3 class="text-cream text-sm font-semibold mb-4 uppercase tracking-widest">{{ $t('footer.shop') }}</h3>
             <ul class="space-y-2.5 text-sm">
               <li><NuxtLink :to="localePath('/products')" class="hover:text-cream transition-colors">{{ $t('nav.products') }}</NuxtLink></li>
-              <li><NuxtLink :to="localePath('/products?animal=dogs')" class="hover:text-cream transition-colors">{{ $t('footer.dogs') }}</NuxtLink></li>
-              <li><NuxtLink :to="localePath('/products?animal=cats')" class="hover:text-cream transition-colors">{{ $t('footer.cats') }}</NuxtLink></li>
-              <li><NuxtLink :to="localePath('/products?animal=birds')" class="hover:text-cream transition-colors">{{ $t('footer.birds') }}</NuxtLink></li>
             </ul>
           </div>
 

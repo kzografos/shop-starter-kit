@@ -187,102 +187,6 @@
       </div>
     </section>
 
-    <!-- Testimonials -->
-    <section class="bg-surface-page py-16 px-4">
-      <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
-
-        <!-- Heading -->
-        <div class="text-center mb-12">
-          <p class="text-terracotta text-xs font-semibold tracking-widest uppercase mb-3">
-            ★★★★★ 4.9
-          </p>
-          <h2 class="font-display text-3xl sm:text-4xl font-bold text-[--color-bark] mb-3">
-            {{ $t('testimonials.title') }}
-          </h2>
-          <p class="text-[--color-bark-light] max-w-md mx-auto text-sm">
-            {{ $t('testimonials.subtitle') }}
-          </p>
-        </div>
-
-        <!-- Review cards -->
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-
-          <!-- Review 1 -->
-          <div class="bg-[--color-surface-card] rounded-2xl p-6 border border-[--color-border-warm] flex flex-col gap-4">
-            <div class="flex items-center gap-1 text-gold">
-              <span v-for="i in 5" :key="i" class="text-base">★</span>
-            </div>
-            <p class="text-sm text-[--color-bark] leading-relaxed flex-1">
-              "Εξαιρετική εξυπηρέτηση και πολύ γρήγορη παράδοση! Βρήκα όλα τα προϊόντα που χρειαζόμουν για τον σκύλο μου σε πολύ καλές τιμές. Σίγουρα θα ξαναγοράσω!"
-            </p>
-            <div class="flex items-center justify-between pt-3 border-t border-[--color-border-warm]">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-terracotta flex items-center justify-center shrink-0">
-                  <span class="text-white text-sm font-bold">Μ</span>
-                </div>
-                <div>
-                  <p class="text-sm font-semibold text-[--color-bark]">Μαρία Παπαδοπούλου</p>
-                  <p class="text-xs text-[--color-bark-light]">Λευκωσία</p>
-                </div>
-              </div>
-              <span class="text-xs text-[--color-bark-light] bg-[--color-surface-page] px-2 py-1 rounded-full border border-[--color-border-warm]">
-                Google
-              </span>
-            </div>
-          </div>
-
-          <!-- Review 2 -->
-          <div class="bg-[--color-surface-card] rounded-2xl p-6 border border-[--color-border-warm] flex flex-col gap-4">
-            <div class="flex items-center gap-1 text-gold">
-              <span v-for="i in 5" :key="i" class="text-base">★</span>
-            </div>
-            <p class="text-sm text-[--color-bark] leading-relaxed flex-1">
-              "Το καλύτερο online pet shop στην Κύπρο! Τεράστια ποικιλία προϊόντων, εύκολη πλοήγηση και το σύστημα πόντων ανταμοιβής είναι φανταστικό. Ανεπιφύλακτα το συστήνω!"
-            </p>
-            <div class="flex items-center justify-between pt-3 border-t border-[--color-border-warm]">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-forest flex items-center justify-center shrink-0">
-                  <span class="text-white text-sm font-bold">Γ</span>
-                </div>
-                <div>
-                  <p class="text-sm font-semibold text-[--color-bark]">Γιώργος Χριστοδούλου</p>
-                  <p class="text-xs text-[--color-bark-light]">Λάρνακα</p>
-                </div>
-              </div>
-              <span class="text-xs text-[--color-bark-light] bg-[--color-surface-page] px-2 py-1 rounded-full border border-[--color-border-warm]">
-                Google
-              </span>
-            </div>
-          </div>
-
-          <!-- Review 3 -->
-          <div class="bg-[--color-surface-card] rounded-2xl p-6 border border-[--color-border-warm] flex flex-col gap-4 sm:col-span-2 lg:col-span-1">
-            <div class="flex items-center gap-1 text-gold">
-              <span v-for="i in 5" :key="i" class="text-base">★</span>
-            </div>
-            <p class="text-sm text-[--color-bark] leading-relaxed flex-1">
-              "Amazing selection and super fast delivery! My cats absolutely love the Royal Canin food I ordered. The loyalty points system is a great bonus. Highly recommend to all pet owners in Cyprus!"
-            </p>
-            <div class="flex items-center justify-between pt-3 border-t border-[--color-border-warm]">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-sage-dark flex items-center justify-center shrink-0">
-                  <span class="text-white text-sm font-bold">A</span>
-                </div>
-                <div>
-                  <p class="text-sm font-semibold text-[--color-bark]">Andreas Georgiou</p>
-                  <p class="text-xs text-[--color-bark-light]">Λεμεσός</p>
-                </div>
-              </div>
-              <span class="text-xs text-[--color-bark-light] bg-[--color-surface-page] px-2 py-1 rounded-full border border-[--color-border-warm]">
-                Facebook
-              </span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
     <!-- Brands marquee -->
     <BrandsMarquee />
 
@@ -399,8 +303,8 @@ onMounted(() => nextTick(updateRailState))
 useSeoMeta({
   // Title omitted → global template renders the brand name (language-neutral) on the homepage.
   description: () => locale.value === 'el'
-    ? 'Τροφές, αξεσουάρ και περιποίηση για σκύλους, γάτες, πουλιά και τρωκτικά. Παράδοση στη Λάρνακα και σε όλη την Κύπρο.'
-    : 'Pet food, accessories and grooming for dogs, cats, birds and rodents. Delivery in Larnaca and across Cyprus.',
+    ? 'Ποιοτικά προϊόντα σε καλές τιμές, με παράδοση στην πόρτα σας σε όλη την Κύπρο.'
+    : 'Quality products at great prices, delivered to your door across Cyprus.',
 })
 </script>
 

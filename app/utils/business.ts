@@ -3,22 +3,22 @@
 export const BUSINESS = {
   name: 'Mike Animal Show', // short brand for UI
   legalName: 'Mike Animal Show Pet Shop', // full name for SEO / structured data
-  tagline: 'Pet products with just a click at your door!',
+  tagline: 'Everything you need, delivered to your door.',
 
   phone: '+35799584273', // tel: link
   phoneDisplay: '+357 99 584 273', // human-readable
   whatsapp: '35799584273', // wa.me number (no +)
 
   address: {
-    street: 'Papanikoli 41',
-    postalCode: '6052',
-    city: 'Larnaca',
-    region: 'Larnaca',
+    street: 'Anexartisias 100',
+    postalCode: '3040',
+    city: 'Limassol',
+    region: 'Limassol',
     country: 'CY',
     countryName: 'Cyprus',
   },
 
-  geo: { lat: 34.937616, lon: 33.6195581 },
+  geo: { lat: 34.6857, lon: 33.0292 },
 
   // Display hours — `key` maps to an i18n label, `value` is shown as-is.
   displayHours: [

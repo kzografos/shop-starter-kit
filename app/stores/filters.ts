@@ -10,7 +10,7 @@ interface CategoryNode extends CategoryLeaf {
 }
 
 export const useFiltersStore = defineStore('filters', () => {
-  const selectedAnimals = ref<string[]>([])   // top-level (parent) category slugs
+  const selectedCategories = ref<string[]>([])   // top-level (parent) category slugs
   const selectedTypes = ref<string[]>([])     // subcategory (child) slugs
   const selectedBrands = ref<string[]>([])
   const priceMin = ref<number | null>(null)
@@ -26,11 +26,11 @@ export const useFiltersStore = defineStore('filters', () => {
     for (const p of tree.value)
       for (const c of p.children ?? []) childToParent.set(c.slug, p.slug)
 
-    const animalsWithType = new Set(
+    const categoriesWithType = new Set(
       selectedTypes.value.map((t) => childToParent.get(t)).filter(Boolean) as string[],
     )
     const result = [...selectedTypes.value]
-    for (const a of selectedAnimals.value) if (!animalsWithType.has(a)) result.push(a)
+    for (const a of selectedCategories.value) if (!categoriesWithType.has(a)) result.push(a)
     return result
   })
 
@@ -45,7 +45,7 @@ export const useFiltersStore = defineStore('filters', () => {
   })
 
   function reset() {
-    selectedAnimals.value = []
+    selectedCategories.value = []
     selectedTypes.value = []
     selectedBrands.value = []
     priceMin.value = null
@@ -55,7 +55,7 @@ export const useFiltersStore = defineStore('filters', () => {
   }
 
   const hasActiveFilters = computed(() =>
-    selectedAnimals.value.length > 0 ||
+    selectedCategories.value.length > 0 ||
     selectedTypes.value.length > 0 ||
     selectedBrands.value.length > 0 ||
     priceMin.value !== null ||
@@ -65,7 +65,7 @@ export const useFiltersStore = defineStore('filters', () => {
   )
 
   return {
-    selectedAnimals,
+    selectedCategories,
     selectedTypes,
     selectedBrands,
     priceMin,

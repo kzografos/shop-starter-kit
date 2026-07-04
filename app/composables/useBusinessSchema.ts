@@ -1,5 +1,5 @@
-// Injects schema.org LocalBusiness/PetStore JSON-LD so the shop is eligible for
-// Google rich results (name, address, geo, hours, phone) — local SEO for "pet shop Larnaca".
+// Injects schema.org LocalBusiness/Store JSON-LD so the shop is eligible for
+// Google rich results (name, address, geo, hours, phone) — local SEO for the store in Limassol.
 import { BUSINESS } from '~/utils/business'
 
 export const useBusinessSchema = () => {
@@ -8,7 +8,7 @@ export const useBusinessSchema = () => {
 
   const schema = {
     '@context': 'https://schema.org',
-    '@type': 'PetStore',
+    '@type': 'Store',
     name: BUSINESS.legalName,
     description: BUSINESS.tagline,
     image: `${base}/logo.svg`,
