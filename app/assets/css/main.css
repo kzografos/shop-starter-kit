@@ -11,8 +11,8 @@
   --font-display: 'Fraunces', Georgia, serif;
   --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
 
-  --color-cream: #fbf6ec;
-  --color-cream-pale: #f5efe2;
+  --color-cream: var(--brand-cream);
+  --color-cream-pale: var(--brand-cream-pale);
 
   /* Terracotta scale — used by NuxtUI primary color system */
   --color-terracotta-50: #fef6f2;
@@ -20,8 +20,8 @@
   --color-terracotta-200: #f8ccb5;
   --color-terracotta-300: #f1a887;
   --color-terracotta-400: #e08e6a;
-  --color-terracotta-500: #c97b5a;
-  --color-terracotta-600: #b5613f;
+  --color-terracotta-500: var(--brand-primary);
+  --color-terracotta-600: var(--brand-primary-dark);
   --color-terracotta-700: #964d34;
   --color-terracotta-800: #7c3f2b;
   --color-terracotta-900: #653426;
@@ -31,13 +31,13 @@
   --color-terracotta: var(--color-terracotta-500);
   --color-terracotta-dark: var(--color-terracotta-600);
 
-  --color-sage: #a8b89a;
-  --color-sage-dark: #6e8163;
-  --color-forest: #475c3f;
-  --color-bark: #3a3a2e;
-  --color-bark-light: #7e7d6e;
-  --color-gold: #d9a85a;
-  --color-warm-red: #9b4a4a;
+  --color-sage: var(--brand-sage);
+  --color-sage-dark: var(--brand-sage-dark);
+  --color-forest: var(--brand-secondary);
+  --color-bark: var(--brand-bark);
+  --color-bark-light: var(--brand-bark-light);
+  --color-gold: var(--brand-gold);
+  --color-warm-red: var(--brand-warm-red);
 
   /* Page & card surface colours */
   --color-surface-page: #f5f0e8; /* global inner page background */

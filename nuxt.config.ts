@@ -55,7 +55,7 @@ export default defineNuxtConfig({
     },
   },
 
-  css: ['~/assets/css/main.css', '~/assets/css/admin.css'],
+  css: ['~/assets/css/brand.css', '~/assets/css/main.css', '~/assets/css/admin.css'],
 
   components: [{ path: '~/components', pathPrefix: false }],
 

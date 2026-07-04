@@ -1,0 +1,14 @@
+/* BRAND COLORS — change these to rebrand the shop. Both storefront and admin read from here. */
+:root {
+  --brand-primary: #c97b5a; /* terracotta — primary accent */
+  --brand-primary-dark: #b5613f; /* darker terracotta — hover / press */
+  --brand-secondary: #475c3f; /* forest green */
+  --brand-sage: #a8b89a;
+  --brand-sage-dark: #6e8163;
+  --brand-gold: #d9a85a;
+  --brand-bark: #3a3a2e;
+  --brand-bark-light: #7e7d6e;
+  --brand-warm-red: #9b4a4a;
+  --brand-cream: #fbf6ec;
+  --brand-cream-pale: #f5efe2;
+}
