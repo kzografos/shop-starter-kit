@@ -39,11 +39,11 @@
       </div>
 
       <!-- Right column: image, hidden on mobile -->
-      <div class="hidden lg:block">
+      <div class="hidden lg:block relative">
         <img
-          src="/hero-image.png"
-          alt="Mike Animal Show Pet Shop"
-          class="w-full h-full object-cover object-center"
+          src="/images/hero-placeholder.svg"
+          :alt="BUSINESS.legalName"
+          class="absolute inset-0 h-full w-full object-cover object-center"
         />
       </div>
     </section>
@@ -104,22 +104,14 @@
             @scroll.passive="updateRailState"
           >
           <NuxtLink
-            v-for="cat in categories"
+            v-for="(cat, i) in categories"
             :key="cat.id"
             :to="localePath(`/products?category=${cat.slug}`)"
-            class="snap-start shrink-0 w-[78%] sm:w-[42%] lg:w-[22%] group relative rounded-2xl overflow-hidden h-64 md:h-80 block"
-            :class="catConfig[cat.slug]?.bg ?? 'bg-forest'"
+            class="snap-start shrink-0 w-[78%] sm:w-[42%] lg:w-[22%] group relative rounded-2xl overflow-hidden h-44 md:h-56 block"
+            :class="catBg(i)"
           >
-            <!-- Animal image — large, bottom-right positioned -->
-            <img
-              v-if="catImage(cat.slug)"
-              :src="catImage(cat.slug)"
-              :alt="locale === 'el' ? cat.name_el : cat.name_en"
-              class="absolute bottom-0 right-0 h-44 md:h-56 w-auto object-contain group-hover:scale-110 transition-transform duration-500 drop-shadow-xl"
-            />
-
-            <!-- Gradient overlay bottom -->
-            <div class="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+            <!-- Gradient overlay bottom (subtle, for text contrast) -->
+            <div class="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
 
             <!-- Top-left: eyebrow -->
             <div class="absolute top-4 left-4">
@@ -216,6 +208,7 @@
 
 <script setup lang="ts">
 import type { Category, Product } from '~~/types'
+import { BUSINESS } from '~/utils/business'
 
 const localePath = useLocalePath()
 const { locale } = useI18n()
@@ -242,26 +235,12 @@ const { data: categories, pending } = useAsyncData('root-categories', async () =
   return tree.filter((c) => !c.parent_id)
 }, { server: false, lazy: true })
 
-const catImages: Record<string, string> = {
-  dogs: '/categories/dog.png',
-  cats: '/categories/cat.png',
-  birds: '/categories/bird.png',
-  rodents: '/categories/rodent.png',
-  fish: '/categories/fish.png',
-  beds: '/categories/bed.png',
-}
+// Rotating brand-colour backgrounds, cycled by card index — the solid
+// coloured tile + category name is the design (no image, slug-independent).
+const CATEGORY_BGS = ['bg-forest', 'bg-terracotta', 'bg-sage-dark', 'bg-bark']
 
-const catConfig: Record<string, { bg: string }> = {
-  dogs: { bg: 'bg-forest' },
-  cats: { bg: 'bg-terracotta' },
-  birds: { bg: 'bg-sage-dark' },
-  rodents: { bg: 'bg-bark' },
-  fish: { bg: 'bg-sage-dark' },
-  beds: { bg: 'bg-forest' },
-}
-
-function catImage(slug: string): string | undefined {
-  return catImages[slug] ?? undefined
+function catBg(index: number): string {
+  return CATEGORY_BGS[index % CATEGORY_BGS.length]
 }
 
 // ── Category carousel (native scroll-snap) ───────────────────

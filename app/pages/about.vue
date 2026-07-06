@@ -2,8 +2,8 @@
   <div class="bg-surface-page">
     <!-- Hero -->
     <section class="relative overflow-hidden py-24 sm:py-32 px-4" style="background: linear-gradient(135deg, var(--color-surface-card), var(--color-cream-pale))">
-      <span class="absolute top-6 left-8 text-6xl opacity-15 select-none pointer-events-none">🐾</span>
-      <span class="absolute bottom-6 right-8 text-6xl opacity-15 select-none pointer-events-none">🐈</span>
+      <span class="absolute top-6 left-8 text-6xl opacity-15 select-none pointer-events-none">🛍️</span>
+      <span class="absolute bottom-6 right-8 text-6xl opacity-15 select-none pointer-events-none">📦</span>
       <div class="max-w-4xl mx-auto text-center relative z-10">
         <h1 class="font-display text-4xl sm:text-5xl font-bold text-bark mb-4">{{ $t('about.title') }}</h1>
         <p class="text-lg text-bark-light max-w-2xl mx-auto">{{ $t('about.subtitle') }}</p>
@@ -20,10 +20,10 @@
         </div>
         <div class="relative h-72 flex items-center justify-center">
           <div class="absolute left-4 top-0 w-44 h-56 rounded-2xl bg-cream shadow-lg rotate-[-5deg] overflow-hidden flex items-center justify-center">
-            <img src="/categories/dog.png" alt="Dog" class="w-full h-full object-contain p-4" >
+            <img src="/images/placeholder-product.svg" alt="" class="w-full h-full object-contain p-4" >
           </div>
           <div class="absolute right-4 bottom-0 w-44 h-56 rounded-2xl shadow-lg rotate-[4deg] overflow-hidden flex items-center justify-center" style="background: #EFE7D6;">
-            <img src="/categories/cat.png" alt="Cat" class="w-full h-full object-contain p-4" >
+            <img src="/images/placeholder-product.svg" alt="" class="w-full h-full object-contain p-4" >
           </div>
         </div>
       </div>

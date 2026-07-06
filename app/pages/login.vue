@@ -32,11 +32,7 @@
     >
       <div class="mb-10">
         <NuxtLink :to="localePath('/')">
-          <img
-            src="/logo.svg"
-            alt="Mike Animal Show Pet Shop"
-            class="h-14 w-auto hover:opacity-80 transition-opacity"
-          />
+          <BrandLockup class="text-3xl hover:opacity-80 transition-opacity" />
         </NuxtLink>
       </div>
 
@@ -78,8 +74,8 @@
       class="flex flex-col items-center justify-center px-6 py-12 lg:h-screen lg:overflow-y-auto bg-[--color-surface-page] lg:bg-[--color-surface-card]"
     >
       <!-- Mobile logo -->
-      <div class="lg:hidden mb-8">
-        <img src="/logo.svg" alt="Mike Animal Show Pet Shop" class="h-12 w-auto mx-auto" />
+      <div class="lg:hidden mb-8 flex justify-center">
+        <BrandLockup class="text-2xl" />
       </div>
 
       <div class="w-full max-w-105 min-h-130 flex flex-col">

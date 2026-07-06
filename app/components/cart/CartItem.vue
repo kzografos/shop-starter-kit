@@ -1,10 +1,10 @@
 <template>
   <div class="flex gap-3 py-3 border-b border-[--color-border-warm] last:border-b-0">
     <img
-      :src="item.product.images[0] || '/placeholder.svg'"
+      :src="item.product.images[0] || '/images/placeholder-product.svg'"
       :alt="productName"
       class="w-16 h-16 object-cover rounded-lg bg-[--color-surface-page] shrink-0"
-      @error="(e: Event) => ((e.target as HTMLImageElement).src = '/placeholder.svg')"
+      @error="(e: Event) => ((e.target as HTMLImageElement).src = '/images/placeholder-product.svg')"
     />
     <div class="flex-1 min-w-0">
       <p class="text-sm font-medium text-[--color-bark] line-clamp-2 leading-tight">

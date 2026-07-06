@@ -1,5 +1,6 @@
 <template>
   <a
+    v-if="enabled"
     :href="whatsappUrl"
     target="_blank"
     rel="noopener noreferrer"
@@ -13,6 +14,8 @@
 </template>
 
 <script setup lang="ts">
-const config = useRuntimeConfig()
-const whatsappUrl = `https://wa.me/${config.public.whatsappNumber}`
+import { BUSINESS } from '~/utils/business'
+
+const enabled = BUSINESS.brand.whatsappEnabled && !!BUSINESS.whatsapp
+const whatsappUrl = `https://wa.me/${BUSINESS.whatsapp}`
 </script>

@@ -1,7 +1,7 @@
 {
-  "name": "petshop-backend",
+  "name": "shop-starter-kit-api",
   "version": "1.0.0",
-  "description": "Mike Animal Show Pet Shop — NestJS API",
+  "description": "E-commerce API",
   "private": true,
   "scripts": {
     "build": "nest build",
@@ -38,6 +38,7 @@
     "minio": "^8.0.7",
     "multer": "^2.1.1",
     "nestjs-pino": "^4.6.1",
+    "nodemailer": "^6.10.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
@@ -56,6 +57,7 @@
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
+    "@types/nodemailer": "^6.4.24",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/passport-jwt": "^4.0.1",
     "prisma": "^6.0.0",

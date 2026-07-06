@@ -91,7 +91,7 @@
                       :src="item.product.images[0]"
                       :alt="locale === 'el' ? item.product.name_el : item.product.name_en"
                       class="w-10 h-10 rounded-lg object-cover shrink-0 bg-[--color-surface-page]"
-                      @error="(e: Event) => ((e.target as HTMLImageElement).src = '/placeholder.svg')"
+                      @error="(e: Event) => ((e.target as HTMLImageElement).src = '/images/placeholder-product.svg')"
                     />
                     <div
                       v-else

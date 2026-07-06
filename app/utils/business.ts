@@ -1,9 +1,19 @@
 // Single source of truth for the shop's real business details.
 // Used by the footer, contact page, WhatsApp button, and SEO structured data.
 export const BUSINESS = {
-  name: 'Mike Animal Show', // short brand for UI
-  legalName: 'Mike Animal Show Pet Shop', // full name for SEO / structured data
+  name: 'Sample Store',
+  legalName: 'Sample Store',
   tagline: 'Everything you need, delivered to your door.',
+
+  brand: {
+    logo: null as string | null,          // null → text lockup; set a path to override
+    logoInverted: null as string | null,
+    wordmarkAccent: 'Store',              // suffix of `name` rendered in accent colour; '' = none
+    favicon: '/favicon.svg',              // reserved (4d) — not wired yet
+    ogImage: '/og-image.png',             // reserved (4d) — not wired yet
+    social: { instagram: null, facebook: null, tiktok: null } as Record<string, string | null>,
+    whatsappEnabled: true,
+  },
 
   phone: '+35799584273', // tel: link
   phoneDisplay: '+357 99 584 273', // human-readable

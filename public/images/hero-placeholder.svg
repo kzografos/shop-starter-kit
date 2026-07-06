@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Hero image placeholder">
+  <defs><linearGradient id="hg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#c97b5a"/><stop offset="0.55" stop-color="#a86a4f"/><stop offset="1" stop-color="#5c6b52"/>
+  </linearGradient></defs>
+  <rect width="1600" height="900" fill="url(#hg)"/>
+  <rect x="40" y="40" width="1520" height="820" rx="24" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="12 10"/>
+  <g fill="#ffffff" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+    <text x="800" y="428" font-size="76" font-weight="700" letter-spacing="2">HERO IMAGE</text>
+    <text x="800" y="492" font-size="30" fill-opacity="0.9">Replace /public/images/hero-placeholder.svg</text>
+    <text x="800" y="544" font-size="24" fill-opacity="0.65">Recommended 1600 × 900 (16:9)</text>
+  </g>
+</svg>

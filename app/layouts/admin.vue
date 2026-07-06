@@ -5,15 +5,7 @@
       <!-- Logo -->
       <div class="admin-sidebar-head" style="flex-direction: column; align-items: flex-start; gap: 8px;">
         <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-          <div class="admin-logo-mark">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="6" cy="10" rx="2" ry="2.5"/>
-              <ellipse cx="18" cy="10" rx="2" ry="2.5"/>
-              <ellipse cx="12" cy="6.5" rx="2" ry="2.5"/>
-              <path d="M7.5 17c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4c0 1.5-1.5 2.5-2 2.5-1.5 0-1.5-1-2.5-1s-1 1-2.5 1c-.5 0-2-1-2-2.5z"/>
-            </svg>
-          </div>
-          <div class="admin-logo-text">Mike Animal Show</div>
+          <BrandLockup inverted class="text-base" />
           <span class="admin-pill">Admin</span>
         </div>
         <NuxtLink :to="localePath('/')" class="admin-back-link">

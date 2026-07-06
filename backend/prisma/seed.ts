@@ -3,8 +3,6 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-const PLACEHOLDER_IMAGE = '/images/placeholder-product.svg';
-
 async function main() {
   // ── Settings ─────────────────────────────────────────────────
   const settings = [
@@ -48,65 +46,60 @@ async function main() {
 
   // ── Categories ───────────────────────────────────────────────
   console.log('Seeding categories...');
-  const [category1, category2] = await Promise.all([
-    prisma.category.upsert({
-      where: { slug: 'category-1' },
+  const categoriesBySlug: Record<string, { id: string }> = {};
+  for (let n = 1; n <= 10; n++) {
+    const slug = `category-${n}`;
+    categoriesBySlug[slug] = await prisma.category.upsert({
+      where: { slug },
       update: {},
-      create: { slug: 'category-1', nameEn: 'Category Name 1', nameEl: 'Category Name 1', sortOrder: 1 },
-    }),
-    prisma.category.upsert({
-      where: { slug: 'category-2' },
-      update: {},
-      create: { slug: 'category-2', nameEn: 'Category Name 2', nameEl: 'Category Name 2', sortOrder: 2 },
-    }),
-  ]);
-
-  // ── Products ─────────────────────────────────────────────────
-  console.log('Seeding products...');
-  const products = [
-    {
-      slug: 'sample-product-1',
-      nameEn: 'Sample Product 1',
-      nameEl: 'Sample Product 1',
-      descriptionEn: 'A short sample product description.',
-      descriptionEl: 'A short sample product description.',
-      price: 19.99,
-      stock: 100,
-      categoryId: category1.id,
-    },
-    {
-      // On sale — compareAtPrice > price triggers strikethrough display.
-      slug: 'sample-product-2',
-      nameEn: 'Sample Product 2',
-      nameEl: 'Sample Product 2',
-      descriptionEn: 'A short sample product description.',
-      descriptionEl: 'A short sample product description.',
-      price: 39.99,
-      compareAtPrice: 49.99,
-      stock: 50,
-      categoryId: category1.id,
-    },
-    {
-      slug: 'sample-product-3',
-      nameEn: 'Sample Product 3',
-      nameEl: 'Sample Product 3',
-      descriptionEn: 'A short sample product description.',
-      descriptionEl: 'A short sample product description.',
-      price: 12.50,
-      stock: 200,
-      categoryId: category2.id,
-    },
-  ];
-
-  for (const p of products) {
-    await prisma.product.upsert({
-      where: { slug: p.slug },
-      update: {},
-      create: { ...p, isActive: true, images: [PLACEHOLDER_IMAGE] },
+      create: { slug, nameEn: `Category Name ${n}`, nameEl: `Κατηγορία ${n}`, sortOrder: n },
     });
   }
 
-  console.log('Seed complete: 2 categories, 3 products, 2 demo users.');
+  // ── Products ─────────────────────────────────────────────────
+  console.log('Seeding products...');
+  // Generic sample products. `brand` strings match the homepage marquee
+  // (Brand 1–8) so every brand resolves to a real list on /brands.
+  // images: [] → cards render the redesigned placeholder via their fallback.
+  const productSpecs: Array<{
+    n: number; brand: string; categorySlug: string;
+    price: number; compareAtPrice?: number; stock: number;
+  }> = [
+    { n: 1,  brand: 'Brand 1', categorySlug: 'category-1',  price: 19.99, stock: 100 },
+    { n: 2,  brand: 'Brand 2', categorySlug: 'category-2',  price: 39.99, compareAtPrice: 49.99, stock: 50 },
+    { n: 3,  brand: 'Brand 3', categorySlug: 'category-3',  price: 12.50, stock: 200 },
+    { n: 4,  brand: 'Brand 4', categorySlug: 'category-4',  price: 8.99,  stock: 150 },
+    { n: 5,  brand: 'Brand 5', categorySlug: 'category-5',  price: 24.99, compareAtPrice: 34.99, stock: 75 },
+    { n: 6,  brand: 'Brand 6', categorySlug: 'category-6',  price: 59.99, stock: 30 },
+    { n: 7,  brand: 'Brand 7', categorySlug: 'category-7',  price: 45.00, stock: 40 },
+    { n: 8,  brand: 'Brand 8', categorySlug: 'category-8',  price: 89.99, stock: 20 },
+    { n: 9,  brand: 'Brand 1', categorySlug: 'category-9',  price: 14.99, stock: 120 },
+    { n: 10, brand: 'Brand 2', categorySlug: 'category-10', price: 74.50, stock: 25 },
+  ];
+
+  for (const s of productSpecs) {
+    const slug = `sample-product-${s.n}`;
+    await prisma.product.upsert({
+      where: { slug },
+      update: {},
+      create: {
+        slug,
+        nameEn: `Sample Product ${s.n}`,
+        nameEl: `Δείγμα Προϊόντος ${s.n}`,
+        descriptionEn: 'A short sample product description.',
+        descriptionEl: 'Σύντομη περιγραφή δείγματος προϊόντος.',
+        price: s.price,
+        ...(s.compareAtPrice ? { compareAtPrice: s.compareAtPrice } : {}),
+        stock: s.stock,
+        brand: s.brand,
+        isActive: true,
+        categoryId: categoriesBySlug[s.categorySlug].id,
+        images: [],
+      },
+    });
+  }
+
+  console.log('Seed complete: 10 categories, 10 products, 8 brands, 2 demo users.');
 }
 
 main()

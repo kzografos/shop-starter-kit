@@ -11,7 +11,8 @@ export const useBusinessSchema = () => {
     '@type': 'Store',
     name: BUSINESS.legalName,
     description: BUSINESS.tagline,
-    image: `${base}/logo.svg`,
+    // Only advertise an image when a real logo asset is configured (avoids a 404).
+    ...(BUSINESS.brand.logo ? { image: `${base}${BUSINESS.brand.logo}` } : {}),
     url: base,
     telephone: BUSINESS.phone,
     priceRange: '€€',

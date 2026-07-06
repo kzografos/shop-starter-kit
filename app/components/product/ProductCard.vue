@@ -6,7 +6,8 @@
     <NuxtLink :to="localePath(`/products/${product.slug}`)" class="block relative overflow-hidden">
       <div class="aspect-square bg-cream-pale">
         <NuxtImg
-          :src="product.images[0]"
+          v-if="primaryImage && !imgError"
+          :src="primaryImage"
           :alt="product.name_el || product.name_en"
           width="400"
           height="400"
@@ -15,6 +16,13 @@
           loading="lazy"
           fit="cover"
           class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          @error="imgError = true"
+        />
+        <img
+          v-else
+          src="/images/placeholder-product.svg"
+          :alt="product.name_el || product.name_en"
+          class="w-full h-full object-contain p-6"
         />
       </div>
 
@@ -141,6 +149,8 @@ const authStore = useAuthStore()
 const toast = useToast()
 
 const showAuthModal = ref(false)
+const imgError = ref(false)
+const primaryImage = computed(() => props.product.images?.[0] || null)
 
 const productName = computed(() =>
   locale.value === 'el' ? props.product.name_el : props.product.name_en

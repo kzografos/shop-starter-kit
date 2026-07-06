@@ -1,6 +1,6 @@
-# 🐾 PetShop CY
+# 🛍️ Shop Starter Kit
 
-> A full-stack e-commerce platform for pet products, built for the Cypriot market with bilingual support (Greek & English).
+> A full-stack, reusable e-commerce starter kit with bilingual support (Greek & English).
 
 ![Tech Stack](https://img.shields.io/badge/Nuxt-3-00DC82?style=flat&logo=nuxt.js) ![NestJS](https://img.shields.io/badge/NestJS-10-E0234E?style=flat&logo=nestjs) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat&logo=postgresql) ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker) ![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?style=flat&logo=stripe)
 
@@ -22,7 +22,7 @@
 
 ## Overview
 
-PetShop CY is a production-ready e-commerce application for a pet shop based in Cyprus. It supports bilingual content (Greek and English), Stripe payment processing, a loyalty points system, order management, and an admin panel for product and order management.
+Shop Starter Kit is a production-ready, reusable e-commerce starter kit. It supports bilingual content (Greek and English), Stripe payment processing, a loyalty points system, order management, and an admin panel for product and order management.
 
 ---
 
@@ -83,7 +83,7 @@ PetShop CY is a production-ready e-commerce application for a pet shop based in 
 ## Project Structure
 
 ```
-PetShopCY/
+shop-starter-kit/
 ├── app/                          # Nuxt 3 frontend
 │   ├── components/               # Vue components
 │   │   ├── cart/                 # CartDrawer, CartItem
@@ -161,8 +161,8 @@ PetShopCY/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-org/petshopcy.git
-cd petshopcy
+git clone https://github.com/your-org/shop-starter-kit.git
+cd shop-starter-kit
 ```
 
 ### 2. Set up environment variables
@@ -294,7 +294,7 @@ Copy `.env.example` to `.env` and fill in all values.
 - **Development** (`NODE_ENV=development`): backend allows **any** `http://localhost:<port>` origin. `NUXT_URL` is ignored. This avoids breakage when Nuxt picks an alternate port (e.g. 3002 if 3000 is taken).
 - **Production** (`NODE_ENV=production`): backend allows **only** the origins in `NUXT_URL`. Supports multiple, comma-separated:
   ```
-  NUXT_URL=https://petshopcyprus.com,http://localhost:3000
+  NUXT_URL=https://example.com,http://localhost:3000
   ```
   Accessing via Nginx (port 80/443) is same-origin, so no CORS applies there.
 

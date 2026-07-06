@@ -33,10 +33,10 @@
             class="relative aspect-square bg-cream-pale rounded-2xl overflow-hidden border border-[--color-border-warm]"
           >
             <img
-              :src="product.images[selectedImage] || '/placeholder.svg'"
+              :src="product.images[selectedImage] || '/images/placeholder-product.svg'"
               :alt="productName"
               class="w-full h-full object-cover"
-              @error="(e: Event) => ((e.target as HTMLImageElement).src = '/placeholder.svg')"
+              @error="(e: Event) => ((e.target as HTMLImageElement).src = '/images/placeholder-product.svg')"
             />
             <!-- Favourite (top-right) -->
             <button
@@ -62,7 +62,7 @@
               <img
                 :src="img"
                 class="w-full h-full object-cover"
-                @error="(e: Event) => ((e.target as HTMLImageElement).src = '/placeholder.svg')"
+                @error="(e: Event) => ((e.target as HTMLImageElement).src = '/images/placeholder-product.svg')"
               />
             </button>
           </div>

@@ -37,17 +37,13 @@ function goToBrand(name: string) {
 }
 
 const brands = [
-  { name: "Royal Canin" },
-  { name: "Purina Pro Plan" },
-  { name: "Pedigree" },
-  { name: "Whiskas" },
-  { name: "Dreamies" },
-  { name: "Trixie" },
-  { name: "Kong" },
-  { name: "Versele-Laga" },
-  { name: "Vitakraft" },
-  { name: "Hill's Science Diet" },
-  { name: "Eukanuba" },
-  { name: "Orijen" },
+  { name: "Brand 1" },
+  { name: "Brand 2" },
+  { name: "Brand 3" },
+  { name: "Brand 4" },
+  { name: "Brand 5" },
+  { name: "Brand 6" },
+  { name: "Brand 7" },
+  { name: "Brand 8" },
 ];
 </script>
