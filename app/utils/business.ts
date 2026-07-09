@@ -9,8 +9,8 @@ export const BUSINESS = {
     logo: null as string | null,          // null → text lockup; set a path to override
     logoInverted: null as string | null,
     wordmarkAccent: 'Store',              // suffix of `name` rendered in accent colour; '' = none
-    favicon: '/favicon.svg',              // reserved (4d) — not wired yet
-    ogImage: '/og-image.png',             // reserved (4d) — not wired yet
+    favicon: '/favicon.svg',              // browser-tab icon (<link rel=icon>); swap to rebrand
+    ogImage: '/og-image.png',             // social share card; app.vue resolves it to an absolute URL
     social: { instagram: null, facebook: null, tiktok: null } as Record<string, string | null>,
     whatsappEnabled: true,
   },
@@ -29,6 +29,9 @@ export const BUSINESS = {
   },
 
   geo: { lat: 34.6857, lon: 33.0292 },
+
+  // IANA timezone for the open/closed calculation (useOpeningHours).
+  timezone: 'Asia/Nicosia',
 
   // Display hours — `key` maps to an i18n label, `value` is shown as-is.
   displayHours: [

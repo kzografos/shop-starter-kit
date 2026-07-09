@@ -110,7 +110,7 @@
             </div>
             <div class="flex justify-between">
               <span class="text-gray-600">{{ $t('checkout.shipping_cost') }}</span>
-              <span v-if="shippingCost === 0" class="text-green-600 font-medium">{{ $t('checkout.free_shipping') }}</span>
+              <span v-if="shippingCost === 0" class="text-success font-medium">{{ $t('checkout.free_shipping') }}</span>
               <span v-else>€{{ shippingCost.toFixed(2) }}</span>
             </div>
 
@@ -120,7 +120,7 @@
                 <span class="text-gray-600">{{ $t('checkout.use_points') }}</span>
                 <USwitch v-model="usePoints" />
               </div>
-              <div v-if="usePoints" class="flex justify-between text-green-600">
+              <div v-if="usePoints" class="flex justify-between text-success">
                 <span>{{ $t('checkout.loyalty_discount') }} ({{ pointsToRedeem }} pts)</span>
                 <span>−€{{ loyaltyDiscount.toFixed(2) }}</span>
               </div>

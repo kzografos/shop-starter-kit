@@ -18,7 +18,7 @@
         </div>
 
         <!-- Error -->
-        <div v-else-if="error" class="text-center py-12 text-red-500">
+        <div v-else-if="error" class="text-center py-12 text-danger">
           {{ error }}
         </div>
 

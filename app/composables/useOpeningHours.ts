@@ -1,13 +1,13 @@
 import { BUSINESS } from '~/utils/business'
 
-// Live "open now / closed" status based on the shop's hours in Cyprus local time.
+// Live "open now / closed" status based on the shop's hours in its configured timezone.
 // Client-only (null on server) to avoid SSR vs client timezone hydration mismatch.
 export const useOpeningHours = () => {
   const isOpen = ref<boolean | null>(null)
 
   function compute() {
     const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Nicosia',
+      timeZone: BUSINESS.timezone,
       weekday: 'long',
       hour: '2-digit',
       minute: '2-digit',

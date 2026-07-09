@@ -48,25 +48,18 @@
 
       <ul class="space-y-4 text-[--color-bark] text-sm max-w-xs w-full">
         <li class="flex items-center gap-3">
-          <span class="text-xl">🐾</span>
+          <UIcon name="i-heroicons-shopping-bag" class="w-5 h-5 text-terracotta shrink-0" />
           <span>{{ $t('login.feature_orders') }}</span>
         </li>
         <li class="flex items-center gap-3">
-          <span class="text-xl">🛒</span>
+          <UIcon name="i-heroicons-star" class="w-5 h-5 text-terracotta shrink-0" />
           <span>{{ $t('login.feature_points') }}</span>
         </li>
         <li class="flex items-center gap-3">
-          <span class="text-xl">⭐</span>
+          <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 text-terracotta shrink-0" />
           <span>{{ $t('login.feature_reorder') }}</span>
         </li>
       </ul>
-
-      <!-- Decorative paw -->
-      <div
-        class="absolute bottom-6 right-6 text-9xl opacity-10 select-none pointer-events-none leading-none"
-      >
-        🐾
-      </div>
     </div>
 
     <!-- Right panel: form -->
@@ -218,7 +211,7 @@
         <div
           class="mt-6 flex items-start gap-3 p-4 rounded-xl bg-[--color-surface-card] border border-[--color-border-warm] text-sm text-[--color-bark-light]"
         >
-          <span class="text-base shrink-0">🐾</span>
+          <UIcon name="i-heroicons-gift" class="w-5 h-5 text-terracotta shrink-0" />
           <span>{{ $t('login.loyalty_note') }}</span>
         </div>
 

@@ -19,7 +19,7 @@
     "hero_label": "Your Favourite Online Store",
     "hero_title": "Everything you need.",
     "hero_title_accent": "Nothing less.",
-    "hero_subtitle": "Quality products, accessories and essentials at great prices. Free delivery across Cyprus.",
+    "hero_subtitle": "Quality products, accessories and essentials at great prices. Free delivery across {country}.",
     "shop_now": "Shop Now",
     "explore_brands": "Explore Brands",
     "vet_approved": "Quality checked",
@@ -202,7 +202,7 @@
     "subtitle": "Your favourite online store. Serving customers online.",
     "story_title": "Our Story",
     "story_p1": "We started with a simple vision: to create a place where everyone can find everything they need in one place.",
-    "story_p2": "Today we offer hundreds of products from the world's best brands, with fast delivery across Cyprus and expert customer service.",
+    "story_p2": "Today we offer hundreds of products from the world's best brands, with fast delivery across {country} and expert customer service.",
     "values_title": "Why Choose Us",
     "value1_title": "Customer First",
     "value1_desc": "Every product is selected with your needs and satisfaction in mind.",
@@ -219,7 +219,6 @@
     "title": "Get in Touch",
     "subtitle": "We're here to help. Visit us in store or reach out anytime.",
     "address_label": "Address",
-    "address_value": "1 Store Street\nLimassol, 3000\nCyprus",
     "phone_label": "Phone",
     "email_label": "Email",
     "hours_label": "Opening Hours",
@@ -238,7 +237,7 @@
     "made_with_love": "Made with love in {country}",
     "links": "Links",
     "contact": "Info",
-    "shipping_info": "Shipping €5 | Free from €50 | Cyprus only",
+    "shipping_info": "Shipping €5 | Free from €50 | {country} only",
     "shop": "Shop",
     "account_title": "Account",
     "info": "Info",
@@ -261,6 +260,19 @@
     "cta": "Subscribe",
     "success": "You're subscribed! Thank you.",
     "error": "Something went wrong. Please try again."
+  },
+  "unsubscribe": {
+    "title": "Unsubscribe",
+    "confirm_title": "Unsubscribe?",
+    "confirm_desc": "Unsubscribe {email} from {name}?",
+    "confirm_btn": "Confirm unsubscribe",
+    "processing": "Processing your request…",
+    "success_title": "Unsubscribed",
+    "success_desc": "You've been unsubscribed from {name}. You won't receive newsletter emails anymore.",
+    "error_title": "Something went wrong",
+    "error_desc": "We couldn't process your request. Please try again later.",
+    "invalid_desc": "This unsubscribe link is invalid or incomplete.",
+    "back_home": "Back to store"
   },
   "whatsapp": {
     "chat": "Chat on WhatsApp"
@@ -454,7 +466,7 @@
   },
   "testimonials": {
     "title": "What our customers say",
-    "subtitle": "Over 1,500 happy customers across Cyprus",
+    "subtitle": "Over 1,500 happy customers across {country}",
     "verified": "Verified purchase"
   },
   "seo": {

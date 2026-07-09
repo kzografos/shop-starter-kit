@@ -12,7 +12,7 @@
           <em class="text-terracotta not-italic">{{ $t('home.hero_title_accent') }}</em>
         </h1>
         <p class="text-white/70 text-base md:text-lg mb-10 max-w-sm leading-relaxed">
-          {{ $t('home.hero_subtitle') }}
+          {{ $t('home.hero_subtitle', { country: BUSINESS.address.countryName }) }}
         </p>
         <div class="flex flex-wrap gap-4">
           <NuxtLink
@@ -190,7 +190,7 @@
         >
           <span class="flex items-center gap-2">
             <UIcon name="i-heroicons-truck" class="w-5 h-5 text-gold" />
-            {{ $t('footer.shipping_info') }}
+            {{ $t('footer.shipping_info', { country: BUSINESS.address.countryName }) }}
           </span>
           <span class="flex items-center gap-2">
             <UIcon name="i-heroicons-star" class="w-5 h-5 text-gold" />
@@ -282,8 +282,8 @@ onMounted(() => nextTick(updateRailState))
 useSeoMeta({
   // Title omitted → global template renders the brand name (language-neutral) on the homepage.
   description: () => locale.value === 'el'
-    ? 'Ποιοτικά προϊόντα σε καλές τιμές, με παράδοση στην πόρτα σας σε όλη την Κύπρο.'
-    : 'Quality products at great prices, delivered to your door across Cyprus.',
+    ? `Ποιοτικά προϊόντα σε καλές τιμές, με παράδοση στην πόρτα σας σε όλη την ${BUSINESS.address.countryName}.`
+    : `Quality products at great prices, delivered to your door across ${BUSINESS.address.countryName}.`,
 })
 </script>
 

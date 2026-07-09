@@ -1,5 +1,5 @@
 // Injects schema.org LocalBusiness/Store JSON-LD so the shop is eligible for
-// Google rich results (name, address, geo, hours, phone) — local SEO for the store in Limassol.
+// Google rich results (name, address, geo, hours, phone) — local SEO for the store.
 import { BUSINESS } from '~/utils/business'
 
 export const useBusinessSchema = () => {

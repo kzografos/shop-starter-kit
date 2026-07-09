@@ -51,7 +51,7 @@
     </button>
   </div>
 
-  <div v-else class="mt-8 max-w-md mx-auto flex items-center justify-center gap-2 text-green-600">
+  <div v-else class="mt-8 max-w-md mx-auto flex items-center justify-center gap-2 text-success">
     <UIcon name="i-heroicons-check-circle" class="w-5 h-5" />
     <span class="font-medium">{{ $t('checkout.account_created') }}</span>
   </div>

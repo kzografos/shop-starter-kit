@@ -11,4 +11,10 @@
   --brand-warm-red: #9b4a4a;
   --brand-cream: #fbf6ec;
   --brand-cream-pale: #f5efe2;
+
+  /* Semantic state colours (success / danger) + pale banner backgrounds */
+  --brand-success: #4f7a3f;
+  --brand-success-bg: #e8f0e2;
+  --brand-danger: var(--brand-warm-red);
+  --brand-danger-bg: #f3e3e3;
 }

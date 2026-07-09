@@ -8,8 +8,8 @@
       </div>
 
       <template v-else-if="errorMessage">
-        <div class="w-24 h-24 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-6">
-          <UIcon name="i-heroicons-x-mark" class="w-12 h-12 text-red-500" />
+        <div class="w-24 h-24 rounded-full bg-danger-bg flex items-center justify-center mx-auto mb-6">
+          <UIcon name="i-heroicons-x-mark" class="w-12 h-12 text-danger" />
         </div>
         <h1 class="font-display text-3xl font-bold text-[--color-bark] mb-3">
           {{ $t('checkout.verification_failed_title') }}

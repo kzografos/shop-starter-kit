@@ -9,6 +9,9 @@ export class MailService {
   private readonly logger = new Logger(MailService.name)
   private readonly from: string
   private readonly brandName: string
+  private readonly brandColor: string
+  private readonly brandLogoUrl: string
+  private readonly siteUrl: string
   private readonly transport: 'smtp' | 'resend'
   private resend?: Resend
   private smtp?: Transporter
@@ -16,6 +19,12 @@ export class MailService {
   constructor(private config: ConfigService) {
     this.from = config.get('EMAIL_FROM', 'Sample Store <orders@example.com>')
     this.brandName = config.get('BRAND_NAME', 'Sample Store')
+    // BRAND_COLOR is a literal hex — email clients can't read CSS vars, so this
+    // intentionally duplicates the app's brand.css --brand-primary.
+    this.brandColor = config.get('BRAND_COLOR', '#c97b5a')
+    this.brandLogoUrl = config.get('BRAND_LOGO_URL', '')
+    // Reuse NUXT_URL as the site/base URL; SITE_URL can override it.
+    this.siteUrl = config.get('SITE_URL', config.get('NUXT_URL', 'http://localhost:3000'))
     // Default 'resend' when unset → prod-safe. The kit ships MAIL_TRANSPORT=smtp
     // in .env.example so a fresh clone catches mail locally (Mailpit).
     this.transport = config.get('MAIL_TRANSPORT', 'resend') === 'smtp' ? 'smtp' : 'resend'
@@ -34,6 +43,31 @@ export class MailService {
     }
   }
 
+  // Primary-button inline style (reused by reset + welcome CTAs).
+  private button(): string {
+    return `display:inline-block;background-color:${this.brandColor};color:#ffffff;text-decoration:none;font-weight:600;padding:12px 28px;border-radius:8px;font-size:15px;`
+  }
+
+  // Shared branded shell — table-based, inline styles only (Gmail/Outlook-safe).
+  private layout(content: string, opts?: { unsubscribeUrl?: string }): string {
+    const year = new Date().getFullYear()
+    const header = this.brandLogoUrl
+      ? `<img src="${this.brandLogoUrl}" alt="${this.brandName}" height="40" style="display:block;margin:0 auto;border:0;">`
+      : `<span style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">${this.brandName}</span>`
+    const unsubscribe = opts?.unsubscribeUrl
+      ? `<br><a href="${opts.unsubscribeUrl}" style="color:#8a7d6d;">Unsubscribe</a>`
+      : ''
+    return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background-color:#f4ede1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4ede1;padding:24px 0;"><tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;">
+<tr><td style="background-color:${this.brandColor};padding:28px 32px;text-align:center;">${header}</td></tr>
+<tr><td style="padding:32px;color:#33302b;font-size:16px;line-height:1.6;">${content}</td></tr>
+<tr><td style="padding:20px 32px 28px;text-align:center;border-top:1px solid #eeeeee;color:#8a7d6d;font-size:13px;line-height:1.5;">© ${year} ${this.brandName}${unsubscribe}</td></tr>
+</table></td></tr></table></body></html>`
+  }
+
   private async send(to: string, subject: string, html: string) {
     if (this.transport === 'smtp') {
       return this.smtp!.sendMail({ from: this.from, to, subject, html })
@@ -42,25 +76,31 @@ export class MailService {
   }
 
   async sendPasswordReset(to: string, token: string) {
-    const nuxtUrl = this.config.get('NUXT_URL', 'http://localhost:3000')
-    const link = `${nuxtUrl}/reset-password?token=${token}`
-
-    await this.send(
-      to,
-      `Reset your ${this.brandName} password`,
-      `
-          <p>You requested a password reset.</p>
-          <p><a href="${link}">Click here to reset your password</a></p>
-          <p>This link expires in 1 hour. If you did not request this, ignore this email.</p>
-        `,
-    ).catch((err) => this.logger.error('Password reset email failed', err))
+    const link = `${this.siteUrl}/reset-password?token=${token}`
+    const content = `
+      <p style="margin:0 0 18px;">You requested a password reset.</p>
+      <p style="margin:0 0 26px;"><a href="${link}" style="${this.button()}">Reset your password</a></p>
+      <p style="margin:0;color:#8a7d6d;font-size:14px;">This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>`
+    await this.send(to, `Reset your ${this.brandName} password`, this.layout(content))
+      .catch((err) => this.logger.error('Password reset email failed', err))
   }
 
   async sendOrderConfirmation(to: string, orderId: string) {
-    await this.send(
-      to,
-      `Order confirmed — ${this.brandName}`,
-      `<p>Your order <strong>#${orderId.slice(0, 8).toUpperCase()}</strong> has been confirmed. Thank you!</p>`,
-    ).catch((err) => this.logger.error('Order confirmation email failed', err))
+    const shortId = orderId.slice(0, 8).toUpperCase()
+    const content = `
+      <p style="margin:0 0 8px;">Your order <strong style="color:${this.brandColor};">#${shortId}</strong> has been confirmed.</p>
+      <p style="margin:0;">Thank you for shopping with ${this.brandName}!</p>`
+    await this.send(to, `Order confirmed — ${this.brandName}`, this.layout(content))
+      .catch((err) => this.logger.error('Order confirmation email failed', err))
+  }
+
+  async sendWelcomeEmail(to: string) {
+    const unsubscribeUrl = `${this.siteUrl}/unsubscribe?email=${encodeURIComponent(to)}`
+    const content = `
+      <p style="margin:0 0 16px;">Thanks for subscribing to ${this.brandName}!</p>
+      <p style="margin:0 0 26px;">You'll be first to hear about new arrivals and exclusive offers.</p>
+      <p style="margin:0;"><a href="${this.siteUrl}" style="${this.button()}">Start shopping →</a></p>`
+    await this.send(to, `Welcome to ${this.brandName}`, this.layout(content, { unsubscribeUrl }))
+      .catch((err) => this.logger.error('Welcome email failed', err))
   }
 }

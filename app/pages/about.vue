@@ -16,7 +16,7 @@
         <div>
           <h2 class="font-display text-3xl font-bold text-bark mb-6">{{ $t('about.story_title') }}</h2>
           <p class="text-bark-light leading-relaxed mb-4">{{ $t('about.story_p1') }}</p>
-          <p class="text-bark-light leading-relaxed">{{ $t('about.story_p2') }}</p>
+          <p class="text-bark-light leading-relaxed">{{ $t('about.story_p2', { country: BUSINESS.address.countryName }) }}</p>
         </div>
         <div class="relative h-72 flex items-center justify-center">
           <div class="absolute left-4 top-0 w-44 h-56 rounded-2xl bg-cream shadow-lg rotate-[-5deg] overflow-hidden flex items-center justify-center">
@@ -78,6 +78,8 @@
 </template>
 
 <script setup lang="ts">
+import { BUSINESS } from '~/utils/business'
+
 const { t } = useI18n()
 
 const values = computed(() => [

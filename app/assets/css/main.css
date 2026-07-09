@@ -44,6 +44,12 @@
   --color-surface-card: #efe7d6; /* card / info box background */
   --color-border-warm: #d8d4c2; /* warm neutral border */
   --color-border-soft: #ede5d5; /* lighter border, e.g. navbar divider */
+
+  /* Semantic state colours — follow brand.css */
+  --color-success: var(--brand-success);
+  --color-success-bg: var(--brand-success-bg);
+  --color-danger: var(--brand-danger);
+  --color-danger-bg: var(--brand-danger-bg);
 }
 
 @keyframes cart-bounce {

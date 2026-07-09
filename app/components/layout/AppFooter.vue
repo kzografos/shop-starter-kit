@@ -72,7 +72,7 @@
               <li>
                 <span class="flex items-center gap-1.5">
                   <UIcon name="i-heroicons-truck" class="w-3.5 h-3.5 text-gold shrink-0" />
-                  {{ $t('footer.shipping_info') }}
+                  {{ $t('footer.shipping_info', { country: BUSINESS.address.countryName }) }}
                 </span>
               </li>
             </ul>
