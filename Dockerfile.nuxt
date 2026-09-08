@@ -1,14 +1,33 @@
 FROM node:22-alpine AS base
 WORKDIR /app
 
-FROM base AS deps
-COPY package*.json ./
-RUN npm install
+# Corepack resolves pnpm from package.json#packageManager, so build stages use
+# exactly the pnpm version that produced pnpm-lock.yaml.
+#
+# It is enabled only in the build stages, never in base. The runner has no
+# package.json, so corepack there would have no packageManager field to read and
+# would fetch whatever pnpm is newest on first invocation. The runner only ever
+# runs `node`, so it gets no pnpm shim at all.
+#
+# Note the split toolchain: the Nuxt app is pnpm, the NestJS backend is npm.
+# That is deliberate -- backend/package-lock.json is in sync and its Dockerfile
+# already uses npm ci, while the root project has always been a pnpm project.
+FROM base AS toolchain
+RUN corepack enable
 
-FROM base AS builder
+FROM toolchain AS deps
+# pnpm-workspace.yaml carries onlyBuiltDependencies (sharp), which @nuxt/image
+# needs to compile, so it has to be present before install.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# --frozen-lockfile refuses to install when the lockfile and package.json
+# disagree, so a build can never silently resolve versions that were not
+# committed. This is the reproducibility guarantee npm install did not give.
+RUN pnpm install --frozen-lockfile
+
+FROM toolchain AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 FROM base AS runner
 ENV NODE_ENV=production

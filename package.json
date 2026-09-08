@@ -2,6 +2,7 @@
   "name": "petshopcy",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.26.2",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
