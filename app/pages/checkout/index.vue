@@ -110,7 +110,8 @@
             </div>
             <div class="flex justify-between">
               <span class="text-gray-600">{{ $t('checkout.shipping_cost') }}</span>
-              <span v-if="shippingCost === 0" class="text-success font-medium">{{ $t('checkout.free_shipping') }}</span>
+              <span v-if="!pricingReady" class="text-gray-400">—</span>
+              <span v-else-if="shippingCost === 0" class="text-success font-medium">{{ $t('checkout.free_shipping') }}</span>
               <span v-else>€{{ shippingCost.toFixed(2) }}</span>
             </div>
 
@@ -128,7 +129,8 @@
 
             <div class="flex justify-between font-bold text-base border-t pt-2">
               <span>{{ $t('checkout.total') }}</span>
-              <span>€{{ total.toFixed(2) }}</span>
+              <span v-if="!pricingReady" class="text-gray-400">—</span>
+              <span v-else>€{{ total.toFixed(2) }}</span>
             </div>
           </div>
 
@@ -138,6 +140,7 @@
               :label="$t('checkout.place_order')"
               block
               :loading="loading"
+              :disabled="!pricingReady"
               @click="placeOrder"
             />
           </template>
@@ -209,14 +212,31 @@ type PricingSettings = {
   loyalty_min_redeem: number
 }
 
-const { data: pricing } = await useFetch<PricingSettings>('/settings', {
+const { data: pricing, refresh: refreshPricing } = await useFetch<PricingSettings>('/settings', {
   baseURL: apiBase,
   key: 'pricing-settings',
 })
 
+// The key is static, so a server-side fetch that fails leaves pricing null for
+// the life of the page -- Nuxt reuses the (empty) payload on hydration instead
+// of asking again. Retry once on the client, which reaches apiBase over the
+// public origin even where the server rendering the page cannot.
+onMounted(() => {
+  if (!pricing.value) refreshPricing()
+})
+
+// Whether the server's pricing rules are actually known. Anything money-related
+// stays unresolved until they are: showing a number we cannot stand behind is
+// worse than showing none.
+const pricingReady = computed(() => Boolean(pricing.value))
+
 const shippingCost = computed(() => {
   if (form.fulfillment_type === 'pickup') return 0
   const p = pricing.value
+  // Not "free" -- unknown. Returning 0 here rendered "free shipping" and a
+  // total short by the shipping cost whenever /settings failed to load, so the
+  // customer was quoted one amount and charged another. Callers must check
+  // pricingReady before showing this.
   if (!p) return 0
   return cartStore.subtotal >= p.free_shipping_threshold ? 0 : p.shipping_cost
 })
