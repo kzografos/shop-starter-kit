@@ -106,6 +106,7 @@ services:
     depends_on:
       - nuxt
       - backend
+      - minio
 
 volumes:
   postgres_data:
