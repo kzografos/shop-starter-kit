@@ -143,7 +143,13 @@ export class OrdersService {
       return newOrder
     })
 
-    this.mail.sendOrderConfirmation(confirmationEmail, order.id).catch(() => null)
+    // Only cash/card-on-pickup orders are settled here. A Stripe order is still
+    // unpaid at this point, so its confirmation is sent from the webhook once
+    // payment actually clears -- otherwise abandoning checkout still produced a
+    // "your order has been confirmed" email.
+    if (dto.paymentMethod !== 'STRIPE') {
+      this.mail.sendOrderConfirmation(confirmationEmail, order.id).catch(() => null)
+    }
     this.redis.delPattern('analytics:*').catch(() => null)
 
     // Fire-and-forget low-stock alerts for the products we just decremented.

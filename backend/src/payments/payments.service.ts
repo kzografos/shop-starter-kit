@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
+import { MailService } from '../mail/mail.service'
 import Stripe from 'stripe'
 
 @Injectable()
@@ -12,6 +13,7 @@ export class PaymentsService {
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,
+    private mail: MailService,
   ) {
     this.stripe = new Stripe(config.getOrThrow('STRIPE_SECRET_KEY'))
   }
@@ -112,7 +114,10 @@ export class PaymentsService {
     const userId  = session.metadata?.user_id || null  // empty string = guest order
     if (!orderId) return { received: true }
 
-    const order = await this.prisma.order.findUnique({ where: { id: orderId } })
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { user: { select: { email: true } } },
+    })
     if (!order) return { received: true }
 
     // Cheap guard: an order already settled must never be settled twice, whatever
@@ -177,6 +182,17 @@ export class PaymentsService {
         return { received: true }
       }
       throw err
+    }
+
+    // Payment has cleared and the writes are committed, so this is the first
+    // point at which "your order is confirmed" is true for a Stripe order.
+    // Fire-and-forget, matching how OrdersService sends the pickup-order mail:
+    // a mail outage must not fail the webhook and trigger a Stripe retry.
+    const recipient = order.user?.email ?? order.guestEmail
+    if (recipient) {
+      this.mail.sendOrderConfirmation(recipient, orderId).catch(() => null)
+    } else {
+      this.logger.warn(`Order ${orderId} has no email address — no confirmation sent`)
     }
 
     return { received: true }
