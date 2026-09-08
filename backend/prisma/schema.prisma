@@ -242,6 +242,25 @@ model NewsletterSubscriber {
   @@map("newsletter_subscribers")
 }
 
+// ─── Payment webhook idempotency ─────────────────────────────
+
+/// One row per payment-provider webhook event that has been fully applied.
+///
+/// The event id is the primary key, so the insert itself is the idempotency
+/// guard. It is written inside the same transaction as the order and loyalty
+/// writes: a duplicate delivery hits the unique violation and rolls the whole
+/// transaction back, which is what makes two concurrent deliveries safe. A
+/// check-then-act guard would not be.
+model ProcessedEvent {
+  eventId     String   @id @map("event_id")
+  eventType   String   @map("event_type")
+  orderId     String?  @map("order_id") @db.Uuid
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@index([processedAt])
+  @@map("processed_events")
+}
+
 // ─── Notifications (admin) ───────────────────────────────────
 
 model Notification {

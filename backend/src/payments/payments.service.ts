@@ -105,6 +105,14 @@ export class PaymentsService {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } })
     if (!order) return { received: true }
 
+    // Cheap guard: an order already settled must never be settled twice, whatever
+    // event id carried the news. The authoritative guard is the ProcessedEvent
+    // insert below, which also covers concurrent deliveries.
+    if (order.paymentStatus === 'PAID') {
+      this.logger.log(`Order ${orderId} is already paid — ignoring event ${event.id}`)
+      return { received: true }
+    }
+
     // Verify amount paid matches order total
     const paidCents  = session.amount_total ?? 0
     const orderCents = Math.round(Number(order.total) * 100)
@@ -114,7 +122,15 @@ export class PaymentsService {
     }
 
     // Always confirm the order. Award loyalty only for logged-in buyers.
+    //
+    // The ProcessedEvent insert leads the transaction. Its primary key is the
+    // event id, so a duplicate delivery raises a unique violation and rolls back
+    // every write behind it. This is what makes the handler safe against Stripe
+    // redelivering after a timeout, and against two deliveries racing.
     const writes: Prisma.PrismaPromise<unknown>[] = [
+      this.prisma.processedEvent.create({
+        data: { eventId: event.id, eventType: event.type, orderId },
+      }),
       this.prisma.order.update({
         where: { id: orderId },
         data: {
@@ -140,7 +156,18 @@ export class PaymentsService {
       )
     }
 
-    await this.prisma.$transaction(writes)
+    try {
+      await this.prisma.$transaction(writes)
+    } catch (err) {
+      // P2002 = unique constraint violation on processed_events.event_id.
+      // Another delivery of this same event already applied it; the transaction
+      // rolled back, so nothing was written twice. This is a success, not a fault.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        this.logger.log(`Event ${event.id} already processed — duplicate ignored`)
+        return { received: true }
+      }
+      throw err
+    }
 
     return { received: true }
   }
