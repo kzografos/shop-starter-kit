@@ -115,7 +115,7 @@
             </div>
 
             <!-- Loyalty points redemption -->
-            <div v-if="authStore.isLoggedIn && authStore.loyaltyPoints >= 500" class="border-t pt-2">
+            <div v-if="canRedeemPoints" class="border-t pt-2">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-gray-600">{{ $t('checkout.use_points') }}</span>
                 <USwitch v-model="usePoints" />
@@ -198,17 +198,55 @@ watch(() => form.fulfillment_type, (val) => {
   if (val === 'shipping') form.payment_method = 'stripe'
 })
 
+// Pricing rules come from the server. They were hardcoded here as 50/5 and /100,
+// so the moment the owner changed shipping or the loyalty rate in the admin the
+// customer was shown one total and charged another.
+type PricingSettings = {
+  shipping_cost: number
+  free_shipping_threshold: number
+  loyalty_earn_rate: number
+  loyalty_redeem_rate: number
+  loyalty_min_redeem: number
+}
+
+const { data: pricing } = await useFetch<PricingSettings>('/settings', {
+  baseURL: apiBase,
+  key: 'pricing-settings',
+})
+
 const shippingCost = computed(() => {
   if (form.fulfillment_type === 'pickup') return 0
-  return cartStore.subtotal >= 50 ? 0 : 5
+  const p = pricing.value
+  if (!p) return 0
+  return cartStore.subtotal >= p.free_shipping_threshold ? 0 : p.shipping_cost
 })
 
 const pointsToRedeem = computed(() => {
-  if (!usePoints.value) return 0
-  return Math.min(authStore.loyaltyPoints, 5000)
+  if (!usePoints.value || !pricing.value) return 0
+  const { loyalty_min_redeem, loyalty_redeem_rate } = pricing.value
+  // Never redeem more than the order is worth: points beyond the cart total
+  // would be burned for nothing, since the server clamps the total at 0.
+  const maxUseful = Math.floor(cartStore.subtotal * loyalty_redeem_rate)
+  const use = Math.min(authStore.loyaltyPoints, maxUseful)
+  // The server rejects any non-zero amount below the minimum, so redeem nothing
+  // rather than send a value guaranteed to 400.
+  return use >= loyalty_min_redeem ? use : 0
 })
 
-const loyaltyDiscount = computed(() => pointsToRedeem.value / 100)
+const loyaltyDiscount = computed(() =>
+  pricing.value ? pointsToRedeem.value / pricing.value.loyalty_redeem_rate : 0,
+)
+
+// Offer the toggle only when redeeming would actually be accepted. The threshold
+// was hardcoded as 500 in the template, so raising loyalty_min_redeem in the
+// admin left the switch visible on balances the server would reject.
+const canRedeemPoints = computed(() =>
+  Boolean(
+    authStore.isLoggedIn &&
+    pricing.value &&
+    authStore.loyaltyPoints >= pricing.value.loyalty_min_redeem,
+  ),
+)
 
 const total = computed(() =>
   Math.max(0, cartStore.subtotal + shippingCost.value - loyaltyDiscount.value)

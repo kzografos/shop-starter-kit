@@ -23,6 +23,7 @@ import { UploadsModule } from './uploads/uploads.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { AnalyticsModule } from './analytics/analytics.module'
 import { StaffModule } from './staff/staff.module'
+import { SettingsModule } from './settings/settings.module'
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { StaffModule } from './staff/staff.module'
     NotificationsModule,
     AnalyticsModule,
     StaffModule,
+    SettingsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

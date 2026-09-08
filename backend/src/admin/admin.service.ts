@@ -5,6 +5,7 @@ import { NotificationsService } from '../notifications/notifications.service'
 import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
 import { UpsertProductDto } from './dto/product.dto'
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto'
+import { SettingsService } from '../settings/settings.service'
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   pending: OrderStatus.PENDING,
@@ -21,6 +22,7 @@ export class AdminService {
     private prisma: PrismaService,
     private redis: RedisService,
     private notifications: NotificationsService,
+    private settings: SettingsService,
   ) {}
 
   async getStats() {
@@ -404,6 +406,10 @@ export class AdminService {
         create: { key, value: String(num) },
       })
     }
+    // The storefront reads these through SettingsService, which caches them.
+    // Without this the checkout would price against stale values for up to a
+    // minute after the owner saves -- the exact mismatch this phase removes.
+    await this.settings.invalidate()
     return this.getSettings()
   }
 

@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { RedisService } from '../redis/redis.service'
+import { SettingsService } from '../settings/settings.service'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { Decimal } from '@prisma/client/runtime/library'
 
@@ -13,6 +14,7 @@ export class OrdersService {
     private mail: MailService,
     private notifications: NotificationsService,
     private redis: RedisService,
+    private settings: SettingsService,
   ) {}
 
   async create(userId: string | null, userEmail: string | null, dto: CreateOrderDto) {
@@ -24,9 +26,9 @@ export class OrdersService {
     // Capture as const so TS narrows it inside the transaction closure below.
     const uid = userId
 
-    // Load settings
-    const settings = await this.prisma.setting.findMany()
-    const s = Object.fromEntries(settings.map((r) => [r.key, parseFloat(r.value)]))
+    // Load settings. Throws if any pricing key is missing or non-numeric rather
+    // than letting NaN propagate into subtotal, shipping and total.
+    const s = await this.settings.loadPricing()
 
     // Load user for loyalty check (logged-in only)
     const user = userId
