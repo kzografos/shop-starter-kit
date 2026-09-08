@@ -72,6 +72,9 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-development}
+      # Dev convenience: seed the sample catalogue and demo logins. The production
+      # compose deliberately omits this, so demo accounts are never created there.
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
       MAIL_TRANSPORT: ${MAIL_TRANSPORT:-smtp}
       SMTP_HOST: ${SMTP_HOST:-mailpit}
       SMTP_PORT: ${SMTP_PORT:-1025}

@@ -3,8 +3,18 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  // ── Settings ─────────────────────────────────────────────────
+// Demo users and the sample catalogue are development fixtures. They are NEVER
+// seeded unless SEED_DEMO_DATA is explicitly set to 'true' — production start.sh
+// runs this file on every container boot, so an ungated demo admin would be
+// recreated after every deploy and could never be permanently deleted.
+const SEED_DEMO_DATA = process.env.SEED_DEMO_DATA === 'true';
+
+/**
+ * Baseline settings. These are NOT demo data — orders.service reads every one of
+ * them to price an order, and a missing row produces a NaN total. They must exist
+ * in every environment, so they seed unconditionally.
+ */
+async function seedSettings() {
   const settings = [
     { key: 'loyalty_earn_rate', value: '100' },
     { key: 'loyalty_redeem_rate', value: '100' },
@@ -15,8 +25,11 @@ async function main() {
   for (const s of settings) {
     await prisma.setting.upsert({ where: { key: s.key }, update: {}, create: s });
   }
+  console.log(`Settings ensured (${settings.length} keys).`);
+}
 
-  // ── Demo accounts — CHANGE OR REMOVE before production ───────
+async function seedDemoData() {
+  // ── Demo accounts — development only ───────────────────────────
   const [adminHash, userHash] = await Promise.all([
     bcrypt.hash('admin', 12),
     bcrypt.hash('user', 12),
@@ -99,7 +112,19 @@ async function main() {
     });
   }
 
-  console.log('Seed complete: 10 categories, 10 products, 8 brands, 2 demo users.');
+  console.log('Demo data seeded: 10 categories, 10 products, 8 brands, 2 demo users.');
+}
+
+async function main() {
+  await seedSettings();
+
+  if (!SEED_DEMO_DATA) {
+    console.log('SEED_DEMO_DATA is not "true" — skipping demo users and sample catalogue.');
+    return;
+  }
+
+  console.warn('SEED_DEMO_DATA=true — seeding demo accounts with well-known passwords. Never enable this in production.');
+  await seedDemoData();
 }
 
 main()
