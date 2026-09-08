@@ -9,6 +9,10 @@ const prisma = new PrismaClient();
 // recreated after every deploy and could never be permanently deleted.
 const SEED_DEMO_DATA = process.env.SEED_DEMO_DATA === 'true';
 
+// Minimum length for a bootstrapped owner password. The owner account holds every
+// capability in the system, so a weak one is refused rather than silently accepted.
+const MIN_OWNER_PASSWORD_LENGTH = 12;
+
 /**
  * Baseline settings. These are NOT demo data — orders.service reads every one of
  * them to price an order, and a missing row produces a NaN total. They must exist
@@ -26,6 +30,52 @@ async function seedSettings() {
     await prisma.setting.upsert({ where: { key: s.key }, update: {}, create: s });
   }
   console.log(`Settings ensured (${settings.length} keys).`);
+}
+
+/**
+ * Creates the store's first owner from OWNER_EMAIL / OWNER_PASSWORD.
+ *
+ * With demo data gated off, this is the only way a production store gets an
+ * account that can sign into the admin panel. It is idempotent and safe to run on
+ * every container boot: once any ADMIN exists it does nothing, so it can never
+ * resurrect a deleted account or reset a live owner's password.
+ */
+async function seedOwner() {
+  const email = process.env.OWNER_EMAIL?.trim().toLowerCase();
+  const password = process.env.OWNER_PASSWORD;
+
+  if (!email || !password) {
+    const owners = await prisma.user.count({ where: { role: 'ADMIN' } });
+    if (owners === 0) {
+      console.warn(
+        'No owner account exists and OWNER_EMAIL / OWNER_PASSWORD are not set. ' +
+        'Nobody can sign into the admin panel. Set both and restart to bootstrap one.',
+      );
+    }
+    return;
+  }
+
+  if (password.length < MIN_OWNER_PASSWORD_LENGTH) {
+    throw new Error(
+      `OWNER_PASSWORD must be at least ${MIN_OWNER_PASSWORD_LENGTH} characters.`,
+    );
+  }
+
+  const owners = await prisma.user.count({ where: { role: 'ADMIN' } });
+  if (owners > 0) {
+    console.log('Owner account already exists — leaving it untouched.');
+    return;
+  }
+
+  // An account may already exist as a CUSTOMER (e.g. the operator shopped first).
+  // Promote it rather than failing on the unique email constraint.
+  const passwordHash = await bcrypt.hash(password, 12);
+  await prisma.user.upsert({
+    where: { email },
+    update: { role: 'ADMIN', passwordHash },
+    create: { email, passwordHash, fullName: 'Owner', provider: 'local', role: 'ADMIN' },
+  });
+  console.log(`Owner account bootstrapped: ${email}`);
 }
 
 async function seedDemoData() {
@@ -117,6 +167,7 @@ async function seedDemoData() {
 
 async function main() {
   await seedSettings();
+  await seedOwner();
 
   if (!SEED_DEMO_DATA) {
     console.log('SEED_DEMO_DATA is not "true" — skipping demo users and sample catalogue.');
