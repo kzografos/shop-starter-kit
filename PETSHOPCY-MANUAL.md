@@ -8,6 +8,11 @@ PetShopCY pulls upstream through `v1.5.0-infra` plus the legal track, skips
 Phase 6 permanently, and takes fixes per-commit rather than merged. Work this
 list by hand at each pull.
 
+The list also carries **exclusions**: upstream commits that cherry-pick cleanly
+and must still be refused, because they are correct for a fresh template and
+destructive against an existing deployment. Those are marked `DO NOT
+CHERRY-PICK` and say what breaks.
+
 ## How to use this file
 
 Each entry states the action, why no commit carries it, and how to verify the
@@ -100,6 +105,74 @@ repo whether it is worth doing.
 
 ---
 
+### 6. DO NOT CHERRY-PICK `1f3483b` — the `petshop` → `shopkit` identifier rename
+
+**Action:** skip commit `1f3483b` ("chore: remove pet-shop remnants from the
+template") entirely when taking Phase 1. Nothing in it is wanted downstream.
+
+**Why it must be refused:** it rewrites the *defaults* for the identities that
+name PetShopCY's live data:
+
+```
+POSTGRES_USER: ${DB_USER:-petshop}   ->  ${DB_USER:-shopkit}
+POSTGRES_DB:   ${DB_NAME:-petshop}   ->  ${DB_NAME:-shopkit}
+MINIO_ROOT_USER:  petshop            ->  shopkit
+MINIO_BUCKET:     petshop-images     ->  shopkit-images
+container_name:   petshop_*          ->  shopkit_*
+```
+
+**The finding — why a rename is not a rename here:** the Postgres image creates
+the role and database named by `POSTGRES_USER` / `POSTGRES_DB` **only on first
+initialisation of an empty data volume**. On every later boot those variables are
+inert: the entrypoint sees a populated `PGDATA` and skips initdb completely. So
+against PetShopCY's existing `postgres_data` volume the new default does not
+rename anything — it asks the server for a role that was never created. The
+backend fails to connect with
+
+```
+FATAL: role "shopkit" does not exist
+```
+
+and the healthcheck fails the same way, so `depends_on: service_healthy` holds
+the backend down and the stack never comes up. The data is intact and untouched;
+it is simply being addressed by a name that does not exist. The same reasoning
+applies to `MINIO_ROOT_USER` (root credentials are baked into the MinIO volume at
+first init) and to `MINIO_BUCKET`, where a new bucket name leaves every stored
+product image unreachable while the objects sit safely in the old bucket.
+
+**What masks it:** an explicit `DB_USER=petshop` in PetShopCY's `.env` overrides
+the changed default and the stack boots normally — which is exactly why this is
+easy to take by accident and only discover on a host whose `.env` happens to
+lean on the defaults. Do not rely on that: the `.env` is untracked, differs per
+host, and is the single thing standing between this commit and an outage.
+
+**If it was already taken:** nothing is lost and no data migration is needed.
+Either pin the old identifiers explicitly in `.env`
+
+```
+DB_USER=petshop
+DB_NAME=petshop
+MINIO_ROOT_USER=petshop
+MINIO_BUCKET=petshop-images
+```
+
+or revert the commit. Renaming the role in-place instead (`ALTER ROLE petshop
+RENAME TO shopkit`) is possible but pointless — it buys nothing but a cosmetic
+match with upstream, and Postgres will not let a role rename carry its MD5
+password, so the password has to be reset in the same transaction.
+
+**Verify (before taking the commit):**
+
+```
+docker compose config | grep -E 'POSTGRES_(USER|DB)|MINIO_(ROOT_USER|BUCKET)'
+docker compose exec postgres psql -U petshop -d petshop -c '\du'
+```
+
+The names the compose file resolves must match the roles that actually exist in
+the volume.
+
+---
+
 ## Notes
 
 - `.claude/` and `docs/` are also gitignored upstream, so nothing under them
@@ -107,3 +180,6 @@ repo whether it is worth doing.
   they are not tracked in this file unless something operational moves into them.
 - Add an entry here the moment an untracked file is touched, not at the end of a
   phase. An unrecorded one is invisible to the downstream reconciliation.
+- Exclusions belong here too. A commit that applies cleanly and still must not be
+  taken is more dangerous than one that cannot propagate at all, because nothing
+  in the cherry-pick reports a problem.
