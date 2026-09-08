@@ -49,24 +49,34 @@ export class PaymentsService {
       })
     }
 
+    // Idempotency keys are scoped to the order so a double-click on Place Order
+    // reuses the objects the first click created instead of minting duplicates.
+    // Stripe retains a key for 24h, which matches the default Checkout Session
+    // lifetime, so a retry within that window resumes the same session.
     const discounts: Stripe.Checkout.SessionCreateParams.Discount[] = []
     if (Number(order.loyaltyDiscount) > 0) {
-      const coupon = await this.stripe.coupons.create({
-        amount_off: Math.round(Number(order.loyaltyDiscount) * 100),
-        currency: 'eur',
-        name: 'Loyalty Points Discount',
-      })
+      const coupon = await this.stripe.coupons.create(
+        {
+          amount_off: Math.round(Number(order.loyaltyDiscount) * 100),
+          currency: 'eur',
+          name: 'Loyalty Points Discount',
+        },
+        { idempotencyKey: `loyalty-coupon-${orderId}` },
+      )
       discounts.push({ coupon: coupon.id })
     }
 
-    const session = await this.stripe.checkout.sessions.create({
-      mode: 'payment',
-      line_items: lineItems,
-      discounts,
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      metadata: { order_id: orderId, user_id: userId ?? '' },
-    })
+    const session = await this.stripe.checkout.sessions.create(
+      {
+        mode: 'payment',
+        line_items: lineItems,
+        discounts,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        metadata: { order_id: orderId, user_id: userId ?? '' },
+      },
+      { idempotencyKey: `checkout-session-${orderId}` },
+    )
 
     await this.prisma.order.update({
       where: { id: orderId },
