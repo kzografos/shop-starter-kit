@@ -84,6 +84,22 @@ sign in.
 
 ---
 
+### 5. Retitle `.claude/CLAUDE.md`
+
+**Action:** change line 1 from `# PetShopCY Tech Stack Rules` to whatever names
+that repo.
+
+**Why no commit carries it:** `.claude/` is listed in `.gitignore`, so the whole
+directory is untracked.
+
+**Why it matters:** cosmetic upstream, where the file now reads "Shop Starter Kit
+Tech Stack Rules". Listed only so the reconciliation is complete — decide per
+repo whether it is worth doing.
+
+**Verify:** `head -1 .claude/CLAUDE.md`
+
+---
+
 ## Notes
 
 - `.claude/` and `docs/` are also gitignored upstream, so nothing under them
