@@ -29,8 +29,16 @@ export class AdminController {
 
   @Get('orders')
   @RequirePermissions('view:orders')
-  orders() {
-    return this.admin.getOrders()
+  orders(
+    @Query('page') page?: string,
+    @Query('search') search?: string,
+    @Query('payment_status') paymentStatus?: string,
+  ) {
+    return this.admin.getOrders({
+      page: page ? parseInt(page, 10) : 1,
+      search,
+      paymentStatus,
+    })
   }
 
   @Patch('orders/:id/status')

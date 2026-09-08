@@ -73,9 +73,13 @@
         </tbody>
       </table>
 
-      <!-- Pagination placeholder -->
-      <div v-if="!pending && filteredOrders.length" class="ac-pagination">
-        <div>{{ filteredOrders.length }} παραγγελίες</div>
+      <div v-if="!pending && totalOrders" class="ac-pagination">
+        <div>{{ totalOrders }} παραγγελίες</div>
+        <div v-if="totalPages > 1" style="display: flex; gap: 6px; align-items: center;">
+          <button class="ac-filter-btn" :disabled="page <= 1" @click="page--">←</button>
+          <span class="ac-muted">{{ page }} / {{ totalPages }}</span>
+          <button class="ac-filter-btn" :disabled="page >= totalPages" @click="page++">→</button>
+        </div>
       </div>
     </div>
   </div>
@@ -108,20 +112,36 @@ type OrderRow = {
   status: string
 }
 
-const { data: orders, pending, refresh } = useAsyncData('admin-orders', () =>
-  $fetch<OrderRow[]>(`${apiBase}/admin/orders`, { credentials: 'include' }),
-  { server: false }
+type OrdersResponse = { orders: OrderRow[]; total: number; page: number; totalPages: number }
+
+const page = ref(1)
+
+// Search and the payment filter run server-side now. Filtering in the browser
+// only ever searched the rows already loaded, which was every order before the
+// list was paginated and would otherwise have become just the current page.
+const { data, pending, refresh } = useAsyncData('admin-orders', () =>
+  $fetch<OrdersResponse>(`${apiBase}/admin/orders`, {
+    credentials: 'include',
+    query: {
+      page: page.value,
+      search: search.value.trim() || undefined,
+      payment_status: paymentFilter.value === 'all' ? undefined : paymentFilter.value,
+    },
+  }),
+  { server: false, watch: [page] }
 )
 
-const filteredOrders = computed(() => {
-  const list = orders.value ?? []
-  const q = search.value.trim().toLowerCase()
-  return list.filter(o => {
-    if (paymentFilter.value !== 'all' && o.payment_status !== paymentFilter.value) return false
-    if (!q) return true
-    return o.id.toLowerCase().includes(q)
-  })
+const filteredOrders = computed(() => data.value?.orders ?? [])
+const totalOrders = computed(() => data.value?.total ?? 0)
+const totalPages = computed(() => data.value?.totalPages ?? 1)
+
+let searchTimer: ReturnType<typeof setTimeout>
+watch(search, () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => { page.value = 1; refresh() }, 350)
 })
+
+watch(paymentFilter, () => { page.value = 1; refresh() })
 
 async function updateStatus(orderId: string, status: string) {
   await $fetch(`${apiBase}/admin/orders/${orderId}/status`, {
