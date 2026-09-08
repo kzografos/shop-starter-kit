@@ -1,6 +1,12 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
 import { MinioService } from '../minio/minio.service'
-import FileType from 'file-type'
+// Namespace import, not a default import. tsconfig sets
+// allowSyntheticDefaultImports but not esModuleInterop: the first only relaxes
+// the type checker, it does not emit the interop helper. `import FileType from`
+// therefore compiled to `file_type_1.default.fromBuffer(...)`, and file-type@16
+// is CommonJS with no default export, so that was undefined at runtime and every
+// upload threw. It typechecked cleanly, which is why it survived.
+import * as FileType from 'file-type'
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
 const MAX_BYTES = 5 * 1024 * 1024
