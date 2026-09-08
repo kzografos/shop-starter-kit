@@ -1,4 +1,9 @@
 export default defineNuxtRouteMiddleware(async (to) => {
+  // Same reason as middleware/auth.ts: the server render cannot see the session
+  // cookies, so fetchProfile() below always fails there and every hard
+  // navigation to an admin page redirected to /login. Decide on the client.
+  if (import.meta.server) return
+
   const authStore = useAuthStore()
   const localePath = useLocalePath()
 
