@@ -47,7 +47,7 @@ export class AdminService {
       recentOrders,
       last30Orders,
       statusGroups,
-      orderItems,
+      topProductRows,
       lowStock,
       prevMonthRevenue,
       prevMonthNewCustomers,
@@ -72,13 +72,22 @@ export class AdminService {
         select: { createdAt: true, total: true },
       }),
       this.prisma.order.groupBy({ by: ['status'], _count: { _all: true } }),
-      this.prisma.orderItem.findMany({
-        take: 500,
-        select: {
-          productId: true,
-          quantity: true,
-          product: { select: { nameEl: true } },
+      // Top sellers, aggregated in the database.
+      //
+      // This was findMany({ take: 500 }) with no orderBy and no filter, summed
+      // in JS: an arbitrary 500 rows in whatever order Postgres returned them,
+      // across all time and including unpaid orders. Past 500 line items ever
+      // sold the figures were simply wrong, and the card is labelled "by units
+      // sold this month".
+      this.prisma.orderItem.groupBy({
+        by: ['productId'],
+        where: {
+          productId: { not: null },
+          order: { paymentStatus: PaymentStatus.PAID, createdAt: { gte: monthStart } },
         },
+        _sum: { quantity: true },
+        orderBy: { _sum: { quantity: 'desc' } },
+        take: 5,
       }),
       this.prisma.product.findMany({
         where: { stock: { lt: 5 } },
@@ -101,14 +110,15 @@ export class AdminService {
     const pctChange = (cur: number, prev: number) =>
       prev > 0 ? Math.round(((cur - prev) / prev) * 1000) / 10 : cur > 0 ? 100 : 0
 
-    const productMap = new Map<string, { name: string; units: number }>()
-    for (const item of orderItems) {
-      if (!item.productId) continue
-      const name = item.product?.nameEl ?? item.productId
-      const cur = productMap.get(item.productId)
-      if (cur) cur.units += item.quantity
-      else productMap.set(item.productId, { name, units: item.quantity })
-    }
+    // groupBy cannot join, so resolve the five names in one follow-up query.
+    const topProductIds = topProductRows.map((r) => r.productId).filter((id): id is string => !!id)
+    const topProductNames = topProductIds.length
+      ? await this.prisma.product.findMany({
+          where: { id: { in: topProductIds } },
+          select: { id: true, nameEl: true },
+        })
+      : []
+    const nameById = new Map(topProductNames.map((p) => [p.id, p.nameEl]))
 
     return {
       totalRevenue: Number(revenueAll._sum.total ?? 0),
@@ -126,9 +136,11 @@ export class AdminService {
         status: g.status,
         count: g._count._all,
       })),
-      topProducts: Array.from(productMap.values())
-        .sort((a, b) => b.units - a.units)
-        .slice(0, 5),
+      topProducts: topProductRows.map((row) => ({
+        // Falls back to the id if the product has since been deleted.
+        name: nameById.get(row.productId!) ?? row.productId!,
+        units: row._sum.quantity ?? 0,
+      })),
       lowStock: lowStock.map((p) => ({ id: p.id, nameEl: p.nameEl, stock: p.stock })),
     }
   }
