@@ -6,6 +6,7 @@ import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
 import { UpsertProductDto } from './dto/product.dto'
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto'
 import { SettingsService } from '../settings/settings.service'
+import { MinioService } from '../minio/minio.service'
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   pending: OrderStatus.PENDING,
@@ -23,6 +24,7 @@ export class AdminService {
     private redis: RedisService,
     private notifications: NotificationsService,
     private settings: SettingsService,
+    private minio: MinioService,
   ) {}
 
   async getStats() {
@@ -216,7 +218,14 @@ export class AdminService {
   async getProductById(id: string) {
     const product = await this.prisma.product.findUnique({ where: { id } })
     if (!product) throw new NotFoundException('Product not found')
-    return product
+    // `images` stays the stored object keys: the edit drawer submits this value
+    // straight back, so returning presigned URLs here would persist an expiring
+    // URL as the permanent reference and every photo would 404 an hour later.
+    // Display URLs are a separate field.
+    return {
+      ...product,
+      imageUrls: await this.minio.resolveImageUrls(product.images),
+    }
   }
 
   /**

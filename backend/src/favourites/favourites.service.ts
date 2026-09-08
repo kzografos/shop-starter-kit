@@ -1,16 +1,32 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
+import { MinioService } from '../minio/minio.service'
 
 @Injectable()
 export class FavouritesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private minio: MinioService,
+  ) {}
 
   async findByUser(userId: string) {
-    return this.prisma.favourite.findMany({
+    const favourites = await this.prisma.favourite.findMany({
       where: { userId },
       include: { product: { include: { category: true } } },
       orderBy: { createdAt: 'desc' },
     })
+
+    // Returned raw MinIO object keys before, so every favourited product
+    // rendered its placeholder instead of its photo.
+    return Promise.all(
+      favourites.map(async (fav) => ({
+        ...fav,
+        product: {
+          ...fav.product,
+          images: await this.minio.resolveImageUrls(fav.product.images),
+        },
+      })),
+    )
   }
 
   async toggle(userId: string, productId: string) {

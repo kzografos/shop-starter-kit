@@ -27,6 +27,25 @@ export class MinioService implements OnModuleInit {
     return key
   }
 
+  /**
+   * Turns stored image references into URLs a browser can load.
+   *
+   * A product's `images` column holds MinIO object keys, except for rows seeded
+   * or imported with an absolute URL, which are passed through untouched.
+   * Anything that returns raw keys renders as a broken image.
+   */
+  async resolveImageUrls(refs: string[], expirySeconds = 3600): Promise<string[]> {
+    return Promise.all(
+      refs.map((ref) =>
+        this.isExternalUrl(ref) ? Promise.resolve(ref) : this.getPresignedUrl(ref, expirySeconds),
+      ),
+    )
+  }
+
+  private isExternalUrl(ref: string): boolean {
+    return ref.startsWith('http://') || ref.startsWith('https://')
+  }
+
   async getPresignedUrl(filename: string, expirySeconds: number): Promise<string> {
     const url = await this.client.presignedGetObject(this.bucket, filename, expirySeconds)
     const publicUrl = this.config.get<string>('MINIO_PUBLIC_URL')

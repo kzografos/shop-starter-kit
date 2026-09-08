@@ -216,7 +216,10 @@ watch(open, async (isOpen) => {
         is_active: data.is_active !== false,
         images: (data.images as string[]) ?? [],
       })
-      previewUrls.value = []
+      // `images` are the stored object keys that get submitted back; image_urls
+      // are the presigned URLs used only for the thumbnails. Keeping them apart
+      // is what stops an expiring URL being saved as the permanent reference.
+      previewUrls.value = (data.image_urls as string[]) ?? []
     }
   }
 })
