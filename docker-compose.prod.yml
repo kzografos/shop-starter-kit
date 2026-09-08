@@ -73,6 +73,14 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-shopkit-images}
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
       NUXT_URL: ${NUXT_URL}
+      # Google OAuth. AuthModule only registers the strategy when
+      # GOOGLE_CLIENT_ID is non-empty, so leaving these unset in .env keeps the
+      # feature off cleanly -- but omitting them from this file entirely meant
+      # they could never be set at all, and /auth/google 500d in production
+      # while the login page and the guest-checkout CTA both link to it.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-}
       PORT: 3001
     depends_on:
       postgres:
