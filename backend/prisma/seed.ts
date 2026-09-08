@@ -76,6 +76,23 @@ async function seedOwner() {
     create: { email, passwordHash, fullName: 'Owner', provider: 'local', role: 'ADMIN' },
   });
   console.log(`Owner account bootstrapped: ${email}`);
+  console.warn(
+    [
+      '',
+      '  ┌────────────────────────────────────────────────────────────────┐',
+      '  │  ACTION REQUIRED                                               │',
+      '  │                                                                │',
+      '  │  Remove OWNER_PASSWORD from .env now, then restart.            │',
+      '  │                                                                │',
+      '  │  The owner account exists, so this bootstrap will not run      │',
+      '  │  again. The password is now dead weight in a plaintext file    │',
+      '  │  readable by anything with filesystem access to this host.     │',
+      '  │                                                                │',
+      '  │  Leaving OWNER_EMAIL set is harmless.                          │',
+      '  └────────────────────────────────────────────────────────────────┘',
+      '',
+    ].join('\n'),
+  );
 }
 
 async function seedDemoData() {
