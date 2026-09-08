@@ -89,7 +89,7 @@ services:
     environment:
       NODE_ENV: production
       NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE}
-      NUXT_PUBLIC_STRIPE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
     depends_on:
       - backend
 
