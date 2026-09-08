@@ -73,10 +73,16 @@ export interface Order {
 export interface OrderItem {
   id: string
   order_id: string
-  product_id: string
+  // Null once the product is deleted — the relation is SetNull.
+  product_id: string | null
   quantity: number
   unit_price: number
-  product?: Product
+  // Snapshots taken at order time. These are the historical record and survive
+  // the product being deleted or renamed, so they are the fallback whenever
+  // `product` is absent.
+  product_name: string
+  product_price: number
+  product?: Product | null
 }
 
 export interface CartItem {

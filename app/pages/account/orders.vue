@@ -100,8 +100,7 @@
                       <span class="text-lg">📦</span>
                     </div>
                     <span class="text-sm text-[--color-bark] truncate">
-                      x{{ item.quantity }} ·
-                      {{ locale === 'el' ? item.product?.name_el : item.product?.name_en }}
+                      x{{ item.quantity }} · {{ itemName(item) }}
                     </span>
                   </div>
                   <span class="text-sm font-medium text-[--color-bark] shrink-0">
@@ -127,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Order } from '~~/types'
+import type { Order, OrderItem } from '~~/types'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -175,10 +174,22 @@ function statusColor(status: string): BadgeColor {
   return map[status] ?? 'neutral'
 }
 
+// Prefer the live product name so it follows the current locale; fall back to
+// the snapshot captured at order time, which is all that survives once a product
+// is deleted (the relation is SetNull).
+function itemName(item: OrderItem): string {
+  if (item.product) {
+    return locale.value === 'el' ? item.product.name_el : item.product.name_en
+  }
+  return item.product_name
+}
+
 async function repeatOrder(order: Order) {
   if (!order.items) return
+  // Deleted, deactivated and out-of-stock lines are skipped — they cannot be
+  // bought again.
   const products = order.items
-    .filter((i) => i.product && i.product.stock > 0)
+    .filter((i) => i.product && i.product.is_active && i.product.stock > 0)
     .map((i) => ({ product: i.product!, quantity: i.quantity }))
   cartStore.loadFromOrder(products)
   await router.push(localePath('/checkout'))

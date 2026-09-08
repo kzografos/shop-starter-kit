@@ -4,6 +4,7 @@ import { MailService } from '../mail/mail.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { RedisService } from '../redis/redis.service'
 import { SettingsService } from '../settings/settings.service'
+import { MinioService } from '../minio/minio.service'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { Decimal } from '@prisma/client/runtime/library'
 
@@ -15,6 +16,7 @@ export class OrdersService {
     private notifications: NotificationsService,
     private redis: RedisService,
     private settings: SettingsService,
+    private minio: MinioService,
   ) {}
 
   async create(userId: string | null, userEmail: string | null, dto: CreateOrderDto) {
@@ -164,8 +166,40 @@ export class OrdersService {
     return { id: order.id }
   }
 
+  /**
+   * Replaces stored object keys on each line's product with loadable URLs.
+   * Keys are collected across the whole result and resolved once per key, so a
+   * product appearing in several orders is not presigned repeatedly.
+   */
+  private async withResolvedImages<T extends { items: { product: { images: string[] } | null }[] }>(
+    orders: T[],
+  ): Promise<T[]> {
+    const keys = new Set<string>()
+    for (const order of orders) {
+      for (const item of order.items) {
+        const first = item.product?.images?.[0]
+        if (first) keys.add(first)
+      }
+    }
+    if (keys.size === 0) return orders
+
+    const list = [...keys]
+    const resolved = await this.minio.resolveImageUrls(list)
+    const byKey = new Map(list.map((key, i) => [key, resolved[i]]))
+
+    for (const order of orders) {
+      for (const item of order.items) {
+        const first = item.product?.images?.[0]
+        if (item.product && first) {
+          item.product.images = [byKey.get(first) ?? first]
+        }
+      }
+    }
+    return orders
+  }
+
   async findByUser(userId: string) {
-    return this.prisma.order.findMany({
+    const orders = await this.prisma.order.findMany({
       where: { userId },
       include: {
         items: {
@@ -176,11 +210,31 @@ export class OrdersService {
             productPrice: true,
             quantity: true,
             unitPrice: true,
+            // The order history renders the product's name and photo and offers
+            // "buy again", none of which the snapshot columns can supply. The
+            // relation was never selected, so the UI read undefined: names were
+            // blank and reorder filtered every line out.
+            //
+            // Nullable by design -- product is SetNull on delete, and the
+            // snapshot columns above remain the historical record.
+            product: {
+              select: {
+                id: true,
+                slug: true,
+                nameEl: true,
+                nameEn: true,
+                price: true,
+                stock: true,
+                isActive: true,
+                images: true,
+              },
+            },
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     })
+    return this.withResolvedImages(orders)
   }
 
   async findOneForUser(orderId: string, userId: string) {
@@ -195,11 +249,31 @@ export class OrdersService {
             productPrice: true,
             quantity: true,
             unitPrice: true,
+            // The order history renders the product's name and photo and offers
+            // "buy again", none of which the snapshot columns can supply. The
+            // relation was never selected, so the UI read undefined: names were
+            // blank and reorder filtered every line out.
+            //
+            // Nullable by design -- product is SetNull on delete, and the
+            // snapshot columns above remain the historical record.
+            product: {
+              select: {
+                id: true,
+                slug: true,
+                nameEl: true,
+                nameEn: true,
+                price: true,
+                stock: true,
+                isActive: true,
+                images: true,
+              },
+            },
           },
         },
       },
     })
     if (!order) throw new NotFoundException('Order not found')
-    return order
+    const [resolved] = await this.withResolvedImages([order])
+    return resolved
   }
 }
