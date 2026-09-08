@@ -13,6 +13,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { PermissionsGuard } from '../auth/guards/permissions.guard'
 import { RequirePermissions } from '../auth/decorators/permissions.decorator'
 import { AdminService } from './admin.service'
+import { UpsertProductDto } from './dto/product.dto'
+import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto'
 
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('admin')
@@ -61,14 +63,14 @@ export class AdminController {
 
   @Post('products')
   @RequirePermissions('manage:catalog')
-  createProduct(@Body() body: Record<string, unknown>) {
-    return this.admin.createProduct(body)
+  createProduct(@Body() dto: UpsertProductDto) {
+    return this.admin.createProduct(dto)
   }
 
   @Patch('products/:id')
   @RequirePermissions('manage:catalog')
-  updateProduct(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.admin.updateProduct(id, body)
+  updateProduct(@Param('id') id: string, @Body() dto: UpsertProductDto) {
+    return this.admin.updateProduct(id, dto)
   }
 
   @Patch('products/:id/deactivate')
@@ -87,14 +89,14 @@ export class AdminController {
 
   @Post('categories')
   @RequirePermissions('manage:catalog')
-  createCategory(@Body() body: Record<string, unknown>) {
-    return this.admin.createCategory(body)
+  createCategory(@Body() dto: CreateCategoryDto) {
+    return this.admin.createCategory(dto)
   }
 
   @Patch('categories/:id')
   @RequirePermissions('manage:catalog')
-  updateCategory(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.admin.updateCategory(id, body)
+  updateCategory(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
+    return this.admin.updateCategory(id, dto)
   }
 
   @Delete('categories/:id')

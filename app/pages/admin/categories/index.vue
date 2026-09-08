@@ -246,14 +246,15 @@ async function save() {
     const body = {
       name_el: form.name_el.trim(),
       name_en: form.name_en.trim(),
-      slug: form.slug.trim(),
       parent_id: form.parent_id || null,
       sort_order: form.sort_order || 0,
     }
     if (editing.value) {
+      // Slug is locked after creation — the API has always ignored it on update
+      // and now rejects it outright, so it is not sent.
       await $fetch(`${apiBase}/admin/categories/${form.id}`, { method: 'PATCH', credentials: 'include', body })
     } else {
-      await $fetch(`${apiBase}/admin/categories`, { method: 'POST', credentials: 'include', body })
+      await $fetch(`${apiBase}/admin/categories`, { method: 'POST', credentials: 'include', body: { ...body, slug: form.slug.trim() } })
     }
     modalOpen.value = false
     toast.add({ title: t('admin.saved'), color: 'success', icon: 'i-heroicons-check-circle' })

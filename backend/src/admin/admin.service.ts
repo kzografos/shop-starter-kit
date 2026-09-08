@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
+import { UpsertProductDto } from './dto/product.dto'
+import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto'
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   pending: OrderStatus.PENDING,
@@ -215,51 +217,81 @@ export class AdminService {
     return product
   }
 
-  async createProduct(body: Record<string, unknown>) {
-    const product = await this.prisma.product.create({
-      data: {
-        slug: body.slug as string,
-        nameEl: body.name_el as string,
-        nameEn: body.name_en as string,
-        descriptionEl: body.description_el as string | undefined,
-        descriptionEn: body.description_en as string | undefined,
-        price: body.price as number,
-        compareAtPrice: (body.compare_at_price as number | null) || null,
-        cost: (body.cost as number | null) || null,
-        stock: body.stock as number,
-        brand: body.brand as string | undefined,
-        categoryId: (body.category_id as string | null) || null,
-        isActive: body.is_active !== false,
-        images: (body.images as string[]) ?? [],
-      },
-    })
+  /**
+   * Maps the validated wire payload onto Prisma columns.
+   *
+   * Optional text fields arrive as '' from the admin form; those are stored as
+   * null so "not set" is one value in the database rather than two.
+   */
+  private toProductData(dto: UpsertProductDto) {
+    return {
+      slug: dto.slug,
+      nameEl: dto.name_el,
+      nameEn: dto.name_en,
+      descriptionEl: dto.description_el?.trim() || null,
+      descriptionEn: dto.description_en?.trim() || null,
+      price: dto.price,
+      compareAtPrice: dto.compare_at_price ?? null,
+      cost: dto.cost ?? null,
+      stock: dto.stock,
+      brand: dto.brand?.trim() || null,
+      categoryId: dto.category_id || null,
+      images: dto.images ?? [],
+    }
+  }
+
+  async createProduct(dto: UpsertProductDto) {
+    const product = await this.prisma.product
+      .create({
+        data: {
+          ...this.toProductData(dto),
+          // Absent means active, matching the previous `!== false` behaviour.
+          isActive: dto.is_active ?? true,
+        },
+      })
+      .catch((err) => {
+        throw this.translateProductWriteError(err, dto.slug)
+      })
     await this.redis.delPattern('products:*')
     await this.notifications.checkStock(product)
     return product
   }
 
-  async updateProduct(id: string, body: Record<string, unknown>) {
-    const product = await this.prisma.product.update({
-      where: { id },
-      data: {
-        slug: body.slug as string,
-        nameEl: body.name_el as string,
-        nameEn: body.name_en as string,
-        descriptionEl: body.description_el as string | undefined,
-        descriptionEn: body.description_en as string | undefined,
-        price: body.price as number,
-        compareAtPrice: (body.compare_at_price as number | null) || null,
-        cost: (body.cost as number | null) || null,
-        stock: body.stock as number,
-        brand: body.brand as string | undefined,
-        categoryId: (body.category_id as string | null) || null,
-        isActive: body.is_active as boolean,
-        images: (body.images as string[]) ?? [],
-      },
-    })
+  async updateProduct(id: string, dto: UpsertProductDto) {
+    const product = await this.prisma.product
+      .update({
+        where: { id },
+        data: {
+          ...this.toProductData(dto),
+          isActive: dto.is_active ?? true,
+        },
+      })
+      .catch((err) => {
+        throw this.translateProductWriteError(err, dto.slug)
+      })
     await this.redis.delPattern('products:*')
     await this.notifications.checkStock(product)
     return product
+  }
+
+  /**
+   * Turns Prisma's write failures into messages the admin panel can show.
+   * A duplicate slug previously surfaced as a raw 500 with no indication of
+   * which field was at fault.
+   */
+  private translateProductWriteError(err: unknown, slug: string): Error {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === 'P2002') {
+        return new BadRequestException(`A product with the slug "${slug}" already exists`)
+      }
+      if (err.code === 'P2025') {
+        return new NotFoundException('Product not found')
+      }
+      if (err.code === 'P2003') {
+        return new BadRequestException('The selected category no longer exists')
+      }
+    }
+    return err instanceof Error ? err : new Error(String(err))
   }
 
   async deactivateProduct(id: string) {
@@ -290,17 +322,17 @@ export class AdminService {
     })
   }
 
-  async createCategory(body: Record<string, unknown>) {
-    const slug = (body.slug as string)?.trim()
-    const nameEl = (body.name_el as string)?.trim()
-    const nameEn = (body.name_en as string)?.trim()
-    if (!slug || !nameEl || !nameEn)
-      throw new BadRequestException('Slug, Greek name and English name are required')
+  async createCategory(dto: CreateCategoryDto) {
+    // Shape validation (required, length, slug format) is handled by the DTO.
+    // What remains here needs a database read.
+    const slug = dto.slug.trim()
+    const nameEl = dto.name_el.trim()
+    const nameEn = dto.name_en.trim()
 
     const exists = await this.prisma.category.findUnique({ where: { slug } })
     if (exists) throw new BadRequestException('A category with this slug already exists')
 
-    const parentId = (body.parent_id as string) || null
+    const parentId = dto.parent_id || null
     if (parentId) {
       const parent = await this.prisma.category.findUnique({ where: { id: parentId } })
       if (!parent) throw new BadRequestException('Parent category not found')
@@ -308,20 +340,20 @@ export class AdminService {
     }
 
     const cat = await this.prisma.category.create({
-      data: { slug, nameEl, nameEn, parentId, sortOrder: Number(body.sort_order) || 0 },
+      data: { slug, nameEl, nameEn, parentId, sortOrder: dto.sort_order ?? 0 },
     })
     await this.invalidateCatalog()
     return cat
   }
 
-  async updateCategory(id: string, body: Record<string, unknown>) {
+  async updateCategory(id: string, dto: UpdateCategoryDto) {
     const cat = await this.prisma.category.findUnique({
       where: { id },
       include: { _count: { select: { children: true } } },
     })
     if (!cat) throw new NotFoundException('Category not found')
 
-    const parentId = (body.parent_id as string) || null
+    const parentId = dto.parent_id || null
     if (parentId === id) throw new BadRequestException('A category cannot be its own parent')
     if (parentId) {
       if (cat._count.children > 0)
@@ -335,10 +367,10 @@ export class AdminService {
     const updated = await this.prisma.category.update({
       where: { id },
       data: {
-        nameEl: (body.name_el as string)?.trim(),
-        nameEn: (body.name_en as string)?.trim(),
+        nameEl: dto.name_el.trim(),
+        nameEn: dto.name_en.trim(),
         parentId,
-        sortOrder: Number(body.sort_order) || 0,
+        sortOrder: dto.sort_order ?? 0,
       },
     })
     await this.invalidateCatalog()

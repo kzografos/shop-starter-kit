@@ -196,8 +196,24 @@ watch(open, async (isOpen) => {
   if (editing.value) {
     const data = await $fetch<Record<string, unknown>>(`${apiBase}/admin/products/${props.productId}`, { credentials: 'include' }).catch(() => null)
     if (data) {
+      // Copy only the fields the form owns. Spreading the whole response used to
+      // add id, created_at and updated_at onto the reactive form, which then went
+      // back out in the PATCH body — and the API now rejects unknown fields.
       Object.assign(form, {
-        ...data,
+        slug: (data.slug as string) ?? '',
+        name_el: (data.name_el as string) ?? '',
+        name_en: (data.name_en as string) ?? '',
+        description_el: (data.description_el as string) ?? '',
+        description_en: (data.description_en as string) ?? '',
+        price: Number(data.price ?? 0),
+        compare_at_price: data.compare_at_price === null || data.compare_at_price === undefined
+          ? null
+          : Number(data.compare_at_price),
+        cost: data.cost === null || data.cost === undefined ? null : Number(data.cost),
+        stock: Number(data.stock ?? 0),
+        brand: (data.brand as string) ?? '',
+        category_id: (data.category_id as string | null) ?? null,
+        is_active: data.is_active !== false,
         images: (data.images as string[]) ?? [],
       })
       previewUrls.value = []
