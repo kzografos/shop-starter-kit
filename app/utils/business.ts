@@ -15,9 +15,11 @@ export const BUSINESS = {
     whatsappEnabled: true,
   },
 
-  phone: '+35799584273', // tel: link
-  phoneDisplay: '+357 99 584 273', // human-readable
-  whatsapp: '35799584273', // wa.me number (no +)
+  // Contact numbers. Every consumer treats an empty string as "not configured"
+  // and hides the corresponding UI, so a store with no phone renders cleanly.
+  phone: '', // tel: link, e.g. '+35722000000'
+  phoneDisplay: '', // human-readable, e.g. '+357 22 000 000'
+  whatsapp: '', // wa.me number, digits only, no '+' — empty hides the button
 
   address: {
     street: 'Anexartisias 100',

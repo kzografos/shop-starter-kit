@@ -110,10 +110,16 @@ const addressValue = `${BUSINESS.address.street}\n${BUSINESS.address.postalCode}
 const hours = BUSINESS.displayHours
 const { isOpen } = useOpeningHours()
 
+// Phone and WhatsApp are optional — a store that configures neither shows only
+// the address card rather than empty rows with dead tel:/wa.me links.
 const allContactItems = computed(() => [
   { icon: 'i-heroicons-map-pin', label: t('contact.address_label'), value: addressValue, href: undefined as string | undefined },
-  { icon: 'i-heroicons-phone', label: t('contact.phone_label'), value: BUSINESS.phoneDisplay, href: `tel:${BUSINESS.phone}` },
-  { icon: 'i-heroicons-chat-bubble-left-right', label: 'WhatsApp', value: BUSINESS.phoneDisplay, href: `https://wa.me/${BUSINESS.whatsapp}` },
+  ...(BUSINESS.phone
+    ? [{ icon: 'i-heroicons-phone', label: t('contact.phone_label'), value: BUSINESS.phoneDisplay, href: `tel:${BUSINESS.phone}` }]
+    : []),
+  ...(BUSINESS.whatsapp
+    ? [{ icon: 'i-heroicons-chat-bubble-left-right', label: 'WhatsApp', value: BUSINESS.phoneDisplay, href: `https://wa.me/${BUSINESS.whatsapp}` }]
+    : []),
 ])
 
 // Scroll fade-in — contact items + 1 hours card

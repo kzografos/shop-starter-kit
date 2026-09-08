@@ -14,7 +14,9 @@ export const useBusinessSchema = () => {
     // Only advertise an image when a real logo asset is configured (avoids a 404).
     ...(BUSINESS.brand.logo ? { image: `${base}${BUSINESS.brand.logo}` } : {}),
     url: base,
-    telephone: BUSINESS.phone,
+    // Only advertise a phone when one is configured — an empty telephone is
+    // invalid structured data and can invalidate the whole Store entity.
+    ...(BUSINESS.phone ? { telephone: BUSINESS.phone } : {}),
     priceRange: '€€',
     currenciesAccepted: 'EUR',
     address: {
