@@ -90,6 +90,9 @@ services:
       NODE_ENV: production
       NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE}
       NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      # Absolute public origin. Without it siteUrl falls back to localhost:3000
+      # and the schema.org Store entity plus og:image publish localhost URLs.
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL}
     depends_on:
       - backend
 
