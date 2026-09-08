@@ -29,7 +29,7 @@
             </label>
             <label class="acf">
               <span>Slug (URL) *</span>
-              <input v-model="form.slug" type="text" placeholder="royal-canin-adult" @input="slugTouched = true" />
+              <input v-model="form.slug" type="text" placeholder="example-product-name" @input="slugTouched = true" />
             </label>
             <label class="acf">
               <span>{{ $t('admin.description_el') }}</span>

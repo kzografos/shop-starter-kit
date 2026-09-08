@@ -181,7 +181,7 @@ Before starting the app, Minio needs a bucket. Start Minio and create it:
 docker compose up -d minio
 ```
 
-Then open `http://localhost:9001`, log in with your `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD` from `.env`, and create a bucket matching your `MINIO_BUCKET` value (default: `petshop-images`).
+Then open `http://localhost:9001`, log in with your `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD` from `.env`, and create a bucket matching your `MINIO_BUCKET` value (default: `shopkit-images`).
 
 ---
 
@@ -339,11 +339,11 @@ To create an admin user, register through the app first, then run:
 
 ```bash
 # Local
-docker compose exec postgres psql -U petshop -d petshop -c \
+docker compose exec postgres psql -U shopkit -d shopkit -c \
   "UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';"
 
 # Production
-docker compose -f docker-compose.prod.yml exec postgres psql -U petshop -d petshop -c \
+docker compose -f docker-compose.prod.yml exec postgres psql -U shopkit -d shopkit -c \
   "UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';"
 ```
 
