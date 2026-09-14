@@ -22,6 +22,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Drops the in-memory session without calling the API. Used when the API
+  // client reports that the refresh token is gone (api:unauthenticated).
+  function clearSession() {
+    profile.value = null
+  }
+
   async function signOut() {
     await api('/auth/logout', { method: 'POST' }).catch(() => {})
     profile.value = null
@@ -34,5 +40,5 @@ export const useAuthStore = defineStore('auth', () => {
   const loyaltyPoints = computed(() => profile.value?.loyalty_points ?? 0)
   const isLoggedIn = computed(() => !!profile.value)
 
-  return { profile: skipHydrate(profile), loading, error, isAdmin, loyaltyPoints, isLoggedIn, fetchProfile, signOut }
+  return { profile: skipHydrate(profile), loading, error, isAdmin, loyaltyPoints, isLoggedIn, fetchProfile, clearSession, signOut }
 })

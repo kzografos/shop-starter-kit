@@ -177,7 +177,7 @@ Listed so that nobody treats them as precedent. Locations are current paths.
 | `app/components/layout/AppHeader.vue` imports cart/filters stores, `cart-open` state, shop nav | §5.1, §5.6, §5.8 | seam 9 |
 | `app/components/account/AccountSidebar.vue`, `app/pages/account/index.vue` hardcode shop routes and `loyalty.*` keys | §5.1, §5.8 | seam 9 |
 | `app/composables/usePermissions.ts` `SECTION_CAPS` / `LANDING_ORDER`; `app/layouts/admin.vue` nav buttons | §5.2 | Phase 2 Admin Registry |
-| `app/composables/useApi.ts` writes `useAuthStore().profile` | §5.4 | Phase 1 |
+| ~~`app/composables/useApi.ts` writes `useAuthStore().profile`~~ | §5.4 | **Removed.** `useApi` calls `nuxtApp.callHook('api:unauthenticated')`; `plugins/auth-hooks.ts` subscribes and calls `authStore.clearSession()` |
 | 27 files read `apiBase`; every admin page uses raw `$fetch` | §5.3 | Phase 1 |
 | `app/composables/useBusinessSchema.ts` hardcodes `Store`, `priceRange`, `currenciesAccepted`; `useCurrency` hardcodes EUR / `el-GR` | §8.2 | Phase 3 |
 | `nuxt.config.ts` `components.pathPrefix: false` | §5.5 | Phase 2 |

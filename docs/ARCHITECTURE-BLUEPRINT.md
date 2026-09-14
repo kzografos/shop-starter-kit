@@ -462,7 +462,7 @@ Each phase ends with a bootable, deployable system. Phases are sequential; steps
 - Separate the Core settings mechanism (seam 4).
 - Separate mail/notification mechanisms from shop templates (seam 5).
 - Remove global frontend shop coupling (seam 9) using slots first; registries follow in Phase 2.
-- Fix the `useApi ↔ useAuthStore` cycle; migrate raw `$fetch` calls to `useApi`.
+- Fix the `useApi ↔ useAuthStore` cycle — **DONE** (`api:unauthenticated` Nuxt hook + `plugins/auth-hooks.ts`); migrate raw `$fetch` calls to `useApi` — open.
 - Introduce backend folder layers (`core/`, `modules/ecommerce/`, `infrastructure/`) and the multi-file Prisma schema; verify empty migration diff.
 
 ### Phase 2 — Registries and Module Boundaries
