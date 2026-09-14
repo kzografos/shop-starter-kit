@@ -169,7 +169,7 @@ Listed so that nobody treats them as precedent. Locations are current paths.
 | `backend/src/uploads/uploads.controller.ts` guarded by `manage:catalog` | §6.1 | seam 7 |
 | `backend/src/mail/mail.service.ts` `sendOrderConfirmation` | §3 | seam 5 |
 | `backend/src/common/interceptors/snake-case.interceptor.ts` `ENUM_FIELDS` names order enums | §3 | E7 |
-| `backend/src/app.module.ts` Joi requires `STRIPE_*`, `MINIO_*` | §6.2 | Phase 1 |
+| ~~`backend/src/app.module.ts` Joi requires `STRIPE_*`, `MINIO_*`~~ | §6.2 | **Removed.** `core/config/env.validation.ts`: core keys required, provider keys validated only when the provider's presence key is set; Stripe / MinIO / Resend / Google clients are created only when configured and reject use with 503 otherwise |
 | `backend/src/admin/admin.service.ts` mixes users/newsletter/settings with shop | §3, §4 | seam 10 |
 | `backend/src/admin/admin.service.ts`, `orders.service.ts` delete other namespaces' cache keys | §4, §6.6 | seam 8 |
 | `backend/src/products/products.service.ts` duplicates `isExternalUrl` / presign loop | §2 (adapter use) | seam 7 |

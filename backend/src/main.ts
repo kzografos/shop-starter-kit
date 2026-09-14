@@ -8,6 +8,9 @@ import { SnakeCaseInterceptor } from './common/interceptors/snake-case.intercept
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter'
 
 async function bootstrap() {
+  // rawBody: required by the payments module (Stripe webhook signature check).
+  // Harmless for everything else; kept unconditional so the option is not
+  // silently missing the day payments are enabled.
   const app = await NestFactory.create(AppModule, { rawBody: true, bufferLogs: true })
 
   app.useLogger(app.get(Logger))

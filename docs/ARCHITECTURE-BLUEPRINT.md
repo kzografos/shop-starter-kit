@@ -327,7 +327,7 @@ PROJECT CONFIG   who this client is; committed, non-secret, drives generation
 
 Today's `NUXT_URL` carries three meanings (CORS allow-list, OAuth return base, mail link base). It splits into `CORS_ORIGINS` and `APP_URL`. Today's `BRAND_NAME`, `BRAND_COLOR`, `BRAND_LOGO_URL` env vars move to project config (§8.2) and are handed to the backend by the config loader.
 
-**Core-only boot requires none of the storage, payments or OAuth variables.** Each module's Joi fragment is merged only when the module is enabled.
+**Core-only boot requires none of the storage, payments or OAuth variables.** Implemented in `backend/src/core/config/env.validation.ts`: presence of a provider's lead key (`MINIO_ENDPOINT`, `STRIPE_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `RESEND_API_KEY`/`MAIL_TRANSPORT=smtp`) switches that provider on and makes the rest of its keys required; empty strings count as unset. Per-module fragment *registration* (module registry) is still Phase 2.
 
 ### 8.2 Project configuration — non-secret identity, committed
 
@@ -457,7 +457,7 @@ Each phase ends with a bootable, deployable system. Phases are sequential; steps
 - Add the event bus (D8) — prerequisite for the next item.
 - Remove shop logic from Auth (seam 1).
 - Remove shop-specific roles from Core (seam 3) — includes the enum migration.
-- Make optional providers optional: per-module Joi fragments; `MinioModule`/`PaymentsModule` behind `enabled`; Nginx `/media/` block conditional; `rawBody` documented.
+- Make optional providers optional — **DONE (backend)**: `core/config/env.validation.ts` holds the core schema plus conditional provider fragments; MinIO client, Stripe client, Resend transport and Google strategy are instantiated only when configured and fail with 503 when used unconfigured; `rawBody` documented in `main.ts`. Still open: Nginx `/media/` block is unconditional (Docker config, separate step); frontend still renders the Google button regardless.
 - Split the admin God Service (seam 10).
 - Separate the Core settings mechanism (seam 4).
 - Separate mail/notification mechanisms from shop templates (seam 5).

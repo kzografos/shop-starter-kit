@@ -1,13 +1,15 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common'
+import { Injectable, BadRequestException, Logger, ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
+import { isPaymentsConfigured } from '../core/config/env.validation'
 import Stripe from 'stripe'
 
 @Injectable()
 export class PaymentsService {
-  private stripe: Stripe
+  // Null when Stripe is not configured; no SDK client is created in that case.
+  private readonly stripe: Stripe | null
   private readonly logger = new Logger(PaymentsService.name)
 
   constructor(
@@ -15,10 +17,26 @@ export class PaymentsService {
     private config: ConfigService,
     private mail: MailService,
   ) {
-    this.stripe = new Stripe(config.getOrThrow('STRIPE_SECRET_KEY'))
+    if (isPaymentsConfigured(config)) {
+      this.stripe = new Stripe(config.getOrThrow('STRIPE_SECRET_KEY'))
+    } else {
+      this.stripe = null
+      this.logger.warn('Stripe not configured — online payments are unavailable')
+    }
+  }
+
+  get isEnabled(): boolean {
+    return this.stripe !== null
+  }
+
+  // Single choke point: a disabled provider fails clearly before any DB work.
+  private requireStripe(): Stripe {
+    if (!this.stripe) throw new ServiceUnavailableException('Online payments are not configured')
+    return this.stripe
   }
 
   async createCheckoutSession(orderId: string, userId: string | null, successUrl: string, cancelUrl: string) {
+    const stripe = this.requireStripe()
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: { items: { include: { product: true } } },
@@ -57,7 +75,7 @@ export class PaymentsService {
     // lifetime, so a retry within that window resumes the same session.
     const discounts: Stripe.Checkout.SessionCreateParams.Discount[] = []
     if (Number(order.loyaltyDiscount) > 0) {
-      const coupon = await this.stripe.coupons.create(
+      const coupon = await stripe.coupons.create(
         {
           amount_off: Math.round(Number(order.loyaltyDiscount) * 100),
           currency: 'eur',
@@ -68,7 +86,7 @@ export class PaymentsService {
       discounts.push({ coupon: coupon.id })
     }
 
-    const session = await this.stripe.checkout.sessions.create(
+    const session = await stripe.checkout.sessions.create(
       {
         mode: 'payment',
         line_items: lineItems,
@@ -89,8 +107,9 @@ export class PaymentsService {
   }
 
   async verifySession(sessionId: string, userId: string | null) {
+    const stripe = this.requireStripe()
     if (!sessionId) throw new BadRequestException('session_id is required')
-    const session = await this.stripe.checkout.sessions.retrieve(sessionId)
+    const session = await stripe.checkout.sessions.retrieve(sessionId)
     const sessionUserId = session.metadata?.user_id || null
     // Owned sessions require the owner; guest sessions are open to anyone with the id.
     if (sessionUserId && sessionUserId !== userId) throw new BadRequestException('Session not found')
@@ -98,11 +117,12 @@ export class PaymentsService {
   }
 
   async handleWebhook(rawBody: Buffer, signature: string) {
+    const stripe = this.requireStripe()
     const secret = this.config.getOrThrow('STRIPE_WEBHOOK_SECRET')
     let event: Stripe.Event
 
     try {
-      event = this.stripe.webhooks.constructEvent(rawBody, signature, secret)
+      event = stripe.webhooks.constructEvent(rawBody, signature, secret)
     } catch {
       throw new BadRequestException('Invalid webhook signature')
     }

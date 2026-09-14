@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import { Resend } from 'resend'
 import * as nodemailer from 'nodemailer'
 import type { Transporter } from 'nodemailer'
+import { isMailConfigured } from '../core/config/env.validation'
 
 @Injectable()
 export class MailService {
@@ -13,6 +14,9 @@ export class MailService {
   private readonly brandLogoUrl: string
   private readonly siteUrl: string
   private readonly transport: 'smtp' | 'resend'
+  // False when no usable transport is configured: sends are rejected with a
+  // clear error (callers already log and continue) instead of boot failing.
+  readonly isEnabled: boolean
   private resend?: Resend
   private smtp?: Transporter
 
@@ -29,15 +33,18 @@ export class MailService {
     // in .env.example so a fresh clone catches mail locally (Mailpit).
     this.transport = config.get('MAIL_TRANSPORT', 'resend') === 'smtp' ? 'smtp' : 'resend'
 
-    if (this.transport === 'smtp') {
+    this.isEnabled = isMailConfigured(config)
+    if (!this.isEnabled) {
+      this.logger.warn(
+        'Mail not configured (MAIL_TRANSPORT=resend without RESEND_API_KEY) — password reset, order and welcome emails will not be sent',
+      )
+    } else if (this.transport === 'smtp') {
       const host = config.get('SMTP_HOST', 'localhost')
       const port = Number(config.get('SMTP_PORT', 1025))
       // Mailpit accepts unauthenticated mail — no auth in dev.
       this.smtp = nodemailer.createTransport({ host, port, secure: false })
       this.logger.log(`Mail transport: SMTP ${host}:${port}`)
     } else {
-      // Lazy Resend init — only when actually using it, so smtp/dev boots
-      // without a RESEND_API_KEY.
       this.resend = new Resend(config.getOrThrow('RESEND_API_KEY'))
       this.logger.log('Mail transport: Resend')
     }
@@ -69,6 +76,7 @@ export class MailService {
   }
 
   private async send(to: string, subject: string, html: string) {
+    if (!this.isEnabled) throw new Error('Mail transport is not configured')
     if (this.transport === 'smtp') {
       return this.smtp!.sendMail({ from: this.from, to, subject, html })
     }

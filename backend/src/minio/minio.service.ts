@@ -1,20 +1,40 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
+import { Inject, Injectable, Logger, OnModuleInit, ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as Minio from 'minio'
 import { MINIO_CLIENT } from './minio.constants'
 
 @Injectable()
 export class MinioService implements OnModuleInit {
-  private bucket: string
+  private readonly logger = new Logger(MinioService.name)
+  private readonly bucket: string
 
   constructor(
-    @Inject(MINIO_CLIENT) private readonly client: Minio.Client,
+    // Null when object storage is not configured (see MinioModule).
+    @Inject(MINIO_CLIENT) private readonly maybeClient: Minio.Client | null,
     private config: ConfigService,
   ) {
-    this.bucket = this.config.getOrThrow<string>('MINIO_BUCKET')
+    this.bucket = this.config.get<string>('MINIO_BUCKET') ?? ''
+  }
+
+  /** True when a storage backend is configured and a client exists. */
+  get isEnabled(): boolean {
+    return this.maybeClient !== null
+  }
+
+  // Every storage operation goes through here, so a disabled provider fails
+  // with one clear, non-fatal error instead of a null dereference.
+  private get client(): Minio.Client {
+    if (!this.maybeClient) {
+      throw new ServiceUnavailableException('Object storage is not configured')
+    }
+    return this.maybeClient
   }
 
   async onModuleInit() {
+    if (!this.isEnabled) {
+      this.logger.warn('Object storage not configured — uploads and image resolution are unavailable')
+      return
+    }
     const exists = await this.client.bucketExists(this.bucket)
     if (!exists) {
       await this.client.makeBucket(this.bucket)
