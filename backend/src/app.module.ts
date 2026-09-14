@@ -5,6 +5,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { LoggerModule } from 'nestjs-pino'
 import * as Joi from 'joi'
 import { PrismaModule } from './prisma/prisma.module'
+import { CoreEventModule } from './core/events/core-event.module'
 import { RedisModule } from './redis/redis.module'
 import { MailModule } from './mail/mail.module'
 import { HealthModule } from './health/health.module'
@@ -55,6 +56,7 @@ import { SettingsModule } from './settings/settings.module'
     }),
     ThrottlerModule.forRoot({ throttlers: [{ ttl: 60000, limit: 100 }] }),
     PrismaModule,
+    CoreEventModule,
     RedisModule,
     MailModule,
     HealthModule,

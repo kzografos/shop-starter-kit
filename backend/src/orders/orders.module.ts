@@ -3,11 +3,14 @@ import { NotificationsModule } from '../notifications/notifications.module'
 import { SettingsModule } from '../settings/settings.module'
 import { OrdersController } from './orders.controller'
 import { OrdersService } from './orders.service'
+import { LoyaltyService } from './loyalty.service'
+import { GuestOrderLinkerService } from './guest-order-linker.service'
 
 @Module({
   imports: [NotificationsModule, SettingsModule],
   controllers: [OrdersController],
-  providers: [OrdersService],
+  // GuestOrderLinkerService subscribes to Core's user.authenticated event on init.
+  providers: [OrdersService, LoyaltyService, GuestOrderLinkerService],
   exports: [OrdersService],
 })
 export class OrdersModule {}

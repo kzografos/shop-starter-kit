@@ -160,7 +160,7 @@ Listed so that nobody treats them as precedent. Locations are current paths.
 
 | Violation | Rule | Removal |
 |---|---|---|
-| `backend/src/auth/auth.service.ts` `linkGuestOrders()` touches `order`, `loyaltyTransaction`, `setting` | §3, §6.4 | Blueprint seam 1 |
+| ~~`backend/src/auth/auth.service.ts` `linkGuestOrders()` touches `order`, `loyaltyTransaction`, `setting`~~ | §3, §6.4 | **Removed (seam 1).** AuthService emits `user.authenticated` on `CoreEventBus`; `orders/guest-order-linker.service.ts` subscribes; loyalty award in `orders/loyalty.service.ts` |
 | `backend/src/users/users.service.ts` selects `loyaltyPoints` | §7.1 | seam 2 |
 | `backend/src/profile/*` exposes `GET /profile/loyalty` | §3 | seam 2 |
 | `backend/src/auth/permissions.ts` defines shop capabilities and roles; `UserRole` enum | §3 | seam 3 |
