@@ -1,3 +1,5 @@
+> **HISTORICAL.** Written 2026-09-08 against `main@d7ff140`. Several findings (Stripe webhook idempotency, server-side pricing, admin DTOs, order pagination, MinIO routing, demo-admin seeding) were fixed on `phase-1-clean-ground` before this file was archived. Kept for the feature inventory and effort estimates. Current architecture: [../ARCHITECTURE-BLUEPRINT.md](../ARCHITECTURE-BLUEPRINT.md).
+
 # Commercial Readiness Audit — shop-starter-kit
 
 **Date:** 2026-09-08

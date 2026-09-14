@@ -16,8 +16,9 @@ mkadmin.js
 schema-dump.txt
 tree.txt
 
-# claude code working notes
-docs/
+# Official architecture documentation lives in docs/ and IS tracked.
+# Only the scratch sub-folder of AI working notes stays ignored.
+docs/blueprint/
 
 # TLS material — never commit private keys
 docker/nginx/ssl/*.pem

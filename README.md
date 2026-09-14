@@ -1,14 +1,15 @@
 # 🛍️ Shop Starter Kit
 
-> A full-stack, reusable e-commerce starter kit with bilingual support (Greek & English).
+> A reusable, single-tenant, full-stack starter system for independently deployed client websites and e-commerce applications — bilingual (Greek & English) out of the box.
 
-![Tech Stack](https://img.shields.io/badge/Nuxt-3-00DC82?style=flat&logo=nuxt.js) ![NestJS](https://img.shields.io/badge/NestJS-10-E0234E?style=flat&logo=nestjs) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat&logo=postgresql) ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker) ![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?style=flat&logo=stripe)
+![Tech Stack](https://img.shields.io/badge/Nuxt-4-00DC82?style=flat&logo=nuxt.js) ![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=flat&logo=nestjs) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat&logo=postgresql) ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker) ![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?style=flat&logo=stripe)
 
 ---
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Features](#features)
 - [Project Structure](#project-structure)
@@ -22,7 +23,32 @@
 
 ## Overview
 
-Shop Starter Kit is a production-ready, reusable e-commerce starter kit. It supports bilingual content (Greek and English), Stripe payment processing, a loyalty points system, order management, and an admin panel for product and order management.
+Shop Starter Kit is a reusable starter system. Today it ships a complete e-commerce implementation — bilingual content (Greek and English), Stripe payment processing, a loyalty points system, order management, and an admin panel — and it is being restructured so that the e-commerce parts become an optional module on top of a generic core.
+
+- **It is a starting point, not a shared dependency.** Each client project is an independent clone with its own repository, database, environment, deployment, enabled modules and branding.
+- **Modules are optional.** E-commerce (and future CMS, blog, booking modules) are enabled per project.
+- **Core must not depend on domain modules.** Authentication, users, roles, settings, notifications and the API foundation stay generic.
+
+---
+
+## Architecture
+
+Before modifying the repository, read, in order:
+
+1. [docs/ARCHITECTURE-BLUEPRINT.md](docs/ARCHITECTURE-BLUEPRINT.md) — target architecture, layers, registries, migration phases
+2. [docs/ARCHITECTURE-DECISIONS.md](docs/ARCHITECTURE-DECISIONS.md) — decisions D1–D12 and their rationale
+3. [docs/DEPENDENCY-RULES.md](docs/DEPENDENCY-RULES.md) — allowed and forbidden dependencies (enforceable)
+4. [docs/MODULE-DEVELOPMENT-GUIDE.md](docs/MODULE-DEVELOPMENT-GUIDE.md) — how to build a module
+
+Every change is checked against [docs/ARCHITECTURE-CHECKLIST.md](docs/ARCHITECTURE-CHECKLIST.md). AI agents follow [AGENTS.md](AGENTS.md).
+
+Dependency direction (downward only):
+
+```text
+PROJECT → OPTIONAL MODULES → CORE → INFRASTRUCTURE
+```
+
+The current folder layout predates the blueprint; the blueprint maps every existing path to its layer and describes the incremental move.
 
 ---
 
@@ -32,9 +58,9 @@ Shop Starter Kit is a production-ready, reusable e-commerce starter kit. It supp
 
 | Technology  | Version | Purpose                      |
 | ----------- | ------- | ---------------------------- |
-| Nuxt 3      | 4.x     | SSR framework                |
+| Nuxt        | 4.x     | SSR framework                |
 | Vue 3       | 3.5     | UI framework                 |
-| Pinia       | 2.x     | State management             |
+| Pinia       | 3.x     | State management             |
 | Nuxt UI     | 4.x     | Component library            |
 | @nuxt/i18n  | 10.x    | Internationalization (EL/EN) |
 | @nuxt/image | latest  | Image optimization           |
@@ -44,7 +70,7 @@ Shop Starter Kit is a production-ready, reusable e-commerce starter kit. It supp
 
 | Technology | Version | Purpose               |
 | ---------- | ------- | --------------------- |
-| NestJS     | 10.x    | API framework         |
+| NestJS     | 11.x    | API framework         |
 | Prisma     | 6.x     | ORM                   |
 | PostgreSQL | 16      | Primary database      |
 | Redis      | 7       | Caching + token store |
@@ -76,7 +102,7 @@ Shop Starter Kit is a production-ready, reusable e-commerce starter kit. It supp
 - 📧 **Transactional email** — Order confirmations, password reset via Resend
 - 🖼️ **Image storage** — Self-hosted Minio with pre-signed URLs
 - 📱 **Responsive** — Mobile-first design
-- 🔒 **Security** — HTTPS, HSTS, CSP, rate limiting, input validation
+- 🔒 **Security** — HTTPS, HSTS, security headers, rate limiting (Nginx + throttler), input validation
 
 ---
 
@@ -84,7 +110,7 @@ Shop Starter Kit is a production-ready, reusable e-commerce starter kit. It supp
 
 ```
 shop-starter-kit/
-├── app/                          # Nuxt 3 frontend
+├── app/                          # Nuxt 4 frontend
 │   ├── components/               # Vue components
 │   │   ├── cart/                 # CartDrawer, CartItem
 │   │   ├── checkout/             # CheckoutSteps
@@ -105,20 +131,26 @@ shop-starter-kit/
 ├── backend/                      # NestJS API
 │   ├── prisma/                   # Schema + migrations
 │   └── src/
-│       ├── auth/                 # JWT auth, guards, strategies
-│       ├── admin/                # Admin endpoints
+│       ├── admin/                # Admin endpoints (stats, orders, products, categories, customers, newsletter, settings)
+│       ├── analytics/            # Admin analytics
+│       ├── auth/                 # JWT auth, guards, strategies, capabilities
 │       ├── categories/           # Product categories
 │       ├── common/               # Shared filters, interceptors, utils
 │       ├── favourites/           # User favourites
-│       ├── mail/                 # Email service (Resend)
+│       ├── health/               # Health check
+│       ├── mail/                 # Email service (Resend / SMTP)
 │       ├── minio/                # File storage
 │       ├── newsletter/           # Newsletter subscribe/unsubscribe
+│       ├── notifications/        # Admin notifications (low stock)
 │       ├── orders/               # Order creation + history
 │       ├── payments/             # Stripe integration + webhooks
 │       ├── products/             # Product listing + detail
 │       ├── profile/              # User profile management
 │       ├── redis/                # Redis caching
-│       └── uploads/              # File upload endpoint
+│       ├── settings/             # Pricing settings
+│       ├── staff/                # Staff accounts + roles
+│       ├── uploads/              # File upload endpoint
+│       └── users/                # User repository
 │
 ├── docker/
 │   └── nginx/
@@ -129,6 +161,8 @@ shop-starter-kit/
 │   ├── el.json                   # Greek translations
 │   └── en.json                   # English translations
 │
+├── docs/                         # Architecture blueprint, decisions, rules, guides (tracked)
+├── AGENTS.md                     # Authoritative instructions for AI agents
 ├── docker-compose.yml            # Local development (full Docker)
 ├── docker-compose.prod.yml       # Production
 ├── Dockerfile.nuxt               # Frontend container
@@ -302,7 +336,16 @@ Copy `.env.example` to `.env` and fill in all values.
 
 ## Production Deployment
 
-See [DEPLOY.md](./DEPLOY.md) for the complete step-by-step production deployment guide.
+There is no standalone deployment guide yet. Production runs from [docker-compose.prod.yml](docker-compose.prod.yml) behind the Nginx config in [docker/nginx/nginx.conf](docker/nginx/nginx.conf):
+
+```bash
+cp .env.example .env            # fill in real values; set OWNER_EMAIL / OWNER_PASSWORD for first boot
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Place `fullchain.pem` and `privkey.pem` in `docker/nginx/ssl/` (never committed). Set `MINIO_PUBLIC_URL=https://<domain>/media` and `NUXT_URL=https://<domain>`. After the first boot, remove `OWNER_PASSWORD` from `.env` (see [PETSHOPCY-MANUAL.md](PETSHOPCY-MANUAL.md) §4).
+
+Downstream client projects that pull changes from this repository follow [PETSHOPCY-MANUAL.md](PETSHOPCY-MANUAL.md) for the steps that cannot propagate by cherry-pick.
 
 ---
 
@@ -335,7 +378,9 @@ Minio is self-hosted and runs as a Docker container. No external account needed.
 
 ## Admin Access
 
-To create an admin user, register through the app first, then run:
+The recommended way to create the first admin (owner) is the env-driven bootstrap: set `OWNER_EMAIL` and `OWNER_PASSWORD` (12+ characters) in `.env` before the first boot. The seed creates the owner once and never again. Remove `OWNER_PASSWORD` afterwards.
+
+Alternatively, register through the app first, then promote the account:
 
 ```bash
 # Local
