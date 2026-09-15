@@ -18,7 +18,6 @@ import { PaymentsModule } from './payments/payments.module'
 import { FavouritesModule } from './favourites/favourites.module'
 import { NewsletterModule } from './newsletter/newsletter.module'
 import { ProfileModule } from './profile/profile.module'
-import { AdminModule } from './admin/admin.module'
 import { MinioModule } from './minio/minio.module'
 import { UploadsModule } from './uploads/uploads.module'
 import { NotificationsModule } from './notifications/notifications.module'
@@ -53,7 +52,6 @@ import { SettingsModule } from './settings/settings.module'
     FavouritesModule,
     NewsletterModule,
     ProfileModule,
-    AdminModule,
     MinioModule,
     UploadsModule,
     NotificationsModule,

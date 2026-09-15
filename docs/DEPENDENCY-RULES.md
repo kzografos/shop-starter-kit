@@ -170,8 +170,8 @@ Listed so that nobody treats them as precedent. Locations are current paths.
 | `backend/src/mail/mail.service.ts` `sendOrderConfirmation` | §3 | seam 5 |
 | `backend/src/common/interceptors/snake-case.interceptor.ts` `ENUM_FIELDS` names order enums | §3 | E7 |
 | ~~`backend/src/app.module.ts` Joi requires `STRIPE_*`, `MINIO_*`~~ | §6.2 | **Removed.** `core/config/env.validation.ts`: core keys required, provider keys validated only when the provider's presence key is set; Stripe / MinIO / Resend / Google clients are created only when configured and reject use with 503 otherwise |
-| `backend/src/admin/admin.service.ts` mixes users/newsletter/settings with shop | §3, §4 | seam 10 |
-| `backend/src/admin/admin.service.ts`, `orders.service.ts` delete other namespaces' cache keys | §4, §6.6 | seam 8 |
+| ~~`backend/src/admin/admin.service.ts` mixes users/newsletter/settings with shop~~ | §3, §4 | **Removed (seam 10).** Each resource's module owns its `admin/*` controller: newsletter, settings, users (customers), orders, categories, products, analytics (stats). `admin/` folder deleted |
+| `products.service.ts`, `categories.service.ts` (`products:*`, `categories:tree`), `orders.service.ts` (`analytics:*`) delete cache keys by string | §4, §6.6 | seam 8 (moved with the admin extraction; still string-keyed) |
 | `backend/src/products/products.service.ts` duplicates `isExternalUrl` / presign loop | §2 (adapter use) | seam 7 |
 | `app/layouts/default.vue` mounts `CartDrawer` | §5.1 | seam 9 |
 | `app/components/layout/AppHeader.vue` imports cart/filters stores, `cart-open` state, shop nav | §5.1, §5.6, §5.8 | seam 9 |
