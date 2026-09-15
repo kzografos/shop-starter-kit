@@ -283,15 +283,6 @@ export class AdminService {
     return { customers, total, page, totalPages: Math.ceil(total / PAGE_SIZE) }
   }
 
-  // ── Newsletter ─────────────────────────────────────────────
-
-  async getNewsletter() {
-    return this.prisma.newsletterSubscriber.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: { id: true, email: true, createdAt: true },
-    })
-  }
-
   async getProductById(id: string) {
     const product = await this.prisma.product.findUnique({ where: { id } })
     if (!product) throw new NotFoundException('Product not found')

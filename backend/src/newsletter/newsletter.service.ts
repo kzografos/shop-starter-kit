@@ -23,6 +23,14 @@ export class NewsletterService {
     return { ok: true }
   }
 
+  // Admin list. Moved unchanged from AdminService.getNewsletter().
+  listSubscribers() {
+    return this.prisma.newsletterSubscriber.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, email: true, createdAt: true },
+    })
+  }
+
   async unsubscribe(email: string) {
     try {
       await this.prisma.newsletterSubscriber.delete({ where: { email } })
