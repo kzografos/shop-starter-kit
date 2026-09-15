@@ -5,6 +5,7 @@ import { OrdersController } from './orders.controller'
 import { OrdersAdminController } from './orders-admin.controller'
 import { PricingSettingsController } from './pricing-settings.controller'
 import { PricingSettingsService } from './pricing-settings.service'
+import { OrdersPermissions } from './orders-permissions'
 import { OrdersService } from './orders.service'
 import { LoyaltyService } from './loyalty.service'
 import { GuestOrderLinkerService } from './guest-order-linker.service'
@@ -14,7 +15,8 @@ import { GuestOrderLinkerService } from './guest-order-linker.service'
   controllers: [OrdersController, OrdersAdminController, PricingSettingsController],
   // GuestOrderLinkerService subscribes to Core's user.authenticated event on init.
   // PricingSettingsService registers the pricing keys with Core settings on init.
-  providers: [OrdersService, LoyaltyService, GuestOrderLinkerService, PricingSettingsService],
+  // OrdersPermissions registers the order capabilities and the shop staff-role presets.
+  providers: [OrdersService, LoyaltyService, GuestOrderLinkerService, PricingSettingsService, OrdersPermissions],
   exports: [OrdersService, PricingSettingsService],
 })
 export class OrdersModule {}

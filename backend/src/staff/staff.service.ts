@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
 import { UserRole } from '@prisma/client'
-import { STAFF_ROLES } from '../auth/permissions'
+import { PermissionsRegistryService } from '../auth/permissions.registry.service'
 import type { CreateStaffDto, UpdateStaffRoleDto } from './dto/staff.dto'
 
 const STAFF_SELECT = {
@@ -16,11 +16,14 @@ const STAFF_SELECT = {
 
 @Injectable()
 export class StaffService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private permissions: PermissionsRegistryService,
+  ) {}
 
   list() {
     return this.prisma.user.findMany({
-      where: { role: { in: STAFF_ROLES as unknown as UserRole[] } },
+      where: { role: { in: this.permissions.staffRoles() as UserRole[] } },
       select: STAFF_SELECT,
       orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
     })

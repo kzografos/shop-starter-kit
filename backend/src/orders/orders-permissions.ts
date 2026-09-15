@@ -1,0 +1,30 @@
+import { Injectable, OnModuleInit } from '@nestjs/common'
+import { PermissionsRegistryService } from '../auth/permissions.registry.service'
+
+/** Capabilities owned by orders. */
+export const ORDERS_CAPABILITIES = [
+  'view:orders',
+  'manage:orders', // status changes, refunds
+] as const
+
+/**
+ * Shop staff-role presets. Role names are the Prisma UserRole enum NAMES.
+ * Registered here because the e-commerce module has no single root yet;
+ * they move to ecommerce.module.ts with the folder layers.
+ */
+export const SHOP_ROLE_PRESETS: Record<string, readonly string[]> = {
+  ACCOUNTANT: ['view:finance', 'view:orders'],
+  STOCK_MANAGER: ['view:catalog', 'manage:catalog', 'manage:inventory'],
+}
+
+@Injectable()
+export class OrdersPermissions implements OnModuleInit {
+  constructor(private permissions: PermissionsRegistryService) {}
+
+  onModuleInit() {
+    this.permissions.defineCapabilities(ORDERS_CAPABILITIES, { order: 20 })
+    for (const [role, caps] of Object.entries(SHOP_ROLE_PRESETS)) {
+      this.permissions.defineRolePreset(role, caps)
+    }
+  }
+}

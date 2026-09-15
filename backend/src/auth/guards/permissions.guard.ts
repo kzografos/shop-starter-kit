@@ -1,11 +1,15 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator'
-import { permissionsFor, type Capability } from '../permissions'
+import { OWNER_ROLE, type Capability } from '../permissions'
+import { PermissionsRegistryService } from '../permissions.registry.service'
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private permissions: PermissionsRegistryService,
+  ) {}
 
   canActivate(ctx: ExecutionContext): boolean {
     const required = this.reflector.getAllAndOverride<Capability[]>(PERMISSIONS_KEY, [
@@ -16,12 +20,12 @@ export class PermissionsGuard implements CanActivate {
     if (!user?.role) throw new ForbiddenException('Not authenticated')
 
     // Owner has everything.
-    if (user.role === 'ADMIN') return true
+    if (user.role === OWNER_ROLE) return true
 
     // Untagged admin routes are owner-only by default.
     if (!required || required.length === 0) throw new ForbiddenException('Owner only')
 
-    const held = permissionsFor(user.role)
+    const held = this.permissions.permissionsFor(user.role)
     const ok = required.every((cap) => held.includes(cap))
     if (!ok) throw new ForbiddenException('Insufficient permissions')
     return true

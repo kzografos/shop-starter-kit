@@ -1,19 +1,20 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { UsersService } from '../users/users.service'
-import { permissionsFor } from '../auth/permissions'
+import { PermissionsRegistryService } from '../auth/permissions.registry.service'
 
 @Injectable()
 export class ProfileService {
   constructor(
     private prisma: PrismaService,
     private users: UsersService,
+    private permissions: PermissionsRegistryService,
   ) {}
 
   me(user: unknown) {
     const u = (user ?? {}) as { role?: string }
     // Expose admin capabilities so the client can gate nav + routes.
-    return { ...u, permissions: permissionsFor(u.role) }
+    return { ...u, permissions: this.permissions.permissionsFor(u.role) }
   }
 
   update(userId: string, dto: { fullName?: string; phone?: string }) {
