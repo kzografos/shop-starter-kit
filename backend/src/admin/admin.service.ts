@@ -2,31 +2,10 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
 import { NotificationsService } from '../notifications/notifications.service'
-import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
+import { PaymentStatus, Prisma } from '@prisma/client'
 import { UpsertProductDto } from './dto/product.dto'
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto'
 import { MinioService } from '../minio/minio.service'
-
-const PAYMENT_STATUS_MAP: Record<string, PaymentStatus> = {
-  pending: PaymentStatus.PENDING,
-  paid: PaymentStatus.PAID,
-  failed: PaymentStatus.FAILED,
-  refunded: PaymentStatus.REFUNDED,
-}
-
-// A search term made only of hex digits and dashes is treated as an order-id
-// prefix. Anchored and length-capped so it cannot be used to smuggle anything
-// into the LIKE pattern below.
-const UUID_PREFIX = /^[0-9a-f-]{1,36}$/i
-
-const STATUS_MAP: Record<string, OrderStatus> = {
-  pending: OrderStatus.PENDING,
-  confirmed: OrderStatus.CONFIRMED,
-  processing: OrderStatus.PROCESSING,
-  ready: OrderStatus.READY,
-  completed: OrderStatus.COMPLETED,
-  cancelled: OrderStatus.CANCELLED,
-}
 
 @Injectable()
 export class AdminService {
@@ -155,68 +134,6 @@ export class AdminService {
     }
   }
 
-  /**
-   * Paginated order list. This previously returned every order ever placed in
-   * one unbounded query, which the client then filtered in memory -- fine at
-   * demo scale, progressively slower for a real shop and eventually a timeout.
-   *
-   * Search and the payment-status filter moved server-side with it, since
-   * filtering one page in the browser would otherwise only ever search the page
-   * you happen to be looking at.
-   */
-  async getOrders({ page = 1, search, paymentStatus }: {
-    page?: number
-    search?: string
-    paymentStatus?: string
-  } = {}) {
-    const PAGE_SIZE = 25
-    const skip = (Math.max(1, page) - 1) * PAGE_SIZE
-
-    const where: Prisma.OrderWhereInput = {}
-
-    const mappedPayment = PAYMENT_STATUS_MAP[paymentStatus ?? '']
-    if (mappedPayment) where.paymentStatus = mappedPayment
-
-    const term = search?.trim()
-    if (term) {
-      // Staff see an order as the first 8 characters of its uuid, so a prefix
-      // has to match. Prisma types a uuid column as UuidFilter, which has no
-      // startsWith, so the ids are resolved separately and fed back in as an
-      // `in` list. The extra query only runs when the term looks like hex.
-      let idMatches: string[] = []
-      if (UUID_PREFIX.test(term)) {
-        const rows = await this.prisma.$queryRaw<Array<{ id: string }>>`
-          SELECT id FROM orders WHERE id::text LIKE ${`${term.toLowerCase()}%`} LIMIT 100
-        `
-        idMatches = rows.map((r) => r.id)
-      }
-
-      where.OR = [
-        ...(idMatches.length ? [{ id: { in: idMatches } }] : []),
-        { guestEmail: { contains: term, mode: 'insensitive' as const } },
-        { user: { email: { contains: term, mode: 'insensitive' as const } } },
-        { user: { fullName: { contains: term, mode: 'insensitive' as const } } },
-      ]
-    }
-
-    const [orders, total] = await this.prisma.$transaction([
-      this.prisma.order.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: PAGE_SIZE,
-      }),
-      this.prisma.order.count({ where }),
-    ])
-
-    return { orders, total, page, totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)) }
-  }
-
-  async updateOrderStatus(id: string, status: string) {
-    const mapped = STATUS_MAP[status]
-    if (!mapped) throw new NotFoundException(`Unknown status: ${status}`)
-    return this.prisma.order.update({ where: { id }, data: { status: mapped } })
-  }
 
   async getProducts({ page = 1, search, sort, order }: { page?: number; search?: string; sort?: string; order?: 'asc' | 'desc' } = {}) {
     const PAGE_SIZE = 20

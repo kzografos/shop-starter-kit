@@ -27,26 +27,6 @@ export class AdminController {
     return this.admin.getStats()
   }
 
-  @Get('orders')
-  @RequirePermissions('view:orders')
-  orders(
-    @Query('page') page?: string,
-    @Query('search') search?: string,
-    @Query('payment_status') paymentStatus?: string,
-  ) {
-    return this.admin.getOrders({
-      page: page ? parseInt(page, 10) : 1,
-      search,
-      paymentStatus,
-    })
-  }
-
-  @Patch('orders/:id/status')
-  @RequirePermissions('manage:orders')
-  updateOrderStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.admin.updateOrderStatus(id, status)
-  }
-
   @Get('products')
   @RequirePermissions('view:catalog')
   products(
