@@ -10,10 +10,10 @@ These rules are written to be checked by a tool (D12). Until the tool exists, th
 ## 1. Layers
 
 ```text
-PROJECT          app/project/**        backend/src/project/**        contracts/project.config.ts
-OPTIONAL MODULE  app/modules/<id>/**   backend/src/modules/<id>/**   prisma/schema/<id>.prisma
-CORE             app/core/**           backend/src/core/**           prisma/schema/core.prisma
-INFRASTRUCTURE   —                     backend/src/infrastructure/** prisma/schema/infrastructure.prisma, docker/, compose files
+PROJECT          app/project/**        backend/src/project/**        contracts/project.config.ts, backend/prisma/project.prisma
+OPTIONAL MODULE  app/modules/<id>/**   backend/src/modules/<id>/**   backend/prisma/<id>.prisma   (today: ecommerce.prisma)
+CORE             app/core/**           backend/src/core/**           backend/prisma/core.prisma
+INFRASTRUCTURE   —                     backend/src/infrastructure/** backend/prisma/infrastructure.prisma, backend/prisma/migrations/, docker/, compose files
 ```
 
 Until the folders exist, the mapping of **current** paths to layers is the one in the blueprint §2 and §10. The rules apply to the current paths by that mapping.
@@ -107,7 +107,7 @@ Modules must not:
 
 ## 7. Data and schema rules
 
-1. Core models (`User`, `Setting`, `NewsletterSubscriber`, `Notification`) carry no module-specific scalar columns. Module back-relations on `User` are declared in the module's schema file.
+1. Core models (`User`, `Setting`, `NewsletterSubscriber`, `Notification`) carry no module-specific scalar columns. A Prisma model block must be complete in one file, so module back-relations on `User` are written inside `core.prisma` and annotated as module-owned there; the owning side of the relation lives in the module's file.
 2. Modules reference users by `userId` (UUID) with an explicit relation in their own file.
 3. `ProcessedEvent` and similar technical ledgers are Infrastructure; modules use them through the pattern (insert inside the same transaction), not by adding domain columns to them.
 4. A commit that changes a schema file is owned by that file's layer and is never cherry-picked downstream without its migration.
@@ -163,7 +163,7 @@ The boundary verifier carries a **baseline** of violations that existed at Archi
 | §5.3–§5.4 `useApi` | ESLint `no-restricted-syntax` on `$fetch(` / `useFetch(` outside allow-listed files; `no-restricted-imports` of `~/stores/*` in `useApi.ts` | needs `eslint` as a root devDependency (today only transitive; `pnpm lint` fails) |
 | §5.5 component collisions | Nuxt build with per-layer prefix; a duplicate-name check script | Phase 2 |
 | §6.6 cache namespaces | grep-based script over `delPattern('` / `redis.del('` per folder | Phase 2 |
-| §7.1 Core columns | review + schema-file ownership (`core.prisma` diff reviewed by Core owner) | Phase 1 (multi-file schema) |
+| §7.1 Core columns | review + schema-file ownership (`core.prisma` diff reviewed by Core owner) | schema split done (seam 3b step 1); review-based until a column-ownership check exists |
 | Frontend typecheck / lint / tests | `nuxi typecheck` (needs `vue-tsc`), `eslint`, Vitest; backend Jest | Phase 4 |
 
 > Architecture rules are not complete until they are enforceable automatically.
