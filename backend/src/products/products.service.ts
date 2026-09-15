@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
 import { MinioService } from '../minio/minio.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import { toCache } from '../common/utils/serialize'
 import { Prisma } from '@prisma/client'
 import { QueryProductsDto } from './dto/query-products.dto'
+import { UpsertProductDto } from './dto/product.dto'
 
 const PAGE_SIZE = 12
 
@@ -14,6 +16,7 @@ export class ProductsService {
     private prisma: PrismaService,
     private redis: RedisService,
     private minio: MinioService,
+    private notifications: NotificationsService,
   ) {}
 
   private isExternalUrl = (s: string) =>
@@ -169,5 +172,130 @@ export class ProductsService {
     const result = rows.map((r) => ({ brand: r.brand!, count: r._count.brand }))
     await this.redis.set(cacheKey, toCache(result), 30)
     return result
+  }
+
+  // ── Admin (moved unchanged from AdminService) ────────────────
+
+  async listForAdmin({ page = 1, search, sort, order }: { page?: number; search?: string; sort?: string; order?: 'asc' | 'desc' } = {}) {
+    const PAGE_SIZE = 20
+    const skip = (Math.max(1, page) - 1) * PAGE_SIZE
+    const where = search
+      ? {
+          OR: [
+            { nameEl: { contains: search, mode: 'insensitive' as const } },
+            { nameEn: { contains: search, mode: 'insensitive' as const } },
+            { brand: { contains: search, mode: 'insensitive' as const } },
+          ],
+        }
+      : {}
+    const SORT_MAP: Record<string, string> = {
+      name: 'nameEl',
+      brand: 'brand',
+      price: 'price',
+      stock: 'stock',
+    }
+    const sortField = SORT_MAP[sort ?? ''] ?? 'createdAt'
+    const dir = order ?? 'desc'
+    const [products, total] = await this.prisma.$transaction([
+      this.prisma.product.findMany({ where, orderBy: { [sortField]: dir }, skip, take: PAGE_SIZE }),
+      this.prisma.product.count({ where }),
+    ])
+    return { products, total, page, totalPages: Math.ceil(total / PAGE_SIZE) }
+  }
+
+  async findByIdForAdmin(id: string) {
+    const product = await this.prisma.product.findUnique({ where: { id } })
+    if (!product) throw new NotFoundException('Product not found')
+    // `images` stays the stored object keys: the edit drawer submits this value
+    // straight back, so returning presigned URLs here would persist an expiring
+    // URL as the permanent reference and every photo would 404 an hour later.
+    // Display URLs are a separate field.
+    return {
+      ...product,
+      imageUrls: await this.minio.resolveImageUrls(product.images),
+    }
+  }
+
+  /**
+   * Maps the validated wire payload onto Prisma columns.
+   *
+   * Optional text fields arrive as '' from the admin form; those are stored as
+   * null so "not set" is one value in the database rather than two.
+   */
+  private toProductData(dto: UpsertProductDto) {
+    return {
+      slug: dto.slug,
+      nameEl: dto.name_el,
+      nameEn: dto.name_en,
+      descriptionEl: dto.description_el?.trim() || null,
+      descriptionEn: dto.description_en?.trim() || null,
+      price: dto.price,
+      compareAtPrice: dto.compare_at_price ?? null,
+      cost: dto.cost ?? null,
+      stock: dto.stock,
+      brand: dto.brand?.trim() || null,
+      categoryId: dto.category_id || null,
+      images: dto.images ?? [],
+    }
+  }
+
+  async create(dto: UpsertProductDto) {
+    const product = await this.prisma.product
+      .create({
+        data: {
+          ...this.toProductData(dto),
+          // Absent means active, matching the previous `!== false` behaviour.
+          isActive: dto.is_active ?? true,
+        },
+      })
+      .catch((err) => {
+        throw this.translateProductWriteError(err, dto.slug)
+      })
+    await this.redis.delPattern('products:*')
+    await this.notifications.checkStock(product)
+    return product
+  }
+
+  async update(id: string, dto: UpsertProductDto) {
+    const product = await this.prisma.product
+      .update({
+        where: { id },
+        data: {
+          ...this.toProductData(dto),
+          isActive: dto.is_active ?? true,
+        },
+      })
+      .catch((err) => {
+        throw this.translateProductWriteError(err, dto.slug)
+      })
+    await this.redis.delPattern('products:*')
+    await this.notifications.checkStock(product)
+    return product
+  }
+
+  /**
+   * Turns Prisma's write failures into messages the admin panel can show.
+   * A duplicate slug previously surfaced as a raw 500 with no indication of
+   * which field was at fault.
+   */
+  private translateProductWriteError(err: unknown, slug: string): Error {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === 'P2002') {
+        return new BadRequestException(`A product with the slug "${slug}" already exists`)
+      }
+      if (err.code === 'P2025') {
+        return new NotFoundException('Product not found')
+      }
+      if (err.code === 'P2003') {
+        return new BadRequestException('The selected category no longer exists')
+      }
+    }
+    return err instanceof Error ? err : new Error(String(err))
+  }
+
+  async deactivate(id: string) {
+    const product = await this.prisma.product.update({ where: { id }, data: { isActive: false } })
+    await this.redis.delPattern('products:*')
+    return product
   }
 }
