@@ -81,7 +81,7 @@ Frontend side: the layer path (`app/modules/<id>`) is added to `extends` by the 
 ### 3.2 Permission Registry contributions
 
 - Capabilities: `{ id: 'view:catalog', descriptionKey: 'ecommerce.caps.view_catalog' }`. Naming `verb:noun`, verbs `view` | `manage`. Ids are global; a duplicate across modules fails boot.
-- Role presets: `{ role: 'stock_manager', capabilities: ['view:catalog', 'manage:catalog', 'manage:inventory'] }`. Roles are lowercase strings. `owner` and `member` are Core; do not redefine them.
+- Role presets: `{ role: 'stock_manager', capabilities: ['view:catalog', 'manage:catalog', 'manage:inventory'] }`. Roles are lowercase strings stored as-is in `users.role`; adding one is a registration, never a schema change. `admin` (owner) and `customer` (member) are Core; do not redefine them.
 - Guard your controllers with your own capabilities. Never guard with another module's.
 
 ### 3.3 Settings Registry contributions

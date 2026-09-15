@@ -173,6 +173,46 @@ the volume.
 
 ---
 
+## Standing rule — schema-owning commits are atomic
+
+Applies to every client clone, not only this one. Some upstream commits change
+the database schema, add a migration, **and** change application code that
+depends on the new shape in the same commit. They must be taken **whole, in
+order, with their migration** — never cherry-picked partially, never with the
+migration dropped, never with the code taken and the migration left for later.
+
+Why: the code assumes the migrated shape and the migration assumes the code
+that reads it. Taking one without the other produces a running application
+that is wrong against its own database, often silently.
+
+How to recognise one: the commit touches `backend/prisma/*.prisma` and adds a
+directory under `backend/prisma/migrations/`. Take the full commit, run
+`prisma migrate deploy` (start.sh does this on boot), and verify the affected
+table before declaring the pull done.
+
+**Known instance:** `refactor(core): store user roles as plain lowercase
+strings` — `users.role` moves from the `user_role` enum to `text`, the enum is
+dropped, and every backend role literal moves from the Prisma enum names
+(`ADMIN`, `CUSTOMER`, …) to the stored lowercase values (`admin`, `customer`,
+`accountant`, `stock_manager`). Existing rows are preserved verbatim; no data is
+rewritten. Taken partially, every staff account is locked out: code comparing
+`admin` against an enum still reporting `ADMIN`, or the reverse.
+
+**Verify after the pull:**
+
+```
+docker compose exec postgres psql -U <db_user> -d <db_name> -c '\d users'
+  -- role | text | not null | default 'customer'::text
+docker compose exec postgres psql -U <db_user> -d <db_name> -c 'SELECT role, count(*) FROM users GROUP BY role'
+  -- only lowercase values; counts unchanged from before the pull
+docker compose exec postgres psql -U <db_user> -d <db_name> -c "SELECT count(*) FROM pg_type WHERE typname = 'user_role'"
+  -- 0
+```
+
+then sign in as the owner and open the admin panel.
+
+---
+
 ## Notes
 
 - `.claude/` and `docs/` are also gitignored upstream, so nothing under them
