@@ -1,0 +1,108 @@
+// ─── Core (ARCHITECTURE-BLUEPRINT §9) ────────────────────────
+//
+// Identity, settings, subscribers, notifications. A Prisma model is a single
+// block, so the back-relations that e-commerce models declare on `User`
+// (orders, favourites, loyaltyTransactions) live here even though the owning
+// side is in ecommerce.prisma. `UserRole` and `User.loyaltyPoints` are
+// documented seam residue (3b, 2).
+//
+// Multi-file schema: every *.prisma in this directory is one schema. Generator
+// and datasource live in this file only.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Settings ────────────────────────────────────────────────
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// ─── Users / Profiles ────────────────────────────────────────
+
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String    @unique
+  passwordHash  String?   @map("password_hash")
+  fullName      String?   @map("full_name")
+  phone         String?
+  googleId      String?   @unique @map("google_id")
+  provider      String    @default("local")
+  avatarUrl     String?   @map("avatar_url")
+  loyaltyPoints Int       @default(0) @map("loyalty_points")
+  role          UserRole  @default(CUSTOMER)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  orders              Order[]
+  favourites          Favourite[]
+  loyaltyTransactions LoyaltyTransaction[]
+  refreshTokens       RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+enum UserRole {
+  CUSTOMER      @map("customer")
+  ADMIN         @map("admin")
+  ACCOUNTANT    @map("accountant")
+  STOCK_MANAGER @map("stock_manager")
+
+  @@map("user_role")
+}
+
+// ─── Newsletter ──────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("newsletter_subscribers")
+}
+
+// ─── Notifications (admin) ───────────────────────────────────
+
+model Notification {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type      NotificationType
+  productId String?          @map("product_id") @db.Uuid
+  stock     Int?
+  meta      Json?
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([productId])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  LOW_STOCK    @map("low_stock")
+  OUT_OF_STOCK @map("out_of_stock")
+
+  @@map("notification_type")
+}
