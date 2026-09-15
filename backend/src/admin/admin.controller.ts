@@ -1,17 +1,12 @@
-import { Controller, Get, UseGuards } from '@nestjs/common'
+import { Controller, UseGuards } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { PermissionsGuard } from '../auth/guards/permissions.guard'
-import { RequirePermissions } from '../auth/decorators/permissions.decorator'
 import { AdminService } from './admin.service'
 
+// No routes remain: each admin surface is served by its owning module's
+// admin/* controller. Left in place for the cleanup step.
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('admin')
 export class AdminController {
   constructor(private admin: AdminService) {}
-
-  @Get('stats')
-  @RequirePermissions('view:finance')
-  stats() {
-    return this.admin.getStats()
-  }
 }
