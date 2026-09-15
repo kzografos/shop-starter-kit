@@ -3,7 +3,6 @@ import {
   Get,
   Patch,
   Post,
-  Delete,
   Body,
   Param,
   Query,
@@ -14,7 +13,6 @@ import { PermissionsGuard } from '../auth/guards/permissions.guard'
 import { RequirePermissions } from '../auth/decorators/permissions.decorator'
 import { AdminService } from './admin.service'
 import { UpsertProductDto } from './dto/product.dto'
-import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto'
 
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('admin')
@@ -66,31 +64,4 @@ export class AdminController {
   deactivateProduct(@Param('id') id: string) {
     return this.admin.deactivateProduct(id)
   }
-
-  // ── Categories ─────────────────────────────────────────────
-
-  @Get('categories')
-  @RequirePermissions('view:catalog')
-  categories() {
-    return this.admin.getCategories()
-  }
-
-  @Post('categories')
-  @RequirePermissions('manage:catalog')
-  createCategory(@Body() dto: CreateCategoryDto) {
-    return this.admin.createCategory(dto)
-  }
-
-  @Patch('categories/:id')
-  @RequirePermissions('manage:catalog')
-  updateCategory(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
-    return this.admin.updateCategory(id, dto)
-  }
-
-  @Delete('categories/:id')
-  @RequirePermissions('manage:catalog')
-  deleteCategory(@Param('id') id: string) {
-    return this.admin.deleteCategory(id)
-  }
-
 }
