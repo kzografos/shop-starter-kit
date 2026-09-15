@@ -37,7 +37,7 @@ backend/src/modules/<id>/
 ├── mail/                     # template functions (return { subject, html })
 └── README.md                 # what it does, what it contributes, what env it needs
 
-prisma/schema/<id>.prisma     # this module's models, enums, and its back-relations on Core models
+backend/prisma/<id>.prisma    # this module's models and enums (today: ecommerce.prisma); the prisma/ folder is the schema root
 
 app/modules/<id>/             # Nuxt layer
 ├── nuxt.config.ts            # components.prefix, i18n files, layer-specific config
@@ -126,8 +126,8 @@ Component references are by registered name (prefixed), never by import path.
 
 ### 3.8 Schema
 
-- Models, enums and indexes in `prisma/schema/<id>.prisma`.
-- Reference users with `userId String @db.Uuid` + `user User @relation(...)`, and declare the matching back-relation on `User` in **your** file.
+- Models, enums and indexes in `backend/prisma/<id>.prisma`, beside `core.prisma`, `infrastructure.prisma` and the shared `migrations/` folder. The `prisma/` folder is the schema root (`package.json#prisma.schema`, `start.sh --schema prisma`); every `*.prisma` file in it is one schema, and only `core.prisma` carries the `generator`/`datasource` blocks.
+- Reference users with `userId String @db.Uuid` + `user User @relation(...)` in your file. Prisma keeps a model in **one block**, so the matching back-relation field on `User` (e.g. `orders Order[]`) is written inside the `User` block in `core.prisma`, annotated there as owned by your module; the owning side of the relation stays in your file.
 - Never add scalar columns to Core models. If you need per-user data, create your own 1:1 table (`LoyaltyAccount { userId @unique }`).
 - Content localization is yours to choose (D5). Document it in your README. If you use column-per-locale, expose a `useLocalized()`-style accessor in your layer so consumers do not inline locale ternaries.
 
@@ -174,7 +174,7 @@ Never `prisma.<A's model>` from B. Never write A's rows.
 - [ ] `index.ts` is the only export point; nothing imports deeper.
 - [ ] Every capability, role preset, setting, admin section, nav item, event is declared in the module, not in Core.
 - [ ] Env fragment covers every variable read; no `process.env` at import time.
-- [ ] Schema file contains only this module's models; back-relations on `User` declared here.
+- [ ] Schema file contains only this module's models and enums; any back-relation field your models need on `User` is added to the `User` block in `core.prisma` with a comment naming this module as its owner — no scalar columns on Core models.
 - [ ] No Prisma access to models outside this file except through Core/module services.
 - [ ] Cache keys namespaced; `invalidate()` exported; no `delPattern` on foreign namespaces.
 - [ ] No hardcoded brand, currency, locale or address.

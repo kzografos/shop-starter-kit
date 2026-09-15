@@ -421,7 +421,7 @@ The ten seams, in the order they should be cut. Each leaves the system bootable.
 | 9 | **Remove shop dependencies from global frontend layouts** | `layouts/default.vue` → `CartDrawer`; `AppHeader` → cart/filters stores + `cart-open` state + hardcoded shop nav; `AccountSidebar` + `account/index` → shop routes and keys | Slots and `app.config` lists (§10.2 rules 1–3) | Low code risk; visual regression risk — verify header, account dashboard and admin nav render identically with the e-commerce layer enabled |
 | 10 | **Split the God Admin service** — **DONE** | Was `backend/src/admin/admin.service.ts` (515 lines) | Newsletter → `newsletter`, settings → `settings`, customers → `users`, orders → `orders`, categories → `categories` (+ DTO), products → `products` (+ DTO), stats → `analytics`; each with its own `admin/*` controller. `admin/` folder removed | Done in seven verbatim moves + one deletion; route inventory (57 routes, guards, capabilities) identical before and after every step. Route paths kept (`/admin/customers` not renamed) |
 
-Dead code removed alongside (no seam, just deletion in Phase 1): `RefreshToken` model, `AdminGuard`, `plugins/stripe.client.ts` `$stripe` provide, root `stripe`/`resend`/`zod` dependencies, `runtimeConfig` secret keys in `nuxt.config.ts`, `app/types/database.types.ts`, `pages/confirm.vue`, `pages/admin/products/[id].vue`, `app/package.json`, stale `.nuxt` folders.
+Dead code removed alongside (no seam, just deletion in Phase 1) — **partially done**: ~~`AdminGuard`~~ (deleted in seam 3b). Still to remove: `RefreshToken` model, `plugins/stripe.client.ts` `$stripe` provide, root `stripe`/`resend`/`zod` dependencies, `runtimeConfig` secret keys in `nuxt.config.ts`, `app/types/database.types.ts`, `pages/confirm.vue`, `pages/admin/products/[id].vue`, `app/package.json`, stale `.nuxt` folders.
 
 ---
 
@@ -473,9 +473,9 @@ Each phase ends with a bootable, deployable system. Phases are sequential; steps
 
 ### Phase 1 — Core Cleanup
 
-- Remove dead code (list in §11).
-- Add the event bus (D8) — prerequisite for the next item.
-- Remove shop logic from Auth (seam 1).
+- Remove dead code (list in §11) — **open, partially done**: `AdminGuard` deleted (seam 3b). Still present: `RefreshToken` model (schema — fold into the seam 2 migration), `plugins/stripe.client.ts` `$stripe` provide, root `stripe`/`resend`/`zod` dependencies, `runtimeConfig` secret keys in `nuxt.config.ts`, `app/types/database.types.ts`, `pages/confirm.vue`, `pages/admin/products/[id].vue`, `app/package.json`, stale `.nuxt` folders. Each item needs explicit approval (package.json / frontend / schema).
+- Add the event bus (D8) — **DONE**: `backend/src/core/events/` (`CoreEventBus`, typed `CoreEventMap`, first event `user.authenticated`).
+- Remove shop logic from Auth (seam 1) — **DONE**: `AuthService` emits `user.authenticated`; `orders/guest-order-linker.service.ts` subscribes; loyalty award in `orders/loyalty.service.ts`.
 - Remove shop-specific roles from Core (seam 3) — **DONE**: 3a made the capability/role vocabulary a module-fed registry (`auth/permissions.registry.service.ts`); 3b replaced the `UserRole` enum with a lowercase `role String` via a hand-written, data-preserving migration. Core roles `admin`/`customer`; module roles `accountant`/`stock_manager`; new modules add roles by registration, not schema. Frontend `STAFF_ROLES` duplication stays for Phase 2; `orders-permissions.ts` may move with the folder/layer structure.
 - Make optional providers optional — **DONE (backend)**: `core/config/env.validation.ts` holds the core schema plus conditional provider fragments; MinIO client, Stripe client, Resend transport and Google strategy are instantiated only when configured and fail with 503 when used unconfigured; `rawBody` documented in `main.ts`. Still open: Nginx `/media/` block is unconditional (Docker config, separate step); frontend still renders the Google button regardless.
 - Split the admin God Service (seam 10) — **DONE**.
