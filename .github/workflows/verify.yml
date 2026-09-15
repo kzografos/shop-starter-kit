@@ -1,0 +1,39 @@
+# Architecture verification (ARCHITECTURE-BLUEPRINT §12.1, DEPENDENCY-RULES §10).
+# Runs the same chain as `npm run verify` in backend/: typecheck → build →
+# boundaries → routes → providers. No database, Redis or provider is needed;
+# the scripts stub their own environment.
+name: verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    name: backend verify
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches backend/Dockerfile (node:22-alpine) and the README prerequisite.
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies (lockfile)
+        run: npm ci
+
+      # The Prisma client is generated code; tsc and nest build need it present.
+      # @prisma/client's postinstall usually does this, but make it explicit so
+      # a cache hit or a postinstall skip cannot produce a misleading failure.
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Verify architecture
+        run: npm run verify

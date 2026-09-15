@@ -425,18 +425,34 @@ Dead code removed alongside (no seam, just deletion in Phase 1): `RefreshToken` 
 
 > **Architecture rules are not complete until they are enforceable automatically.**
 
-Minimum quality gates for v1, run on every pull request:
+### 12.1 Verification workflow (implemented)
+
+Backend: `npm run verify` (in `backend/`), also run by `.github/workflows/verify.yml` on every pull request and push to `main`. Its purpose is to make every seam cut in §11 mechanically checkable, so a later change cannot silently reopen it. The stages run **in this order** and the chain stops at the first failure:
+
+| # | Stage | Command | Why this position |
+|---|---|---|---|
+| 1 | Typecheck | `npm run typecheck` (`tsc --noEmit`) | cheapest signal; fails before anything is built |
+| 2 | Build | `npm run build` (`nest build` → `dist/`) | stages 4–5 compose the application from `dist/` |
+| 3 | Boundary verification | `npm run verify:boundaries` | source-tree rules ([DEPENDENCY-RULES.md](DEPENDENCY-RULES.md) §10) with a baseline of known, seam-tracked violations; needs no build but runs after it so a broken build never masks a boundary error |
+| 4 | Route verification | `npm run verify:routes` | composes the Nest DI graph without `init()` (no database or provider connection), enumerates every route with guards and capabilities, rejects duplicates, and diffs against the committed snapshot |
+| 5 | Provider verification | `npm run verify:providers` | boots core-only, three partial, full and resend environments in child processes and asserts enabled/disabled state and 503 behaviour |
+
+**Route snapshot.** `backend/scripts/route-inventory.snapshot.txt` is the committed inventory (57 routes at the time of writing): one sorted line per route with method, path, owning controller, guards and capabilities. Any drift — a route added, removed, moved to another controller, or re-guarded — fails stage 4 with a `+`/`-` diff. When the change is intentional, run `npm run verify:routes:update`, review the snapshot diff in the pull request, and commit it with the code. The snapshot is the public-contract record for the API; it is never updated without the diff being read.
+
+The scripts are dependency-free Node (`backend/scripts/*.js`), set their own environment stubs, and open no network connection. They were used to prove every commit of the admin-service extraction (§11 seam 10) before being committed.
+
+### 12.2 Gates still to add
 
 | Gate | Frontend | Backend |
 |---|---|---|
-| Typecheck | `nuxi typecheck` (today: not wired; four `~/types` imports are already broken) | `tsc --noEmit` / `nest build` |
-| Lint | `eslint .` (exists) | ESLint with Nest/TS config (today: none) |
-| Unit tests | Vitest on `useApi` (401 flow, hook), `usePermissions` | Jest on `AuthService` (token issue/refresh/rotation), `PermissionsGuard`, `SettingsService` registry read, event wiring for seam 1 |
-| Boundary / import validation | `dependency-cruiser` or `eslint-plugin-boundaries`: `core/**` may not import `modules/**` or `project/**`; `modules/<a>/**` may not import `modules/<b>/**` except `modules/<b>/index.ts` (public surface); `infrastructure/**` imports nothing above it | same tool, same rules |
+| Typecheck | `nuxi typecheck` (needs `vue-tsc`; four `~/types` imports are already broken) | done |
+| Lint | `eslint .` (script exists; `eslint` is only a transitive dependency, so it fails) | ESLint with Nest/TS config (none) |
+| Unit tests | Vitest on `useApi` (401 flow, hook), `usePermissions` | Jest on `AuthService` (token issue/refresh/rotation), `PermissionsGuard`, `SettingsService`, event wiring |
+| Boundary / import validation on the target layout | `dependency-cruiser` once `core/`, `modules/`, `infrastructure/` exist | same |
 | Schema check | — | `prisma migrate diff` empty after the multi-file split; migrations linear |
-| CI | GitHub Actions (or equivalent) runs all of the above on PR; no merge on red | same workflow |
+| CI coverage | frontend build + lint + typecheck job | done (backend job) |
 
-Not implemented in this step. Phase 0 delivers the definitions; Phase 4 delivers the pipeline; Phase 1 must not start without at least typecheck and the boundary check running locally.
+Phase 4 delivers the remaining gates. Seams 2, 3, 5 and 8 do not start without §12.1 green.
 
 ---
 

@@ -138,17 +138,33 @@ When a sub-domain is promoted to its own module, the convention becomes the rule
 
 ## 10. Enforcement mapping
 
+**Implemented and passing** (`backend`: `npm run verify` = typecheck → build → boundaries → routes → providers; CI: `.github/workflows/verify.yml` on pull requests and pushes to `main`):
+
+| Check | Script | What it enforces |
+|---|---|---|
+| Boundaries | `backend/scripts/verify-boundaries.js` | §2–§3 (Core/Infra must not import shop folders), §4 (no service imports a controller), §6.1 (no shop capability on a Core controller), §6.4 (no shop Prisma model in a Core service) — on the **current flat layout**, via the folder→layer map from the blueprint §2 |
+| Routes | `backend/scripts/verify-routes.js` + `route-inventory.snapshot.txt` | Every route's method, path, owning controller, guards and capabilities match the committed snapshot; no duplicate method+path; zero routes = failure. The snapshot changes only via `npm run verify:routes:update`, and its diff is reviewed in the pull request |
+| Providers | `backend/scripts/verify-providers.js` | §6.2 / §8: Core boots with only its required environment; a half-configured provider is rejected; configured providers instantiate; unconfigured providers answer 503 |
+| Typecheck / build | `npm run typecheck`, `npm run build` | compile-level correctness |
+
+The boundary verifier carries a **baseline** of violations that existed at Architecture Verification Pass 10. They do not fail the check; a new violation does, and a baseline entry that stops matching fails until it is removed. Current baseline, each tied to the seam that removes it:
+
+| Rule | File | Violation | Removed by |
+|---|---|---|---|
+| §6.1 | `backend/src/notifications/notifications.controller.ts` | `manage:inventory` on a Core controller | seam 5 (generic notifications) |
+| §6.1 | `backend/src/uploads/uploads.controller.ts` | `manage:catalog` on a Core controller | seam 7 (media / `manage:media`) |
+| §6.4 | `backend/src/profile/profile.service.ts` | reads `loyaltyTransaction` | seam 2 (loyalty out of `User`) |
+
+**Not yet enforced** (planned):
+
 | Rule | Tool | Status |
 |---|---|---|
-| §2–§3 import direction | `dependency-cruiser` (both roots) or `eslint-plugin-boundaries` | Phase 0 definition · Phase 1 local · Phase 4 CI |
-| §4 internals import | same tool: `modules/<a>/**` → `modules/<b>/**` allowed only for `modules/<b>/index.ts` | same |
-| §5.3–§5.4 `useApi` | ESLint `no-restricted-syntax` on `$fetch(` / `useFetch(` outside allow-listed files; `no-restricted-imports` of `~/stores/*` in `useApi.ts` | Phase 1 |
+| §2–§4 on the target layout (`core/`, `modules/*/index.ts`, `infrastructure/`) | `dependency-cruiser` (new devDependency; explicit approval) | after the Phase 1 folder move; the grep-based script is the stop-gap |
+| §5.3–§5.4 `useApi` | ESLint `no-restricted-syntax` on `$fetch(` / `useFetch(` outside allow-listed files; `no-restricted-imports` of `~/stores/*` in `useApi.ts` | needs `eslint` as a root devDependency (today only transitive; `pnpm lint` fails) |
 | §5.5 component collisions | Nuxt build with per-layer prefix; a duplicate-name check script | Phase 2 |
-| §6.1 Core guards | grep/lint: `RequirePermissions('manage:(inventory|catalog|orders|marketing)')` outside `modules/**` | Phase 1 |
-| §6.4 Prisma access | `dependency-cruiser` cannot see model access; a grep-based script over `prisma\.<model>` per folder | Phase 1 |
 | §6.6 cache namespaces | grep-based script over `delPattern('` / `redis.del('` per folder | Phase 2 |
-| §7.1 Core columns | review + schema-file ownership (`core.prisma` diff reviewed by Core owner) | Phase 1 |
-| Typecheck / lint / tests | `nuxi typecheck`, `tsc --noEmit`, `eslint`, Vitest, Jest | Phase 1 local · Phase 4 CI |
+| §7.1 Core columns | review + schema-file ownership (`core.prisma` diff reviewed by Core owner) | Phase 1 (multi-file schema) |
+| Frontend typecheck / lint / tests | `nuxi typecheck` (needs `vue-tsc`), `eslint`, Vitest; backend Jest | Phase 4 |
 
 > Architecture rules are not complete until they are enforceable automatically.
 
