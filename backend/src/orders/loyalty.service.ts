@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
-import { SettingsService } from '../settings/settings.service'
+import { PricingSettingsService } from './pricing-settings.service'
 
 type LinkedOrder = { id: string; total: Prisma.Decimal | number; paymentStatus: string }
 
 /**
  * Loyalty rules owned by the shop. Lives in the orders module until a
  * dedicated loyalty module exists (blueprint seam 2); the earn rate is read
- * the same way OrdersService.create() reads it, through SettingsService.
+ * the same way OrdersService.create() reads it, through PricingSettingsService.
  */
 @Injectable()
 export class LoyaltyService {
-  constructor(private settings: SettingsService) {}
+  constructor(private pricing: PricingSettingsService) {}
 
   /**
    * Awards points for already-paid orders that have just been attached to a
@@ -23,7 +23,7 @@ export class LoyaltyService {
     userId: string,
     orders: LinkedOrder[],
   ): Promise<number> {
-    const { loyalty_earn_rate: earnRate } = await this.settings.loadPricing()
+    const { loyalty_earn_rate: earnRate } = await this.pricing.loadPricing()
 
     let points = 0
     for (const o of orders) {

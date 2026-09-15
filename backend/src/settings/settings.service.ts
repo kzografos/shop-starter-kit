@@ -1,95 +1,63 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
+import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
+import type { SettingDefinition } from './setting-definition'
 
-/**
- * Settings that price an order. Every one of these is read by OrdersService, so
- * a missing row is a fault rather than a default -- see loadPricing().
- */
-export const PRICING_SETTING_KEYS = [
-  'shipping_cost',
-  'free_shipping_threshold',
-  'loyalty_earn_rate',
-  'loyalty_redeem_rate',
-  'loyalty_min_redeem',
-] as const
-
-export type PricingSettingKey = (typeof PRICING_SETTING_KEYS)[number]
-export type PricingSettings = Record<PricingSettingKey, number>
-
-const CACHE_KEY = 'settings:pricing:all'
+const CACHE_KEY = 'settings:all'
 const CACHE_TTL_S = 60
 
 /**
- * Keys the admin panel may write. Moved verbatim from AdminService; it mirrors
- * PRICING_SETTING_KEYS today and both fold into the Settings Registry later
- * (blueprint seam 4). Kept separate so this move changes no behaviour.
+ * Generic key/value settings store (Core).
+ *
+ * Knows nothing about what a key means. Modules register the keys they own
+ * with define(); Core stores the values, caches them briefly, exposes them
+ * to module services through getAll(), and lets the admin panel read and
+ * write the registered keys. What a value means — and whether a missing one
+ * is a fault — is decided by the module that registered it (e.g. the orders
+ * module's PricingSettingsService).
  */
-const ADMIN_SETTING_KEYS = [
-  'shipping_cost',
-  'free_shipping_threshold',
-  'loyalty_earn_rate',
-  'loyalty_redeem_rate',
-  'loyalty_min_redeem',
-]
-
 @Injectable()
 export class SettingsService {
   private readonly logger = new Logger(SettingsService.name)
+  private readonly registry = new Map<string, SettingDefinition>()
 
   constructor(
     private prisma: PrismaService,
     private redis: RedisService,
   ) {}
 
+  // ── Registry ────────────────────────────────────────────────
+
   /**
-   * Loads every pricing setting, failing loudly if one is missing or unparseable.
-   *
-   * Previously OrdersService did `parseFloat(row.value)` into a plain object and
-   * read keys off it. A missing row yielded undefined, parseFloat(undefined) is
-   * NaN, and the NaN propagated silently into subtotal, shipping and total -- an
-   * order could be written with a NaN total. Blowing up here is strictly better
-   * than persisting that.
+   * Registers settings a module owns. Called from the module's onModuleInit.
+   * A key registered twice is a wiring error and fails boot.
    */
-  async loadPricing(): Promise<PricingSettings> {
+  define(definitions: readonly SettingDefinition[]): void {
+    for (const def of definitions) {
+      if (this.registry.has(def.key)) {
+        throw new Error(`Setting "${def.key}" is already registered`)
+      }
+      this.registry.set(def.key, def)
+    }
+  }
+
+  /** Registered definitions, in registration order. */
+  definitions(): SettingDefinition[] {
+    return [...this.registry.values()]
+  }
+
+  // ── Values ──────────────────────────────────────────────────
+
+  /**
+   * Every stored row as a key → raw string map. Cached briefly; the admin
+   * write path invalidates it so a change is visible immediately.
+   */
+  async getAll(): Promise<Record<string, string>> {
     const cached = await this.redis.get(CACHE_KEY)
-    if (cached) return JSON.parse(cached) as PricingSettings
+    if (cached) return JSON.parse(cached) as Record<string, string>
 
-    const rows = await this.prisma.setting.findMany({
-      where: { key: { in: [...PRICING_SETTING_KEYS] } },
-      select: { key: true, value: true },
-    })
-
-    const byKey = new Map(rows.map((r) => [r.key, r.value]))
-    const missing: string[] = []
-    const unparseable: string[] = []
-    const result = {} as PricingSettings
-
-    for (const key of PRICING_SETTING_KEYS) {
-      const raw = byKey.get(key)
-      if (raw === undefined) {
-        missing.push(key)
-        continue
-      }
-      const parsed = Number(raw)
-      if (!Number.isFinite(parsed)) {
-        unparseable.push(`${key}="${raw}"`)
-        continue
-      }
-      result[key] = parsed
-    }
-
-    if (missing.length || unparseable.length) {
-      const parts = [
-        missing.length ? `missing: ${missing.join(', ')}` : '',
-        unparseable.length ? `not numeric: ${unparseable.join(', ')}` : '',
-      ].filter(Boolean)
-      this.logger.error(`Pricing settings are incomplete (${parts.join('; ')}). Run the seed.`)
-      throw new InternalServerErrorException(
-        'Store pricing is not configured. Please contact the store.',
-      )
-    }
-
+    const rows = await this.prisma.setting.findMany({ select: { key: true, value: true } })
+    const result = Object.fromEntries(rows.map((r) => [r.key, r.value]))
     await this.redis.set(CACHE_KEY, JSON.stringify(result), CACHE_TTL_S)
     return result
   }
@@ -99,7 +67,7 @@ export class SettingsService {
     await this.redis.del(CACHE_KEY)
   }
 
-  // ── Admin read/write (moved unchanged from AdminService) ─────
+  // ── Admin read/write ────────────────────────────────────────
 
   /** Every row as a key → raw string value map, for the admin settings form. */
   async getAdminSettings() {
@@ -107,21 +75,32 @@ export class SettingsService {
     return Object.fromEntries(rows.map((r) => [r.key, r.value]))
   }
 
+  /**
+   * Writes the registered keys present in the body; unknown keys are ignored.
+   * Number settings must parse and be non-negative.
+   */
   async updateAdminSettings(body: Record<string, unknown>) {
-    const entries = Object.entries(body).filter(([k]) => ADMIN_SETTING_KEYS.includes(k))
+    const entries = Object.entries(body).filter(([k]) => this.registry.has(k))
     for (const [key, value] of entries) {
-      const num = Number(value)
-      if (Number.isNaN(num) || num < 0)
-        throw new BadRequestException(`Invalid value for ${key}`)
+      const def = this.registry.get(key)!
+      let stored: string
+      if (def.type === 'number') {
+        const num = Number(value)
+        if (Number.isNaN(num) || num < 0)
+          throw new BadRequestException(`Invalid value for ${key}`)
+        stored = String(num)
+      } else {
+        stored = String(value)
+      }
       await this.prisma.setting.upsert({
         where: { key },
-        update: { value: String(num) },
-        create: { key, value: String(num) },
+        update: { value: stored },
+        create: { key, value: stored },
       })
     }
-    // The storefront reads these through loadPricing(), which caches them.
-    // Without this the checkout would price against stale values for up to a
-    // minute after the owner saves.
+    // Module services read through getAll(), which caches. Without this the
+    // checkout would price against stale values for up to a minute after the
+    // owner saves.
     await this.invalidate()
     return this.getAdminSettings()
   }

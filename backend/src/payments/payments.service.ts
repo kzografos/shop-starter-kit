@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
 import { orderConfirmationMail } from '../orders/order-confirmation.mail'
+import { PricingSettingsService } from '../orders/pricing-settings.service'
 import { isPaymentsConfigured } from '../core/config/env.validation'
 import Stripe from 'stripe'
 
@@ -17,6 +18,7 @@ export class PaymentsService {
     private prisma: PrismaService,
     private config: ConfigService,
     private mail: MailService,
+    private pricing: PricingSettingsService,
   ) {
     if (isPaymentsConfigured(config)) {
       this.stripe = new Stripe(config.getOrThrow('STRIPE_SECRET_KEY'))
@@ -178,8 +180,10 @@ export class PaymentsService {
     ]
 
     if (userId) {
-      const settings = await this.prisma.setting.findMany()
-      const earnRate = parseFloat(settings.find((s) => s.key === 'loyalty_earn_rate')?.value ?? '100')
+      // Same source and same fail-loud rule as order creation: a missing or
+      // non-numeric rate throws before anything below is written, so Stripe
+      // retries the event once the store is configured.
+      const { loyalty_earn_rate: earnRate } = await this.pricing.loadPricing()
       const pointsEarned = Math.floor(Number(order.total) * earnRate)
       writes.push(
         this.prisma.loyaltyTransaction.create({

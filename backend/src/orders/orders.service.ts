@@ -4,7 +4,7 @@ import { MailService } from '../mail/mail.service'
 import { orderConfirmationMail } from './order-confirmation.mail'
 import { StockAlertsService } from '../products/stock-alerts.service'
 import { RedisService } from '../redis/redis.service'
-import { SettingsService } from '../settings/settings.service'
+import { PricingSettingsService } from './pricing-settings.service'
 import { MinioService } from '../minio/minio.service'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -38,7 +38,7 @@ export class OrdersService {
     private mail: MailService,
     private stockAlerts: StockAlertsService,
     private redis: RedisService,
-    private settings: SettingsService,
+    private pricing: PricingSettingsService,
     private minio: MinioService,
   ) {}
 
@@ -53,7 +53,7 @@ export class OrdersService {
 
     // Load settings. Throws if any pricing key is missing or non-numeric rather
     // than letting NaN propagate into subtotal, shipping and total.
-    const s = await this.settings.loadPricing()
+    const s = await this.pricing.loadPricing()
 
     // Load user for loyalty check (logged-in only)
     const user = userId
