@@ -5,6 +5,12 @@ import * as nodemailer from 'nodemailer'
 import type { Transporter } from 'nodemailer'
 import { isMailConfigured } from '../core/config/env.validation'
 
+export interface MailMessage {
+  to: string
+  subject: string
+  html: string
+}
+
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name)
@@ -50,13 +56,18 @@ export class MailService {
     }
   }
 
+  /** Branding values a module-owned template may use. Read-only. */
+  get brand(): { name: string; color: string; logoUrl: string; siteUrl: string } {
+    return { name: this.brandName, color: this.brandColor, logoUrl: this.brandLogoUrl, siteUrl: this.siteUrl }
+  }
+
   // Primary-button inline style (reused by reset + welcome CTAs).
-  private button(): string {
+  buttonStyle(): string {
     return `display:inline-block;background-color:${this.brandColor};color:#ffffff;text-decoration:none;font-weight:600;padding:12px 28px;border-radius:8px;font-size:15px;`
   }
 
   // Shared branded shell — table-based, inline styles only (Gmail/Outlook-safe).
-  private layout(content: string, opts?: { unsubscribeUrl?: string }): string {
+  renderLayout(content: string, opts?: { unsubscribeUrl?: string }): string {
     const year = new Date().getFullYear()
     const header = this.brandLogoUrl
       ? `<img src="${this.brandLogoUrl}" alt="${this.brandName}" height="40" style="display:block;margin:0 auto;border:0;">`
@@ -83,23 +94,25 @@ export class MailService {
     return this.resend!.emails.send({ from: this.from, to, subject, html })
   }
 
+  /**
+   * Sends a fully rendered message. Never throws: a failed send is logged as
+   * `<label> failed`, exactly as the per-template methods have always done, so
+   * a mail outage cannot fail the caller's request. Modules own their
+   * templates (subject + html) and call this.
+   */
+  async sendMail(message: MailMessage, label = 'Email'): Promise<void> {
+    await this.send(message.to, message.subject, message.html)
+      .catch((err) => this.logger.error(`${label} failed`, err))
+  }
+
   async sendPasswordReset(to: string, token: string) {
     const link = `${this.siteUrl}/reset-password?token=${token}`
     const content = `
       <p style="margin:0 0 18px;">You requested a password reset.</p>
-      <p style="margin:0 0 26px;"><a href="${link}" style="${this.button()}">Reset your password</a></p>
+      <p style="margin:0 0 26px;"><a href="${link}" style="${this.buttonStyle()}">Reset your password</a></p>
       <p style="margin:0;color:#8a7d6d;font-size:14px;">This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>`
-    await this.send(to, `Reset your ${this.brandName} password`, this.layout(content))
+    await this.send(to, `Reset your ${this.brandName} password`, this.renderLayout(content))
       .catch((err) => this.logger.error('Password reset email failed', err))
-  }
-
-  async sendOrderConfirmation(to: string, orderId: string) {
-    const shortId = orderId.slice(0, 8).toUpperCase()
-    const content = `
-      <p style="margin:0 0 8px;">Your order <strong style="color:${this.brandColor};">#${shortId}</strong> has been confirmed.</p>
-      <p style="margin:0;">Thank you for shopping with ${this.brandName}!</p>`
-    await this.send(to, `Order confirmed — ${this.brandName}`, this.layout(content))
-      .catch((err) => this.logger.error('Order confirmation email failed', err))
   }
 
   async sendWelcomeEmail(to: string) {
@@ -107,8 +120,8 @@ export class MailService {
     const content = `
       <p style="margin:0 0 16px;">Thanks for subscribing to ${this.brandName}!</p>
       <p style="margin:0 0 26px;">You'll be first to hear about new arrivals and exclusive offers.</p>
-      <p style="margin:0;"><a href="${this.siteUrl}" style="${this.button()}">Start shopping →</a></p>`
-    await this.send(to, `Welcome to ${this.brandName}`, this.layout(content, { unsubscribeUrl }))
+      <p style="margin:0;"><a href="${this.siteUrl}" style="${this.buttonStyle()}">Start shopping →</a></p>`
+    await this.send(to, `Welcome to ${this.brandName}`, this.renderLayout(content, { unsubscribeUrl }))
       .catch((err) => this.logger.error('Welcome email failed', err))
   }
 }

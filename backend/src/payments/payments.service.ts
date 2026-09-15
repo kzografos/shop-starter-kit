@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
+import { orderConfirmationMail } from '../orders/order-confirmation.mail'
 import { isPaymentsConfigured } from '../core/config/env.validation'
 import Stripe from 'stripe'
 
@@ -210,7 +211,9 @@ export class PaymentsService {
     // a mail outage must not fail the webhook and trigger a Stripe retry.
     const recipient = order.user?.email ?? order.guestEmail
     if (recipient) {
-      this.mail.sendOrderConfirmation(recipient, orderId).catch(() => null)
+      this.mail
+        .sendMail(orderConfirmationMail(this.mail, recipient, orderId), 'Order confirmation email')
+        .catch(() => null)
     } else {
       this.logger.warn(`Order ${orderId} has no email address — no confirmation sent`)
     }

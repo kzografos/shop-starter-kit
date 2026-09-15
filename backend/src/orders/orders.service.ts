@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
+import { orderConfirmationMail } from './order-confirmation.mail'
 import { NotificationsService } from '../notifications/notifications.service'
 import { RedisService } from '../redis/redis.service'
 import { SettingsService } from '../settings/settings.service'
@@ -172,7 +173,9 @@ export class OrdersService {
     // payment actually clears -- otherwise abandoning checkout still produced a
     // "your order has been confirmed" email.
     if (dto.paymentMethod !== 'STRIPE') {
-      this.mail.sendOrderConfirmation(confirmationEmail, order.id).catch(() => null)
+      this.mail
+        .sendMail(orderConfirmationMail(this.mail, confirmationEmail, order.id), 'Order confirmation email')
+        .catch(() => null)
     }
     this.redis.delPattern('analytics:*').catch(() => null)
 
