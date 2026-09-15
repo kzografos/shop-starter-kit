@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
 import { MinioService } from '../minio/minio.service'
-import { NotificationsService } from '../notifications/notifications.service'
+import { StockAlertsService } from './stock-alerts.service'
 import { toCache } from '../common/utils/serialize'
 import { Prisma } from '@prisma/client'
 import { QueryProductsDto } from './dto/query-products.dto'
@@ -16,7 +16,7 @@ export class ProductsService {
     private prisma: PrismaService,
     private redis: RedisService,
     private minio: MinioService,
-    private notifications: NotificationsService,
+    private stockAlerts: StockAlertsService,
   ) {}
 
   private isExternalUrl = (s: string) =>
@@ -252,7 +252,7 @@ export class ProductsService {
         throw this.translateProductWriteError(err, dto.slug)
       })
     await this.redis.delPattern('products:*')
-    await this.notifications.checkStock(product)
+    await this.stockAlerts.checkStock(product)
     return product
   }
 
@@ -269,7 +269,7 @@ export class ProductsService {
         throw this.translateProductWriteError(err, dto.slug)
       })
     await this.redis.delPattern('products:*')
-    await this.notifications.checkStock(product)
+    await this.stockAlerts.checkStock(product)
     return product
   }
 

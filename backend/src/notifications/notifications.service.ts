@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
-import { NotificationType } from '@prisma/client'
+import { NotificationType, Prisma } from '@prisma/client'
 
-const LOW_STOCK_THRESHOLD = 10
 const UNREAD_COUNT_KEY = 'notifications:unread:count'
 const UNREAD_COUNT_TTL = 30
 const PAGE_SIZE = 20
 
-type StockProduct = { id: string; stock: number; nameEl: string; nameEn: string }
+export type OpenNotificationFilter = { productId?: string; type?: NotificationType }
 
 @Injectable()
 export class NotificationsService {
@@ -17,48 +16,43 @@ export class NotificationsService {
     private redis: RedisService,
   ) {}
 
-  /**
-   * Called whenever a product's stock changes. Opens a low/out-of-stock alert
-   * (de-duplicated per product+type) or clears open alerts once restocked.
-   */
-  async checkStock(product: StockProduct) {
-    const { id, stock, nameEl, nameEn } = product
+  // ── Persistence primitives (domain-free) ─────────────────────
+  // Modules own the rules that decide WHEN a notification opens, refreshes or
+  // resolves (e.g. products/stock-alerts.service.ts); this service only knows
+  // rows and the unread-count cache. `productId`/`stock` are the columns the
+  // schema has today (blueprint §9); they generalise with the schema step.
 
-    // Restocked above the threshold — resolve any open alerts.
-    if (stock >= LOW_STOCK_THRESHOLD) {
-      const res = await this.prisma.notification.updateMany({
-        where: { productId: id, isRead: false },
-        data: { isRead: true },
-      })
-      if (res.count) await this.redis.del(UNREAD_COUNT_KEY)
-      return
-    }
-
-    const type = stock <= 0 ? NotificationType.OUT_OF_STOCK : NotificationType.LOW_STOCK
-
-    // Already an open alert of this type — just refresh the stock figure.
-    const existing = await this.prisma.notification.findFirst({
-      where: { productId: id, type, isRead: false },
+  /** First open (unread) notification matching the filter, or null. */
+  findOpen(where: OpenNotificationFilter) {
+    return this.prisma.notification.findFirst({
+      where: { ...where, isRead: false },
       select: { id: true },
     })
-    if (existing) {
-      await this.prisma.notification.update({ where: { id: existing.id }, data: { stock } })
-      return
-    }
-
-    // Escalating low -> out: close the stale low-stock alert.
-    if (type === NotificationType.OUT_OF_STOCK) {
-      await this.prisma.notification.updateMany({
-        where: { productId: id, type: NotificationType.LOW_STOCK, isRead: false },
-        data: { isRead: true },
-      })
-    }
-
-    await this.prisma.notification.create({
-      data: { type, productId: id, stock, meta: { name_el: nameEl, name_en: nameEn } },
-    })
-    await this.redis.del(UNREAD_COUNT_KEY)
   }
+
+  /** Opens a notification and invalidates the unread counter. */
+  async create(data: { type: NotificationType; productId?: string; stock?: number; meta?: Prisma.InputJsonValue }) {
+    const row = await this.prisma.notification.create({ data })
+    await this.redis.del(UNREAD_COUNT_KEY)
+    return row
+  }
+
+  /** Updates an existing notification's payload; does not touch read state. */
+  update(id: string, data: { stock?: number; meta?: Prisma.InputJsonValue }) {
+    return this.prisma.notification.update({ where: { id }, data })
+  }
+
+  /** Marks every open notification matching the filter as read. Returns the count. */
+  async resolveOpen(where: OpenNotificationFilter): Promise<number> {
+    const res = await this.prisma.notification.updateMany({
+      where: { ...where, isRead: false },
+      data: { isRead: true },
+    })
+    if (res.count) await this.redis.del(UNREAD_COUNT_KEY)
+    return res.count
+  }
+
+  // ── Inbox ───────────────────────────────────────────────────
 
   async list({ page = 1, unreadOnly = false }: { page?: number; unreadOnly?: boolean }) {
     const where = unreadOnly ? { isRead: false } : {}

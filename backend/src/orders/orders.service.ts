@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
 import { orderConfirmationMail } from './order-confirmation.mail'
-import { NotificationsService } from '../notifications/notifications.service'
+import { StockAlertsService } from '../products/stock-alerts.service'
 import { RedisService } from '../redis/redis.service'
 import { SettingsService } from '../settings/settings.service'
 import { MinioService } from '../minio/minio.service'
@@ -36,7 +36,7 @@ export class OrdersService {
   constructor(
     private prisma: PrismaService,
     private mail: MailService,
-    private notifications: NotificationsService,
+    private stockAlerts: StockAlertsService,
     private redis: RedisService,
     private settings: SettingsService,
     private minio: MinioService,
@@ -183,7 +183,7 @@ export class OrdersService {
     for (const item of dto.items) {
       const p = products.find((x) => x.id === item.productId)
       if (p)
-        this.notifications
+        this.stockAlerts
           .checkStock({ id: p.id, stock: p.stock - item.quantity, nameEl: p.nameEl, nameEn: p.nameEn })
           .catch(() => null)
     }
