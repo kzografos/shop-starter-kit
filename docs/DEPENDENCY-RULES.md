@@ -180,7 +180,8 @@ Listed so that nobody treats them as precedent. Locations are current paths.
 | `backend/src/users/users.service.ts` selects `loyaltyPoints` | §7.1 | seam 2 |
 | `backend/src/profile/*` exposes `GET /profile/loyalty` | §3 | seam 2 |
 | `backend/src/auth/permissions.ts` defines shop capabilities and roles; `UserRole` enum | §3 | seam 3 |
-| `backend/src/settings/settings.service.ts` `PRICING_SETTING_KEYS`; `GET /settings` returns pricing only | §3, §8.3 | seam 4 |
+| ~~`backend/src/settings/settings.service.ts` `PRICING_SETTING_KEYS`; `GET /settings` returns pricing only~~ | §3, §8.3 | **Removed (seam 4).** Core `SettingsService` is a generic registry-backed store; pricing definitions in `orders/pricing-settings.ts`, `loadPricing()` in `orders/pricing-settings.service.ts`, public `GET /settings` in `orders/pricing-settings.controller.ts` |
+| `backend/prisma/seed.ts` `seedSettings()` hard-codes the five pricing keys; `app/pages/admin/settings/index.vue` hard-codes the same five form fields | §8.3 | seam 4 residue — Phase 3 registry-driven seed; Phase 2 registry-driven admin form |
 | ~~`backend/src/notifications/notifications.service.ts` `checkStock` / `LOW_STOCK_THRESHOLD` / `StockProduct`~~ | §3 | **Removed (seam 5b).** Stock rule now in `products/stock-alerts.service.ts`; Core keeps `findOpen`/`create`/`update`/`resolveOpen` |
 | `backend/src/notifications/notifications.controller.ts` guarded by `manage:inventory`; `NotificationType` enum and `Notification.productId`/`stock` columns are product-shaped | §6.1, §7.1 | seam 5 residue — schema/capability step (boundary baseline entry) |
 | `backend/src/uploads/uploads.controller.ts` guarded by `manage:catalog` | §6.1 | seam 7 |
