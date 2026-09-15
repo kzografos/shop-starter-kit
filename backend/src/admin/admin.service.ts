@@ -5,7 +5,6 @@ import { NotificationsService } from '../notifications/notifications.service'
 import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
 import { UpsertProductDto } from './dto/product.dto'
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto'
-import { SettingsService } from '../settings/settings.service'
 import { MinioService } from '../minio/minio.service'
 
 const PAYMENT_STATUS_MAP: Record<string, PaymentStatus> = {
@@ -35,7 +34,6 @@ export class AdminService {
     private prisma: PrismaService,
     private redis: RedisService,
     private notifications: NotificationsService,
-    private settings: SettingsService,
     private minio: MinioService,
   ) {}
 
@@ -454,40 +452,6 @@ export class AdminService {
     })
     await this.invalidateCatalog()
     return updated
-  }
-
-  // ── Settings ───────────────────────────────────────────────
-
-  private readonly SETTING_KEYS = [
-    'shipping_cost',
-    'free_shipping_threshold',
-    'loyalty_earn_rate',
-    'loyalty_redeem_rate',
-    'loyalty_min_redeem',
-  ]
-
-  async getSettings() {
-    const rows = await this.prisma.setting.findMany()
-    return Object.fromEntries(rows.map((r) => [r.key, r.value]))
-  }
-
-  async updateSettings(body: Record<string, unknown>) {
-    const entries = Object.entries(body).filter(([k]) => this.SETTING_KEYS.includes(k))
-    for (const [key, value] of entries) {
-      const num = Number(value)
-      if (Number.isNaN(num) || num < 0)
-        throw new BadRequestException(`Invalid value for ${key}`)
-      await this.prisma.setting.upsert({
-        where: { key },
-        update: { value: String(num) },
-        create: { key, value: String(num) },
-      })
-    }
-    // The storefront reads these through SettingsService, which caches them.
-    // Without this the checkout would price against stale values for up to a
-    // minute after the owner saves -- the exact mismatch this phase removes.
-    await this.settings.invalidate()
-    return this.getSettings()
   }
 
   async deleteCategory(id: string) {

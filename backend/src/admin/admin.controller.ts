@@ -121,17 +121,4 @@ export class AdminController {
     return this.admin.getCustomers({ page: page ? parseInt(page, 10) : 1, search })
   }
 
-  // ── Settings ───────────────────────────────────────────────
-
-  @Get('settings')
-  @RequirePermissions('manage:settings')
-  settings() {
-    return this.admin.getSettings()
-  }
-
-  @Patch('settings')
-  @RequirePermissions('manage:settings')
-  updateSettings(@Body() body: Record<string, unknown>) {
-    return this.admin.updateSettings(body)
-  }
 }

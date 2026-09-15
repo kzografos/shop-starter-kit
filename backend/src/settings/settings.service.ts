@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
+import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
 
@@ -19,6 +19,19 @@ export type PricingSettings = Record<PricingSettingKey, number>
 
 const CACHE_KEY = 'settings:pricing:all'
 const CACHE_TTL_S = 60
+
+/**
+ * Keys the admin panel may write. Moved verbatim from AdminService; it mirrors
+ * PRICING_SETTING_KEYS today and both fold into the Settings Registry later
+ * (blueprint seam 4). Kept separate so this move changes no behaviour.
+ */
+const ADMIN_SETTING_KEYS = [
+  'shipping_cost',
+  'free_shipping_threshold',
+  'loyalty_earn_rate',
+  'loyalty_redeem_rate',
+  'loyalty_min_redeem',
+]
 
 @Injectable()
 export class SettingsService {
@@ -84,5 +97,32 @@ export class SettingsService {
   /** Called by the admin write path so a settings change is visible immediately. */
   async invalidate(): Promise<void> {
     await this.redis.del(CACHE_KEY)
+  }
+
+  // ── Admin read/write (moved unchanged from AdminService) ─────
+
+  /** Every row as a key → raw string value map, for the admin settings form. */
+  async getAdminSettings() {
+    const rows = await this.prisma.setting.findMany()
+    return Object.fromEntries(rows.map((r) => [r.key, r.value]))
+  }
+
+  async updateAdminSettings(body: Record<string, unknown>) {
+    const entries = Object.entries(body).filter(([k]) => ADMIN_SETTING_KEYS.includes(k))
+    for (const [key, value] of entries) {
+      const num = Number(value)
+      if (Number.isNaN(num) || num < 0)
+        throw new BadRequestException(`Invalid value for ${key}`)
+      await this.prisma.setting.upsert({
+        where: { key },
+        update: { value: String(num) },
+        create: { key, value: String(num) },
+      })
+    }
+    // The storefront reads these through loadPricing(), which caches them.
+    // Without this the checkout would price against stale values for up to a
+    // minute after the owner saves.
+    await this.invalidate()
+    return this.getAdminSettings()
   }
 }
