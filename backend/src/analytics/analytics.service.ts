@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
 import { PaymentStatus } from '@prisma/client'
+import { MEMBER_ROLE } from '../auth/permissions'
 
 const CACHE_TTL = 300 // 5 min
 type Granularity = 'day' | 'week' | 'month'
@@ -245,8 +246,8 @@ export class AnalyticsService {
         _sum: { total: true },
         where: { paymentStatus: PaymentStatus.PAID, createdAt: { gte: monthStart } },
       }),
-      this.prisma.user.count({ where: { role: 'CUSTOMER' } }),
-      this.prisma.user.count({ where: { role: 'CUSTOMER', createdAt: { gte: monthStart } } }),
+      this.prisma.user.count({ where: { role: MEMBER_ROLE } }),
+      this.prisma.user.count({ where: { role: MEMBER_ROLE, createdAt: { gte: monthStart } } }),
       this.prisma.order.findMany({
         orderBy: { createdAt: 'desc' },
         take: 5,
@@ -288,7 +289,7 @@ export class AnalyticsService {
         },
       }),
       this.prisma.user.count({
-        where: { role: 'CUSTOMER', createdAt: { gte: prevMonthStart, lt: monthStart } },
+        where: { role: MEMBER_ROLE, createdAt: { gte: prevMonthStart, lt: monthStart } },
       }),
     ])
 

@@ -3,8 +3,9 @@
 // Identity, settings, subscribers, notifications. A Prisma model is a single
 // block, so the back-relations that e-commerce models declare on `User`
 // (orders, favourites, loyaltyTransactions) live here even though the owning
-// side is in ecommerce.prisma. `UserRole` and `User.loyaltyPoints` are
-// documented seam residue (3b, 2).
+// side is in ecommerce.prisma. `User.loyaltyPoints` is documented seam
+// residue (2). `role` is a plain string: values are lowercase (`customer`,
+// `admin`, plus module-registered staff roles) — see auth/permissions.ts.
 //
 // Multi-file schema: every *.prisma in this directory is one schema. Generator
 // and datasource live in this file only.
@@ -40,7 +41,7 @@ model User {
   provider      String    @default("local")
   avatarUrl     String?   @map("avatar_url")
   loyaltyPoints Int       @default(0) @map("loyalty_points")
-  role          UserRole  @default(CUSTOMER)
+  role          String    @default("customer")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
 
@@ -64,14 +65,6 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-enum UserRole {
-  CUSTOMER      @map("customer")
-  ADMIN         @map("admin")
-  ACCOUNTANT    @map("accountant")
-  STOCK_MANAGER @map("stock_manager")
-
-  @@map("user_role")
-}
 
 // ─── Newsletter ──────────────────────────────────────────────
 

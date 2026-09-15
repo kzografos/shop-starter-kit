@@ -8,13 +8,13 @@ export const ORDERS_CAPABILITIES = [
 ] as const
 
 /**
- * Shop staff-role presets. Role names are the Prisma UserRole enum NAMES.
+ * Shop staff-role presets. Role names are the lowercase values stored in `users.role`.
  * Registered here because the e-commerce module has no single root yet;
  * they move to ecommerce.module.ts with the folder layers.
  */
 export const SHOP_ROLE_PRESETS: Record<string, readonly string[]> = {
-  ACCOUNTANT: ['view:finance', 'view:orders'],
-  STOCK_MANAGER: ['view:catalog', 'manage:catalog', 'manage:inventory'],
+  accountant: ['view:finance', 'view:orders'],
+  stock_manager: ['view:catalog', 'manage:catalog', 'manage:inventory'],
 }
 
 @Injectable()

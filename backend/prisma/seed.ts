@@ -45,7 +45,7 @@ async function seedOwner() {
   const password = process.env.OWNER_PASSWORD;
 
   if (!email || !password) {
-    const owners = await prisma.user.count({ where: { role: 'ADMIN' } });
+    const owners = await prisma.user.count({ where: { role: 'admin' } });
     if (owners === 0) {
       console.warn(
         'No owner account exists and OWNER_EMAIL / OWNER_PASSWORD are not set. ' +
@@ -61,7 +61,7 @@ async function seedOwner() {
     );
   }
 
-  const owners = await prisma.user.count({ where: { role: 'ADMIN' } });
+  const owners = await prisma.user.count({ where: { role: 'admin' } });
   if (owners > 0) {
     console.log('Owner account already exists — leaving it untouched.');
     return;
@@ -72,8 +72,8 @@ async function seedOwner() {
   const passwordHash = await bcrypt.hash(password, 12);
   await prisma.user.upsert({
     where: { email },
-    update: { role: 'ADMIN', passwordHash },
-    create: { email, passwordHash, fullName: 'Owner', provider: 'local', role: 'ADMIN' },
+    update: { role: 'admin', passwordHash },
+    create: { email, passwordHash, fullName: 'Owner', provider: 'local', role: 'admin' },
   });
   console.log(`Owner account bootstrapped: ${email}`);
   console.warn(
@@ -109,7 +109,7 @@ async function seedDemoData() {
       passwordHash: adminHash,
       fullName: 'Demo Admin',
       provider: 'local',
-      role: 'ADMIN',
+      role: 'admin',
     },
   });
   await prisma.user.upsert({
@@ -120,7 +120,7 @@ async function seedDemoData() {
       passwordHash: userHash,
       fullName: 'Demo User',
       provider: 'local',
-      role: 'CUSTOMER',
+      role: 'customer',
     },
   });
 

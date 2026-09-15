@@ -41,7 +41,7 @@ export class PermissionsRegistryService implements OnApplicationBootstrap {
     }
   }
 
-  /** Role names are the Prisma UserRole enum NAMES (uppercase), as seen on req.user.role. */
+  /** Role names are the lowercase values stored in `users.role`, as seen on req.user.role. */
   defineRolePreset(role: string, caps: readonly Capability[]): void {
     if (role === OWNER_ROLE) throw new Error(`Role "${OWNER_ROLE}" is the owner and holds every capability; it cannot be redefined`)
     if (this.presets.has(role)) throw new Error(`Role preset "${role}" is already registered`)

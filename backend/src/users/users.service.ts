@@ -1,6 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { Prisma } from '@prisma/client'
+import { MEMBER_ROLE } from '../auth/permissions'
 import * as bcrypt from 'bcrypt'
 
 @Injectable()
@@ -112,7 +113,7 @@ export class UsersService {
     const PAGE_SIZE = 20
     const skip = (Math.max(1, page) - 1) * PAGE_SIZE
     const where: Prisma.UserWhereInput = {
-      role: 'CUSTOMER',
+      role: MEMBER_ROLE,
       ...(search
         ? {
             OR: [
