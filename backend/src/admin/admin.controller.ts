@@ -113,12 +113,4 @@ export class AdminController {
     return this.admin.deleteCategory(id)
   }
 
-  // ── Customers ──────────────────────────────────────────────
-
-  @Get('customers')
-  @RequirePermissions('view:customers')
-  customers(@Query('page') page?: string, @Query('search') search?: string) {
-    return this.admin.getCustomers({ page: page ? parseInt(page, 10) : 1, search })
-  }
-
 }

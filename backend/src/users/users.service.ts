@@ -1,5 +1,6 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
+import { Prisma } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 
 @Injectable()
@@ -99,6 +100,46 @@ export class UsersService {
     // OAuth-only accounts have no password — reject password login.
     if (!user.passwordHash) return false
     return bcrypt.compare(password, user.passwordHash)
+  }
+
+  /**
+   * Paginated customer list for the admin panel. Moved unchanged from
+   * AdminService.getCustomers(). The `loyaltyPoints` column and the `orders`
+   * relation count are shop enrichment living on the Core user model; they
+   * leave with the loyalty extraction (blueprint seam 2), not with this move.
+   */
+  async listCustomers({ page = 1, search }: { page?: number; search?: string } = {}) {
+    const PAGE_SIZE = 20
+    const skip = (Math.max(1, page) - 1) * PAGE_SIZE
+    const where: Prisma.UserWhereInput = {
+      role: 'CUSTOMER',
+      ...(search
+        ? {
+            OR: [
+              { email: { contains: search, mode: 'insensitive' as const } },
+              { fullName: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    }
+    const [customers, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: PAGE_SIZE,
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          loyaltyPoints: true,
+          createdAt: true,
+          _count: { select: { orders: true } },
+        },
+      }),
+      this.prisma.user.count({ where }),
+    ])
+    return { customers, total, page, totalPages: Math.ceil(total / PAGE_SIZE) }
   }
 
   async getOrThrow(id: string) {
