@@ -181,9 +181,10 @@ Listed so that nobody treats them as precedent. Locations are current paths.
 | `backend/src/profile/*` exposes `GET /profile/loyalty` | §3 | seam 2 |
 | `backend/src/auth/permissions.ts` defines shop capabilities and roles; `UserRole` enum | §3 | seam 3 |
 | `backend/src/settings/settings.service.ts` `PRICING_SETTING_KEYS`; `GET /settings` returns pricing only | §3, §8.3 | seam 4 |
-| `backend/src/notifications/*` `checkStock`, `NotificationType`, `manage:inventory` guard | §3, §6.1 | seam 5 |
+| ~~`backend/src/notifications/notifications.service.ts` `checkStock` / `LOW_STOCK_THRESHOLD` / `StockProduct`~~ | §3 | **Removed (seam 5b).** Stock rule now in `products/stock-alerts.service.ts`; Core keeps `findOpen`/`create`/`update`/`resolveOpen` |
+| `backend/src/notifications/notifications.controller.ts` guarded by `manage:inventory`; `NotificationType` enum and `Notification.productId`/`stock` columns are product-shaped | §6.1, §7.1 | seam 5 residue — schema/capability step (boundary baseline entry) |
 | `backend/src/uploads/uploads.controller.ts` guarded by `manage:catalog` | §6.1 | seam 7 |
-| `backend/src/mail/mail.service.ts` `sendOrderConfirmation` | §3 | seam 5 |
+| ~~`backend/src/mail/mail.service.ts` `sendOrderConfirmation`~~ | §3 | **Removed (seam 5a).** Template in `orders/order-confirmation.mail.ts`; Core exposes `sendMail`, `renderLayout`, `brand` |
 | `backend/src/common/interceptors/snake-case.interceptor.ts` `ENUM_FIELDS` names order enums | §3 | E7 |
 | ~~`backend/src/app.module.ts` Joi requires `STRIPE_*`, `MINIO_*`~~ | §6.2 | **Removed.** `core/config/env.validation.ts`: core keys required, provider keys validated only when the provider's presence key is set; Stripe / MinIO / Resend / Google clients are created only when configured and reject use with 503 otherwise |
 | ~~`backend/src/admin/admin.service.ts` mixes users/newsletter/settings with shop~~ | §3, §4 | **Removed (seam 10).** Each resource's module owns its `admin/*` controller: newsletter, settings, users (customers), orders, categories, products, analytics (stats). `admin/` folder deleted |
