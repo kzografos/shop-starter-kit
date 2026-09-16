@@ -21,6 +21,7 @@ import { FavouritesModule } from './favourites/favourites.module'
 import { NewsletterModule } from './newsletter/newsletter.module'
 import { ProfileModule } from './profile/profile.module'
 import { StorageModule } from './storage/storage.module'
+import { PaymentsProviderModule } from './payments-provider/payments-provider.module'
 import { UploadsModule } from './uploads/uploads.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { AnalyticsModule } from './analytics/analytics.module'
@@ -57,6 +58,7 @@ import { SettingsModule } from './settings/settings.module'
     NewsletterModule,
     ProfileModule,
     StorageModule,
+    PaymentsProviderModule,
     UploadsModule,
     NotificationsModule,
     AnalyticsModule,

@@ -1,47 +1,37 @@
-import { Injectable, BadRequestException, Logger, ServiceUnavailableException } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { Injectable, BadRequestException, Logger } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
 import { orderConfirmationMail } from '../orders/order-confirmation.mail'
 import { PricingSettingsService } from '../orders/pricing-settings.service'
 import { LoyaltyService } from '../loyalty/loyalty.service'
-import { isPaymentsConfigured } from '../core/config/env.validation'
-import Stripe from 'stripe'
+import { CheckoutLine, PaymentProvider } from '../payments-provider/payment-provider'
 
+/**
+ * Order-side orchestration of online payments. Which PSP is behind it, how a
+ * checkout session or a signed webhook looks on the wire, lives in the
+ * PaymentProvider (payments-provider/); this service owns the order checks,
+ * the line shaping and the settlement transaction.
+ */
 @Injectable()
 export class PaymentsService {
-  // Null when Stripe is not configured; no SDK client is created in that case.
-  private readonly stripe: Stripe | null
   private readonly logger = new Logger(PaymentsService.name)
 
   constructor(
     private prisma: PrismaService,
-    private config: ConfigService,
+    private provider: PaymentProvider,
     private mail: MailService,
     private pricing: PricingSettingsService,
     private loyalty: LoyaltyService,
-  ) {
-    if (isPaymentsConfigured(config)) {
-      this.stripe = new Stripe(config.getOrThrow('STRIPE_SECRET_KEY'))
-    } else {
-      this.stripe = null
-      this.logger.warn('Stripe not configured — online payments are unavailable')
-    }
-  }
+  ) {}
 
   get isEnabled(): boolean {
-    return this.stripe !== null
-  }
-
-  // Single choke point: a disabled provider fails clearly before any DB work.
-  private requireStripe(): Stripe {
-    if (!this.stripe) throw new ServiceUnavailableException('Online payments are not configured')
-    return this.stripe
+    return this.provider.isEnabled
   }
 
   async createCheckoutSession(orderId: string, userId: string | null, successUrl: string, cancelUrl: string) {
-    const stripe = this.requireStripe()
+    // A disabled provider fails clearly before any DB work.
+    this.provider.assertEnabled()
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: { items: { include: { product: true } } },
@@ -51,57 +41,31 @@ export class PaymentsService {
     if (order.userId && order.userId !== userId) throw new BadRequestException('Order not found')
     if (order.paymentMethod !== 'STRIPE') throw new BadRequestException('Not a Stripe order')
 
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = order.items.map((item) => ({
+    const lines: CheckoutLine[] = order.items.map((item) => ({
+      name: item.product?.nameEn ?? 'Product',
+      unitAmountMinor: Math.round(Number(item.unitPrice) * 100),
       quantity: item.quantity,
-      price_data: {
-        currency: 'eur',
-        unit_amount: Math.round(Number(item.unitPrice) * 100),
-        product_data: {
-          name: item.product?.nameEn ?? 'Product',
-        },
-      },
     }))
 
     // Shipping cost as line item
     if (Number(order.shippingCost) > 0) {
-      lineItems.push({
+      lines.push({
+        name: 'Shipping',
+        unitAmountMinor: Math.round(Number(order.shippingCost) * 100),
         quantity: 1,
-        price_data: {
-          currency: 'eur',
-          unit_amount: Math.round(Number(order.shippingCost) * 100),
-          product_data: { name: 'Shipping' },
-        },
       })
     }
 
-    // Idempotency keys are scoped to the order so a double-click on Place Order
-    // reuses the objects the first click created instead of minting duplicates.
-    // Stripe retains a key for 24h, which matches the default Checkout Session
-    // lifetime, so a retry within that window resumes the same session.
-    const discounts: Stripe.Checkout.SessionCreateParams.Discount[] = []
-    if (Number(order.loyaltyDiscount) > 0) {
-      const coupon = await stripe.coupons.create(
-        {
-          amount_off: Math.round(Number(order.loyaltyDiscount) * 100),
-          currency: 'eur',
-          name: 'Loyalty Points Discount',
-        },
-        { idempotencyKey: `loyalty-coupon-${orderId}` },
-      )
-      discounts.push({ coupon: coupon.id })
-    }
-
-    const session = await stripe.checkout.sessions.create(
-      {
-        mode: 'payment',
-        line_items: lineItems,
-        discounts,
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        metadata: { order_id: orderId, user_id: userId ?? '' },
-      },
-      { idempotencyKey: `checkout-session-${orderId}` },
-    )
+    const session = await this.provider.createCheckout({
+      orderId,
+      userId,
+      lines,
+      discountMinor: Number(order.loyaltyDiscount) > 0 ? Math.round(Number(order.loyaltyDiscount) * 100) : 0,
+      discountLabel: 'Loyalty Points Discount',
+      currency: 'eur',
+      successUrl,
+      cancelUrl,
+    })
 
     await this.prisma.order.update({
       where: { id: orderId },
@@ -112,31 +76,21 @@ export class PaymentsService {
   }
 
   async verifySession(sessionId: string, userId: string | null) {
-    const stripe = this.requireStripe()
+    this.provider.assertEnabled()
     if (!sessionId) throw new BadRequestException('session_id is required')
-    const session = await stripe.checkout.sessions.retrieve(sessionId)
-    const sessionUserId = session.metadata?.user_id || null
+    const session = await this.provider.getCheckoutStatus(sessionId)
     // Owned sessions require the owner; guest sessions are open to anyone with the id.
-    if (sessionUserId && sessionUserId !== userId) throw new BadRequestException('Session not found')
-    return { status: session.payment_status }
+    if (session.userId && session.userId !== userId) throw new BadRequestException('Session not found')
+    return { status: session.status }
   }
 
   async handleWebhook(rawBody: Buffer, signature: string) {
-    const stripe = this.requireStripe()
-    const secret = this.config.getOrThrow('STRIPE_WEBHOOK_SECRET')
-    let event: Stripe.Event
+    // Signature verification and payload parsing are the provider's; a bad
+    // signature is a 400, an unconfigured provider a 503, both before any DB work.
+    const event = this.provider.parseWebhook(rawBody, signature)
+    if (!event.checkoutCompleted) return { received: true }
 
-    try {
-      event = stripe.webhooks.constructEvent(rawBody, signature, secret)
-    } catch {
-      throw new BadRequestException('Invalid webhook signature')
-    }
-
-    if (event.type !== 'checkout.session.completed') return { received: true }
-
-    const session = event.data.object as Stripe.Checkout.Session
-    const orderId = session.metadata?.order_id
-    const userId  = session.metadata?.user_id || null  // empty string = guest order
+    const { orderId, userId, amountTotalMinor, paymentIntentId } = event.checkoutCompleted
     if (!orderId) return { received: true }
 
     const order = await this.prisma.order.findUnique({
@@ -154,7 +108,7 @@ export class PaymentsService {
     }
 
     // Verify amount paid matches order total
-    const paidCents  = session.amount_total ?? 0
+    const paidCents  = amountTotalMinor ?? 0
     const orderCents = Math.round(Number(order.total) * 100)
     if (paidCents < orderCents) {
       this.logger.error(`Amount mismatch order ${orderId}: paid ${paidCents} expected ${orderCents}`)
@@ -165,8 +119,8 @@ export class PaymentsService {
     //
     // The ProcessedEvent insert leads the transaction. Its primary key is the
     // event id, so a duplicate delivery raises a unique violation and rolls back
-    // every write behind it. This is what makes the handler safe against Stripe
-    // redelivering after a timeout, and against two deliveries racing.
+    // every write behind it. This is what makes the handler safe against the
+    // provider redelivering after a timeout, and against two deliveries racing.
     const writes: Prisma.PrismaPromise<unknown>[] = [
       this.prisma.processedEvent.create({
         data: { eventId: event.id, eventType: event.type, orderId },
@@ -176,15 +130,15 @@ export class PaymentsService {
         data: {
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
-          stripePaymentIntentId: session.payment_intent as string,
+          stripePaymentIntentId: paymentIntentId,
         },
       }),
     ]
 
     if (userId) {
       // Same source and same fail-loud rule as order creation: a missing or
-      // non-numeric rate throws before anything below is written, so Stripe
-      // retries the event once the store is configured.
+      // non-numeric rate throws before anything below is written, so the
+      // provider retries the event once the store is configured.
       const { loyalty_earn_rate: earnRate } = await this.pricing.loadPricing()
       const pointsEarned = Math.floor(Number(order.total) * earnRate)
       writes.push(...this.loyalty.earnWrites(this.prisma, userId, orderId, pointsEarned))
@@ -206,7 +160,7 @@ export class PaymentsService {
     // Payment has cleared and the writes are committed, so this is the first
     // point at which "your order is confirmed" is true for a Stripe order.
     // Fire-and-forget, matching how OrdersService sends the pickup-order mail:
-    // a mail outage must not fail the webhook and trigger a Stripe retry.
+    // a mail outage must not fail the webhook and trigger a provider retry.
     const recipient = order.user?.email ?? order.guestEmail
     if (recipient) {
       this.mail
