@@ -4,7 +4,7 @@ import { PermissionsRegistryService } from '../auth/permissions.registry.service
 /** Capabilities owned by the catalogue (products, categories, uploads, stock alerts). */
 export const CATALOG_CAPABILITIES = [
   'view:catalog', // products + categories (read)
-  'manage:catalog', // products + categories (write) + image upload
+  'manage:catalog', // products + categories (write)
   'manage:inventory', // stock, low-stock notifications, suppliers (future)
 ] as const
 

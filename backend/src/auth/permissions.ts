@@ -37,4 +37,5 @@ export const CORE_CAPABILITIES: readonly Capability[] = [
   'manage:settings',
   'manage:staff', // staff accounts + roles
   'view:notifications', // the admin inbox; modules decide what lands in it
+  'manage:media', // image upload through the storage adapter
 ]

@@ -44,7 +44,6 @@ const SHOP_MODELS = ['order', 'orderItem', 'product', 'category', 'favourite', '
 // ── Baseline: known violations at Pass 10, with the seam that removes them ──
 // Format: rule, file (relative to src, forward slashes), detail (must match the finding text exactly)
 const BASELINE = [
-  { rule: 'C', file: 'uploads/uploads.controller.ts', detail: "manage:catalog", seam: 'seam 7 (media module / manage:media) — DEPENDENCY-RULES §11' },
 ]
 
 // ── Helpers ──────────────────────────────────────────────────────

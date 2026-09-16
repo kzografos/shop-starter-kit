@@ -8,7 +8,7 @@ import { UploadsService } from './uploads.service'
 
 @Controller('uploads')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
-@RequirePermissions('manage:catalog')
+@RequirePermissions('manage:media')
 export class UploadsController {
   constructor(private uploadsService: UploadsService) {}
 

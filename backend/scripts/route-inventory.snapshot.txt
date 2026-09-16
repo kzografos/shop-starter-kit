@@ -54,4 +54,4 @@ POST   /newsletter/subscribe                    NewsletterController       guard
 POST   /orders                                  OrdersController           guards=[OptionalJwtAuthGuard] caps=null
 POST   /payments/create-checkout                PaymentsController         guards=[OptionalJwtAuthGuard] caps=null
 POST   /payments/webhook                        PaymentsController         guards=[] caps=null
-POST   /uploads/image                           UploadsController          guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog"]
+POST   /uploads/image                           UploadsController          guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:media"]
