@@ -12,7 +12,7 @@ const SECTION_CAPS: { match: (p: string) => boolean; cap: Cap }[] = [
   { match: (p) => p.includes('/admin/orders'), cap: 'view:orders' },
   { match: (p) => p.includes('/admin/customers'), cap: 'view:customers' },
   { match: (p) => p.includes('/admin/newsletter'), cap: 'manage:marketing' },
-  { match: (p) => p.includes('/admin/notifications'), cap: 'manage:inventory' },
+  { match: (p) => p.includes('/admin/notifications'), cap: 'view:notifications' },
   { match: (p) => p.includes('/admin/settings'), cap: 'manage:settings' },
   { match: (p) => p.includes('/admin/staff'), cap: 'manage:staff' },
 ]
@@ -24,7 +24,7 @@ const LANDING_ORDER: { cap: Cap; path: string }[] = [
   { cap: 'view:orders', path: '/admin/orders' },
   { cap: 'view:customers', path: '/admin/customers' },
   { cap: 'manage:marketing', path: '/admin/newsletter' },
-  { cap: 'manage:inventory', path: '/admin/notifications' },
+  { cap: 'view:notifications', path: '/admin/notifications' },
   { cap: 'manage:settings', path: '/admin/settings' },
   { cap: 'manage:staff', path: '/admin/staff' },
 ]

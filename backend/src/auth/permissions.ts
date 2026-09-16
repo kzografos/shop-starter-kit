@@ -36,4 +36,5 @@ export const CORE_CAPABILITIES: readonly Capability[] = [
   'manage:marketing', // newsletter
   'manage:settings',
   'manage:staff', // staff accounts + roles
+  'view:notifications', // the admin inbox; modules decide what lands in it
 ]

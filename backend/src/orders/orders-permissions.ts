@@ -14,7 +14,8 @@ export const ORDERS_CAPABILITIES = [
  */
 export const SHOP_ROLE_PRESETS: Record<string, readonly string[]> = {
   accountant: ['view:finance', 'view:orders'],
-  stock_manager: ['view:catalog', 'manage:catalog', 'manage:inventory'],
+  // Stock managers also read the admin inbox, where the low-stock alerts land.
+  stock_manager: ['view:catalog', 'manage:catalog', 'manage:inventory', 'view:notifications'],
 }
 
 @Injectable()

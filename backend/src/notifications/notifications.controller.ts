@@ -6,7 +6,7 @@ import { NotificationsService } from './notifications.service'
 
 @Controller('admin/notifications')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
-@RequirePermissions('manage:inventory')
+@RequirePermissions('view:notifications')
 export class NotificationsController {
   constructor(private notifications: NotificationsService) {}
 

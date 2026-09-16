@@ -62,7 +62,7 @@
           <span>{{ $t('admin.orders') }}</span>
         </button>
         <button
-          v-if="can('manage:inventory')"
+          v-if="can('view:notifications')"
           class="admin-nav-item"
           :class="{ active: isNotifications }"
           @click="navigateTo(localePath('/admin/notifications'))"
@@ -150,7 +150,7 @@
         </div>
         <!-- Notifications bell -->
         <button
-          v-if="can('manage:inventory')"
+          v-if="can('view:notifications')"
           class="admin-bell"
           :title="$t('admin.notifications')"
           @click="navigateTo(localePath('/admin/notifications'))"
@@ -200,13 +200,13 @@ const isNotifications = computed(() => route.path.includes('/admin/notifications
 const { unread, refreshCount } = useAdminNotifications()
 let notifTimer: ReturnType<typeof setInterval> | undefined
 onMounted(() => {
-  if (!can('manage:inventory')) return // only inventory-capable staff get low-stock alerts
+  if (!can('view:notifications')) return // only notification-capable staff poll the inbox
   refreshCount()
   notifTimer = setInterval(refreshCount, 60_000)
 })
 onBeforeUnmount(() => { if (notifTimer) clearInterval(notifTimer) })
 // Refresh as soon as the admin opens the notifications page (count may drop).
-watch(() => route.path, (p) => { if (can('manage:inventory') && p.includes('/admin/notifications')) refreshCount() })
+watch(() => route.path, (p) => { if (can('view:notifications') && p.includes('/admin/notifications')) refreshCount() })
 
 // ── Page title / subtitle ───────────────────────────────────
 const pageInfo = computed(() => {

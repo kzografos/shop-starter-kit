@@ -5,8 +5,8 @@ GET    /admin/analytics                         AnalyticsController        guard
 GET    /admin/categories                        CategoriesAdminController  guards=[JwtAuthGuard,PermissionsGuard] caps=["view:catalog"]
 GET    /admin/customers                         UsersAdminController       guards=[JwtAuthGuard,PermissionsGuard] caps=["view:customers"]
 GET    /admin/newsletter                        NewsletterAdminController  guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:marketing"]
-GET    /admin/notifications                     NotificationsController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:inventory"]
-GET    /admin/notifications/unread-count        NotificationsController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:inventory"]
+GET    /admin/notifications                     NotificationsController    guards=[JwtAuthGuard,PermissionsGuard] caps=["view:notifications"]
+GET    /admin/notifications/unread-count        NotificationsController    guards=[JwtAuthGuard,PermissionsGuard] caps=["view:notifications"]
 GET    /admin/orders                            OrdersAdminController      guards=[JwtAuthGuard,PermissionsGuard] caps=["view:orders"]
 GET    /admin/products                          ProductsAdminController    guards=[JwtAuthGuard,PermissionsGuard] caps=["view:catalog"]
 GET    /admin/products/:id                      ProductsAdminController    guards=[JwtAuthGuard,PermissionsGuard] caps=["view:catalog"]
@@ -31,8 +31,8 @@ GET    /profile                                 ProfileController          guard
 GET    /profile/loyalty                         LoyaltyController          guards=[JwtAuthGuard] caps=null
 GET    /settings                                PricingSettingsController  guards=[] caps=null
 PATCH  /admin/categories/:id                    CategoriesAdminController  guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog"]
-PATCH  /admin/notifications/:id/read            NotificationsController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:inventory"]
-PATCH  /admin/notifications/read-all            NotificationsController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:inventory"]
+PATCH  /admin/notifications/:id/read            NotificationsController    guards=[JwtAuthGuard,PermissionsGuard] caps=["view:notifications"]
+PATCH  /admin/notifications/read-all            NotificationsController    guards=[JwtAuthGuard,PermissionsGuard] caps=["view:notifications"]
 PATCH  /admin/orders/:id/status                 OrdersAdminController      guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:orders"]
 PATCH  /admin/products/:id                      ProductsAdminController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog"]
 PATCH  /admin/products/:id/deactivate           ProductsAdminController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog"]
