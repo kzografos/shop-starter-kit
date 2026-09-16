@@ -115,6 +115,7 @@ async function runScenario(name) {
     assert.strictEqual(mail.isEnabled, false, 'mail must be disabled')
     assert.strictEqual(google, null, 'google strategy must not be registered')
     await expect503(() => minio.presign('key', 60), 'storage.presign')
+    await expect503(() => minio.remove('key'), 'storage.remove')
     await expect503(
       () => uploads.uploadImage({ size: 12, buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0]), mimetype: 'image/jpeg', originalname: 'a.jpg' }),
       'uploads.uploadImage',

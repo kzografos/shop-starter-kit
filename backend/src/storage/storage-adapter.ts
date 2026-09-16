@@ -24,4 +24,12 @@ export abstract class StorageAdapter {
 
   /** Presigned URL for one object key. */
   abstract presign(key: string, expirySeconds: number): Promise<string>
+
+  /**
+   * Deletes one stored object. Takes an object key only — callers decide
+   * whether a reference is theirs to delete (not an absolute URL, not still
+   * referenced elsewhere) before calling. Deleting a key that no longer
+   * exists is not an error.
+   */
+  abstract remove(key: string): Promise<void>
 }

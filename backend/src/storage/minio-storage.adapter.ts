@@ -78,4 +78,9 @@ export class MinioStorageAdapter extends StorageAdapter implements OnModuleInit 
     }
     return url
   }
+
+  async remove(key: string): Promise<void> {
+    // S3-style delete is idempotent: a missing object returns success.
+    await this.client.removeObject(this.bucket, key)
+  }
 }
