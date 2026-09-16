@@ -3,9 +3,9 @@ import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
 import { orderConfirmationMail } from './order-confirmation.mail'
 import { StockAlertsService } from '../products/stock-alerts.service'
-import { RedisService } from '../redis/redis.service'
 import { PricingSettingsService } from './pricing-settings.service'
 import { LoyaltyService } from '../loyalty/loyalty.service'
+import { AnalyticsService } from '../analytics/analytics.service'
 import { MinioService } from '../minio/minio.service'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -38,9 +38,9 @@ export class OrdersService {
     private prisma: PrismaService,
     private mail: MailService,
     private stockAlerts: StockAlertsService,
-    private redis: RedisService,
     private pricing: PricingSettingsService,
     private loyalty: LoyaltyService,
+    private analytics: AnalyticsService,
     private minio: MinioService,
   ) {}
 
@@ -167,7 +167,8 @@ export class OrdersService {
         .sendMail(orderConfirmationMail(this.mail, confirmationEmail, order.id), 'Order confirmation email')
         .catch(() => null)
     }
-    this.redis.delPattern('analytics:*').catch(() => null)
+    // A new order changes every report; fire-and-forget through the owner.
+    this.analytics.invalidate().catch(() => null)
 
     // Fire-and-forget low-stock alerts for the products we just decremented.
     for (const item of dto.items) {

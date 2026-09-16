@@ -22,6 +22,14 @@ export class AnalyticsService {
     private redis: RedisService,
   ) {}
 
+  /**
+   * Drops every cached report (`analytics:*`). Owned here so order creation
+   * invalidates through this call, never by pattern string (DEPENDENCY-RULES §6.6).
+   */
+  async invalidate(): Promise<void> {
+    await this.redis.delPattern('analytics:*')
+  }
+
   async overview(fromISO: string, toISO: string, granularity: Granularity, compare: boolean) {
     const from = new Date(fromISO)
     const to = new Date(toISO)

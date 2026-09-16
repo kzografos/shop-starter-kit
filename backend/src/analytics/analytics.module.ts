@@ -9,5 +9,6 @@ import { AnalyticsPermissions } from './analytics-permissions'
   imports: [PrismaModule],
   controllers: [AnalyticsController, AnalyticsAdminController],
   providers: [AnalyticsService, AnalyticsPermissions],
+  exports: [AnalyticsService],
 })
 export class AnalyticsModule {}

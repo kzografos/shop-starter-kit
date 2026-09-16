@@ -239,6 +239,15 @@ export class ProductsService {
     }
   }
 
+  /**
+   * Drops every cached catalogue read (`products:*`). Owned here so other
+   * sub-domains (categories) invalidate through this call, never by pattern
+   * string (DEPENDENCY-RULES §6.6).
+   */
+  async invalidate(): Promise<void> {
+    await this.redis.delPattern('products:*')
+  }
+
   async create(dto: UpsertProductDto) {
     const product = await this.prisma.product
       .create({
@@ -251,7 +260,7 @@ export class ProductsService {
       .catch((err) => {
         throw this.translateProductWriteError(err, dto.slug)
       })
-    await this.redis.delPattern('products:*')
+    await this.invalidate()
     await this.stockAlerts.checkStock(product)
     return product
   }
@@ -268,7 +277,7 @@ export class ProductsService {
       .catch((err) => {
         throw this.translateProductWriteError(err, dto.slug)
       })
-    await this.redis.delPattern('products:*')
+    await this.invalidate()
     await this.stockAlerts.checkStock(product)
     return product
   }
@@ -295,7 +304,7 @@ export class ProductsService {
 
   async deactivate(id: string) {
     const product = await this.prisma.product.update({ where: { id }, data: { isActive: false } })
-    await this.redis.delPattern('products:*')
+    await this.invalidate()
     return product
   }
 }

@@ -3,6 +3,7 @@ import { ProductsModule } from '../products/products.module'
 import { SettingsModule } from '../settings/settings.module'
 import { UsersModule } from '../users/users.module'
 import { LoyaltyModule } from '../loyalty/loyalty.module'
+import { AnalyticsModule } from '../analytics/analytics.module'
 import { OrdersController } from './orders.controller'
 import { OrdersAdminController } from './orders-admin.controller'
 import { PricingSettingsController } from './pricing-settings.controller'
@@ -13,7 +14,7 @@ import { GuestOrderLinkerService } from './guest-order-linker.service'
 import { OrdersUserExtension } from './orders-user.extension'
 
 @Module({
-  imports: [ProductsModule, SettingsModule, UsersModule, LoyaltyModule],
+  imports: [ProductsModule, SettingsModule, UsersModule, LoyaltyModule, AnalyticsModule],
   controllers: [OrdersController, OrdersAdminController, PricingSettingsController],
   // GuestOrderLinkerService subscribes to Core's user.authenticated event on init.
   // PricingSettingsService registers the pricing keys with Core settings on init.

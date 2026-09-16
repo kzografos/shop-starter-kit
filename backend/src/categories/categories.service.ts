@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
+import { ProductsService } from '../products/products.service'
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto'
 
 @Injectable()
@@ -8,6 +9,7 @@ export class CategoriesService {
   constructor(
     private prisma: PrismaService,
     private redis: RedisService,
+    private products: ProductsService,
   ) {}
 
   async findTree() {
@@ -29,8 +31,10 @@ export class CategoriesService {
 
   // ── Admin (moved unchanged from AdminService) ────────────────
 
+  // A category change alters product listings too; the product cache is
+  // invalidated through its owner, then our own tree key is dropped.
   private async invalidateCatalog() {
-    await this.redis.delPattern('products:*')
+    await this.products.invalidate()
     await this.redis.del('categories:tree')
   }
 
