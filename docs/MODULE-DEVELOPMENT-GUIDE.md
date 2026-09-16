@@ -81,8 +81,8 @@ Frontend side: the layer path (`app/modules/<id>`) is added to `extends` by the 
 ### 3.2 Permission Registry contributions
 
 - Capabilities: `{ id: 'view:catalog', descriptionKey: 'ecommerce.caps.view_catalog' }`. Naming `verb:noun`, verbs `view` | `manage`. Ids are global; a duplicate across modules fails boot.
-- Role presets: `{ role: 'stock_manager', capabilities: ['view:catalog', 'manage:catalog', 'manage:inventory'] }`. Roles are lowercase strings stored as-is in `users.role`; adding one is a registration, never a schema change. `admin` (owner) and `customer` (member) are Core; do not redefine them.
-- Guard your controllers with your own capabilities. Never guard with another module's.
+- Role presets: `{ role: 'stock_manager', capabilities: ['view:catalog', 'manage:catalog', 'manage:inventory', 'view:notifications', 'manage:media'] }`. Roles are lowercase strings stored as-is in `users.role`; adding one is a registration, never a schema change. `admin` (owner) and `customer` (member) are Core; do not redefine them. A preset may include Core capabilities (here the admin inbox and image upload) so the role gets the Core surfaces it needs; `accountant` carries none of them.
+- Guard your controllers with your own capabilities. Never guard with another module's. Core controllers are guarded only by Core capabilities (`view:notifications`, `manage:media`, …) — if a Core endpoint should be reachable by your role, add the Core capability to your preset rather than re-guarding the endpoint.
 
 ### 3.3 Settings Registry contributions
 
@@ -161,7 +161,7 @@ this.registry.define({
 
 ### 3.10 Storage
 
-- Use `StorageAdapter.put()` / `resolve(refs[])` / `presign()`. Store what `put()` returns; resolve on read. Never inspect whether a stored reference is a key or a URL — that logic is the adapter's.
+- Use `StorageAdapter.put()` / `resolve(refs[], expiry?)` / `presign(key, expiry)` (`backend/src/storage/storage-adapter.ts`, injected by the abstract class). Store what `put()` returns; resolve on read. Never inspect whether a stored reference is a key or a URL — that logic is the adapter's. Uploads themselves go through Core's `POST /uploads/image` (`manage:media`); add that capability to your preset if your staff role uploads images.
 
 ---
 
@@ -214,10 +214,10 @@ Never `prisma.<A's model>` from B. Never write A's rows.
 |---|---|---|
 | `backend/src/products`, `categories`, `favourites` | `modules/ecommerce/catalog/` | catalog |
 | `backend/src/orders` + pricing keys from `settings` + `checkStock` from `notifications` + `linkGuestOrders` from `auth` | `modules/ecommerce/orders/` | orders |
-| `backend/src/payments` (orchestration) | `modules/ecommerce/payments/` over `infrastructure/payments/stripe` | payments |
+| `backend/src/payments` (orchestration) + `backend/src/payments-provider` (`PaymentProvider`, `StripePaymentProvider` — done, seam 6) | `modules/ecommerce/payments/` over `infrastructure/payments-provider/` (folder move only) | payments |
 | `backend/src/loyalty` (`LoyaltyAccount`, `LoyaltyTransaction`, `GET /profile/loyalty`, `loyaltyPoints` user extension) — **done (seam 2)** | `modules/ecommerce/loyalty/` (folder move only) | loyalty |
 | `backend/src/analytics` | `modules/ecommerce/analytics/` | analytics |
-| `backend/src/uploads` + image resolution | `modules/ecommerce/media/` over `infrastructure/storage` (candidate for promotion to a shared `media` module) | media |
+| `backend/src/uploads` (Core, `manage:media` — done, seam 7 step 2) + `backend/src/storage` (`StorageAdapter` — done, seam 7 step 1) | `modules/ecommerce/media/` over `infrastructure/storage/` (folder move only; candidate for promotion to a shared `media` module) | media |
 | `backend/src/admin/admin.service.ts` (stats, orders, products, categories) | split into the sub-domains' admin controllers | — |
 | `app/stores/{cart,favourites,filters}`, `app/composables/{useProducts,useCurrency}`, `app/components/{product,cart,checkout,filters,loyalty}`, `app/components/admin/ProductDrawer.vue`, `app/pages/{products,checkout,brands}`, `app/pages/account/{orders,favourites,loyalty}`, `app/pages/admin/{index (content),analytics,products,categories,orders}`, `types/index.ts`, shop i18n namespaces | `app/modules/ecommerce/` layer | — |
 

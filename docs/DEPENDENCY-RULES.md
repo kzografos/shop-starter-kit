@@ -96,12 +96,12 @@ Modules must not:
 
 ## 6. Backend-specific rules
 
-1. **Controllers in Core** may be guarded only by Core capabilities (`manage:staff`, `manage:settings`, `view:users`, `view:notifications`, `manage:media`). A Core controller guarded by `manage:inventory` or `manage:catalog` is a violation.
+1. **Controllers in Core** may be guarded only by Core capabilities — today `view:customers`, `manage:marketing`, `manage:settings`, `manage:staff`, `view:notifications` (the admin inbox) and `manage:media` (image upload), all registered in `auth/permissions.ts`. A Core controller guarded by `manage:inventory` or `manage:catalog` is a violation; none remain. A module preset may include a Core capability (the `stock_manager` preset carries `view:notifications` and `manage:media`) so that a role's access does not change when a guard moves to Core.
 2. **Env validation** is per layer: Core's Joi fragment must not require a provider variable that only a module uses. A module declares its own fragment; the config loader merges fragments of enabled modules only.
-3. **Bootstrap options** required by one module (today: `rawBody: true` for Stripe webhooks) are documented in that module's README section and in `main.ts` with a comment naming the module.
+3. **Bootstrap options** required by one module (today: `rawBody: true` for the payment provider's webhook signature check) are documented in that module's README section and in `main.ts` with a comment naming the module.
 4. **Prisma access:** a service accesses only models declared in its own layer's schema file, plus Core models through Core services. `prisma.user.update()` from a module is a violation; `UsersService.…()` is not. The one sanctioned exception is a module writing its *own* relation rows that reference `userId`.
 5. **Seeds** are per owner: Core seed (settings defaults from the registry, owner bootstrap), module seeds, project seed. The Core image does not embed project demo data.
-6. **Cache keys** follow `<module>:<entity>:<id>:<field>` (Core uses `core:` or the existing `refresh:`/`reset:` prefixes). `delPattern` is called only on the caller's own namespace.
+6. **Cache keys** follow `<module>:<entity>:<id>:<field>` (Core uses `core:` or the existing `refresh:`/`reset:` prefixes). `delPattern` is called only on the caller's own namespace; another owner's cache is dropped through its exported `invalidate()` — implemented in seam 8 (`ProductsService.invalidate()`, `AnalyticsService.invalidate()`), while the key strings themselves are still the pre-convention `products:*`, `categories:tree`, `analytics:*`.
 7. **Cross-cutting HTTP concerns** (interceptor, filter, throttler, CORS, helmet) are Core. A module may opt a controller out of throttling with `@SkipThrottle()` only for public read endpoints, and must say so in the controller.
 
 ---
@@ -148,13 +148,13 @@ When a sub-domain is promoted to its own module, the convention becomes the rule
 | Providers | `backend/scripts/verify-providers.js` | §6.2 / §8: Core boots with only its required environment; a half-configured provider is rejected; configured providers instantiate; unconfigured providers answer 503 |
 | Typecheck / build | `npm run typecheck`, `npm run build` | compile-level correctness |
 
-The boundary verifier carries a **baseline** of violations that existed at Architecture Verification Pass 10. They do not fail the check; a new violation does, and a baseline entry that stops matching fails until it is removed. Current baseline, each tied to the seam that removes it:
+The boundary verifier carries a **baseline** of violations that existed at Architecture Verification Pass 10. Baseline entries do not fail the check; a new violation does, and a baseline entry that stops matching fails until it is removed. **The baseline is now empty** (`BASELINE = []` in `verify-boundaries.js`): every Pass 10 violation has been removed by its seam, so any rule-C (shop capability on a Core controller) or rule-D (shop Prisma model in a Core service) finding — or any Core/Infra→shop import — fails `npm run verify` outright. History:
 
 | Rule | File | Violation | Removed by |
 |---|---|---|---|
-| §6.1 | `backend/src/notifications/notifications.controller.ts` | `manage:inventory` on a Core controller | seam 5 (generic notifications) |
-| §6.1 | `backend/src/uploads/uploads.controller.ts` | `manage:catalog` on a Core controller | seam 7 (media / `manage:media`) |
-| ~~§6.4~~ | ~~`backend/src/profile/profile.service.ts`~~ | ~~reads `loyaltyTransaction`~~ | **removed (seam 2)** — history endpoint moved to `loyalty/loyalty.controller.ts`; baseline is now two entries |
+| ~~§6.1~~ | ~~`backend/src/notifications/notifications.controller.ts`~~ | ~~`manage:inventory` on a Core controller~~ | **removed (seam 5 residue)** — Core registers `view:notifications`; the inbox requires it; `stock_manager` preset carries it |
+| ~~§6.1~~ | ~~`backend/src/uploads/uploads.controller.ts`~~ | ~~`manage:catalog` on a Core controller~~ | **removed (seam 7 step 2)** — Core registers `manage:media`; the upload route requires it; `stock_manager` preset carries it |
+| ~~§6.4~~ | ~~`backend/src/profile/profile.service.ts`~~ | ~~reads `loyaltyTransaction`~~ | **removed (seam 2)** — history endpoint moved to `loyalty/loyalty.controller.ts` |
 
 **Not yet enforced** (planned):
 
@@ -163,7 +163,7 @@ The boundary verifier carries a **baseline** of violations that existed at Archi
 | §2–§4 on the target layout (`core/`, `modules/*/index.ts`, `infrastructure/`) | `dependency-cruiser` (new devDependency; explicit approval) | after the Phase 1 folder move; the grep-based script is the stop-gap |
 | §5.3–§5.4 `useApi` | ESLint `no-restricted-syntax` on `$fetch(` / `useFetch(` outside allow-listed files; `no-restricted-imports` of `~/stores/*` in `useApi.ts` | needs `eslint` as a root devDependency (today only transitive; `pnpm lint` fails) |
 | §5.5 component collisions | Nuxt build with per-layer prefix; a duplicate-name check script | Phase 2 |
-| §6.6 cache namespaces | grep-based script over `delPattern('` / `redis.del('` per folder | Phase 2 |
+| §6.6 cache namespaces | grep-based script over `delPattern('` / `redis.del('` per folder | Phase 2 — the cross-owner calls are already gone (seam 8); the script would only guard against regressions |
 | §7.1 Core columns | review + schema-file ownership (`core.prisma` diff reviewed by Core owner) | schema split done (seam 3b step 1); review-based until a column-ownership check exists |
 | Frontend typecheck / lint / tests | `nuxi typecheck` (needs `vue-tsc`), `eslint`, Vitest; backend Jest | Phase 4 |
 
@@ -187,14 +187,16 @@ Listed so that nobody treats them as precedent. Locations are current paths.
 | ~~`backend/src/settings/settings.service.ts` `PRICING_SETTING_KEYS`; `GET /settings` returns pricing only~~ | §3, §8.3 | **Removed (seam 4).** Core `SettingsService` is a generic registry-backed store; pricing definitions in `orders/pricing-settings.ts`, `loadPricing()` in `orders/pricing-settings.service.ts`, public `GET /settings` in `orders/pricing-settings.controller.ts` |
 | `backend/prisma/seed.ts` `seedSettings()` hard-codes the five pricing keys; `app/pages/admin/settings/index.vue` hard-codes the same five form fields | §8.3 | seam 4 residue — Phase 3 registry-driven seed; Phase 2 registry-driven admin form |
 | ~~`backend/src/notifications/notifications.service.ts` `checkStock` / `LOW_STOCK_THRESHOLD` / `StockProduct`~~ | §3 | **Removed (seam 5b).** Stock rule now in `products/stock-alerts.service.ts`; Core keeps `findOpen`/`create`/`update`/`resolveOpen` |
-| `backend/src/notifications/notifications.controller.ts` guarded by `manage:inventory`; `NotificationType` enum and `Notification.productId`/`stock` columns are product-shaped | §6.1, §7.1 | seam 5 residue — schema/capability step (boundary baseline entry) |
-| `backend/src/uploads/uploads.controller.ts` guarded by `manage:catalog` | §6.1 | seam 7 |
+| ~~`backend/src/notifications/notifications.controller.ts` guarded by `manage:inventory`~~ | §6.1 | **Removed (seam 5 residue).** Guarded by Core's `view:notifications`; `stock_manager` preset carries it, access unchanged |
+| `NotificationType` enum and `Notification.productId`/`stock` columns are product-shaped | §7.1 | seam 5 schema residue — schema step (`type String`, `key`, `meta`) |
+| ~~`backend/src/uploads/uploads.controller.ts` guarded by `manage:catalog`~~ | §6.1 | **Removed (seam 7 step 2).** Guarded by Core's `manage:media`; `stock_manager` preset carries it, access unchanged. `uploads/` remains a Core folder until the Phase 2 `media/` move |
 | ~~`backend/src/mail/mail.service.ts` `sendOrderConfirmation`~~ | §3 | **Removed (seam 5a).** Template in `orders/order-confirmation.mail.ts`; Core exposes `sendMail`, `renderLayout`, `brand` |
 | `backend/src/common/interceptors/snake-case.interceptor.ts` `ENUM_FIELDS` names order enums | §3 | E7 |
 | ~~`backend/src/app.module.ts` Joi requires `STRIPE_*`, `MINIO_*`~~ | §6.2 | **Removed.** `core/config/env.validation.ts`: core keys required, provider keys validated only when the provider's presence key is set; Stripe / MinIO / Resend / Google clients are created only when configured and reject use with 503 otherwise |
 | ~~`backend/src/admin/admin.service.ts` mixes users/newsletter/settings with shop~~ | §3, §4 | **Removed (seam 10).** Each resource's module owns its `admin/*` controller: newsletter, settings, users (customers), orders, categories, products, analytics (stats). `admin/` folder deleted |
-| `products.service.ts`, `categories.service.ts` (`products:*`, `categories:tree`), `orders.service.ts` (`analytics:*`) delete cache keys by string | §4, §6.6 | seam 8 (moved with the admin extraction; still string-keyed) |
-| `backend/src/products/products.service.ts` duplicates `isExternalUrl` / presign loop | §2 (adapter use) | seam 7 |
+| ~~`categories.service.ts` deletes `products:*` and `orders.service.ts` deletes `analytics:*` by string~~ | §4, §6.6 | **Removed (seam 8).** Owners expose `invalidate()`; `CategoriesService` and `OrdersService` call them; each service deletes only its own keys |
+| ~~`backend/src/products/products.service.ts` duplicates `isExternalUrl` / presign loop; `MinioService` injected by products, favourites, orders, uploads~~ | §2 (adapter use) | **Removed (seam 7 step 1).** `StorageAdapter.resolve()` is the single resolution path; `minio/` deleted; `storage/` is Infrastructure in the boundary map |
+| ~~`payments.service.ts` instantiates the Stripe SDK and parses webhooks inline~~ | §2 (adapter use), D7 | **Removed (seam 6).** `payments-provider/` (Infrastructure) owns the SDK behind `PaymentProvider`; `PaymentsService` orchestrates only |
 | ~~`app/layouts/default.vue` mounts `CartDrawer`~~ | §5.1 | **Removed (seam 9).** The layout renders `app.config` `globalWidgets[]` by component name; `CartDrawer.global.vue` is contributed there |
 | ~~`app/components/layout/AppHeader.vue` imports cart/filters stores, `cart-open` state, shop nav~~ | §5.1, §5.6, §5.8 | **Removed (seam 9).** Nav from `navItems[]`; search box and cart button are `HeaderSearch.global.vue` / `CartButton.global.vue` contributed via `headerActions[]`; the `cart-open` key is owned by `useCartDrawer()` (module-id prefixing of the key comes with the layer split) |
 | ~~`app/components/account/AccountSidebar.vue`, `app/pages/account/index.vue` hardcode shop routes and `loyalty.*` keys~~ | §5.1, §5.8 | **Removed (seam 9).** Sidebar links from `accountItems[]`; the loyalty card and the orders/favourites/points strip are `LoyaltyCard.global.vue` / `AccountStats.global.vue` contributed via `accountCards[]`; `GET /orders` and the favourites store moved with them |

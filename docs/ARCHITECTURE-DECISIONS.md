@@ -88,9 +88,11 @@ Each record states the decision, why it was chosen over the alternatives the aud
 
 **Why.** Four copies of presign logic and a Stripe SDK instantiated inside business code are real costs; a generic ORM abstraction is not. The three chosen interfaces each have one v1 implementation and a plausible second (S3, SMTP, another PSP).
 
+**Implemented (seams 7 and 6).** `StorageAdapter` — `backend/src/storage/` (`isEnabled`, `put`, `resolve(refs[], expiry?)`, `presign`; `MinioStorageAdapter`, global `StorageModule`); products, favourites, orders and uploads inject the abstract class, the former `MinioService` and its inline presign copies are gone. `PaymentProvider` — `backend/src/payments-provider/` (`isEnabled`, `assertEnabled`, `createCheckout`, `getCheckoutStatus`, `parseWebhook` → neutral `WebhookEvent`; `StripePaymentProvider`, global `PaymentsProviderModule`); `PaymentsService` keeps order orchestration and the ProcessedEvent-first settlement. `MailTransport` was already in this shape. Both adapters are abstract classes used as the Nest injection token, sit in Infrastructure in the boundary map, keep the null-client / 503 behaviour when unconfigured, and changed no route, env name or payload — verified by recorded provider calls and DB effects before/after. The Phase 2 folder move relocates them under `infrastructure/` unchanged.
+
 **Prevents.** Modules knowing "object key vs URL"; `rawBody`/webhook handling scattered; over-engineered infrastructure layers that add indirection without a second implementation.
 
-**Deferred.** Second implementations of any adapter; queue abstraction; an HTTP client abstraction on the backend.
+**Deferred.** Second implementations of any adapter; queue abstraction; an HTTP client abstraction on the backend; renaming the `MINIO_*` env vars and the `stripe*` order columns (contract changes, decided separately).
 
 ---
 
