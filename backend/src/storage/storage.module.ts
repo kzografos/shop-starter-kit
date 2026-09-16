@@ -2,16 +2,18 @@ import { Global, Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as Minio from 'minio'
 import { isStorageConfigured } from '../core/config/env.validation'
-import { MinioService } from './minio.service'
-import { MINIO_CLIENT } from './minio.constants'
+import { StorageAdapter } from './storage-adapter'
+import { MinioStorageAdapter, MINIO_CLIENT } from './minio-storage.adapter'
 
+// Infrastructure: object storage. Global so any layer can inject
+// StorageAdapter; the only implementation today is MinIO (S3-compatible).
 @Global()
 @Module({
   providers: [
     {
       provide: MINIO_CLIENT,
       inject: [ConfigService],
-      // No client at all when storage is not configured. MinioService treats a
+      // No client at all when storage is not configured. The adapter treats a
       // null client as "disabled" and rejects use with a clear error instead of
       // Core boot failing on a provider only the shop needs.
       useFactory: (config: ConfigService): Minio.Client | null =>
@@ -25,8 +27,9 @@ import { MINIO_CLIENT } from './minio.constants'
             })
           : null,
     },
-    MinioService,
+    MinioStorageAdapter,
+    { provide: StorageAdapter, useExisting: MinioStorageAdapter },
   ],
-  exports: [MinioService],
+  exports: [StorageAdapter],
 })
-export class MinioModule {}
+export class StorageModule {}

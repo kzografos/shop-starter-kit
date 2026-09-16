@@ -99,7 +99,7 @@ async function runScenario(name) {
   if (expectPartialRejection) throw new Error('partial provider configuration was accepted')
 
   const get = (rel, cls) => app.get(require(path.join(DIST, rel))[cls])
-  const minio = get('minio/minio.service.js', 'MinioService')
+  const minio = get('storage/minio-storage.adapter.js', 'MinioStorageAdapter')
   const payments = get('payments/payments.service.js', 'PaymentsService')
   const mail = get('mail/mail.service.js', 'MailService')
   const { GoogleStrategy } = require(path.join(DIST, 'auth/strategies/google.strategy.js'))
@@ -114,7 +114,7 @@ async function runScenario(name) {
     assert.strictEqual(payments.isEnabled, false, 'payments must be disabled')
     assert.strictEqual(mail.isEnabled, false, 'mail must be disabled')
     assert.strictEqual(google, null, 'google strategy must not be registered')
-    await expect503(() => minio.getPresignedUrl('key', 60), 'minio.getPresignedUrl')
+    await expect503(() => minio.presign('key', 60), 'storage.presign')
     await expect503(
       () => uploads.uploadImage({ size: 12, buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0]), mimetype: 'image/jpeg', originalname: 'a.jpg' }),
       'uploads.uploadImage',

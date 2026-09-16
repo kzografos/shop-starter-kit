@@ -112,7 +112,7 @@ export class UpsertProductDto {
   @IsBoolean()
   is_active?: boolean
 
-  // MinIO object keys produced by the uploads endpoint, or absolute URLs for
+  // Object-storage keys produced by the uploads endpoint, or absolute URLs for
   // externally hosted images.
   @IsOptional()
   @IsArray()

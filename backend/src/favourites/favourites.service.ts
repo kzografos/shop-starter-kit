@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
-import { MinioService } from '../minio/minio.service'
+import { StorageAdapter } from '../storage/storage-adapter'
 
 @Injectable()
 export class FavouritesService {
   constructor(
     private prisma: PrismaService,
-    private minio: MinioService,
+    private storage: StorageAdapter,
   ) {}
 
   async findByUser(userId: string) {
@@ -16,14 +16,14 @@ export class FavouritesService {
       orderBy: { createdAt: 'desc' },
     })
 
-    // Returned raw MinIO object keys before, so every favourited product
-    // rendered its placeholder instead of its photo.
+    // Returned raw object keys before, so every favourited product rendered
+    // its placeholder instead of its photo.
     return Promise.all(
       favourites.map(async (fav) => ({
         ...fav,
         product: {
           ...fav.product,
-          images: await this.minio.resolveImageUrls(fav.product.images),
+          images: await this.storage.resolve(fav.product.images),
         },
       })),
     )

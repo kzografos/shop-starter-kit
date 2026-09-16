@@ -20,7 +20,7 @@ import { LoyaltyModule } from './loyalty/loyalty.module'
 import { FavouritesModule } from './favourites/favourites.module'
 import { NewsletterModule } from './newsletter/newsletter.module'
 import { ProfileModule } from './profile/profile.module'
-import { MinioModule } from './minio/minio.module'
+import { StorageModule } from './storage/storage.module'
 import { UploadsModule } from './uploads/uploads.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { AnalyticsModule } from './analytics/analytics.module'
@@ -56,7 +56,7 @@ import { SettingsModule } from './settings/settings.module'
     FavouritesModule,
     NewsletterModule,
     ProfileModule,
-    MinioModule,
+    StorageModule,
     UploadsModule,
     NotificationsModule,
     AnalyticsModule,

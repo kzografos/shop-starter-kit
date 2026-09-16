@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
-import { MinioService } from '../minio/minio.service'
+import { StorageAdapter } from '../storage/storage-adapter'
 import { StockAlertsService } from './stock-alerts.service'
 import { toCache } from '../common/utils/serialize'
 import { Prisma } from '@prisma/client'
@@ -15,12 +15,14 @@ export class ProductsService {
   constructor(
     private prisma: PrismaService,
     private redis: RedisService,
-    private minio: MinioService,
+    private storage: StorageAdapter,
     private stockAlerts: StockAlertsService,
   ) {}
 
-  private isExternalUrl = (s: string) =>
-    s.startsWith('http://') || s.startsWith('https://')
+  /** List/related cards show the first image only; the adapter decides key vs URL. */
+  private async thumbnail(images: string[]): Promise<string[]> {
+    return images[0] ? this.storage.resolve([images[0]]) : []
+  }
 
   async findAll(query: QueryProductsDto) {
     const { page: pageParam, categories, brand, minPrice, maxPrice, search, sort, onSale } = query
@@ -77,11 +79,7 @@ export class ProductsService {
 
     const resolved = await Promise.all(
       products.map(async (p) => {
-        const images = p.images as string[]
-        const thumb = images[0]
-          ? [this.isExternalUrl(images[0]) ? images[0] : await this.minio.getPresignedUrl(images[0], 3600)]
-          : []
-        return { ...p, images: thumb }
+        return { ...p, images: await this.thumbnail(p.images as string[]) }
       })
     )
     const result = {
@@ -115,13 +113,7 @@ export class ProductsService {
     })
     if (!product || !product.isActive) throw new NotFoundException('Product not found')
 
-    const resolvedImages: string[] = []
-    for (const key of product.images as string[]) {
-      resolvedImages.push(
-        this.isExternalUrl(key) ? key : await this.minio.getPresignedUrl(key, 3600),
-      )
-    }
-    const resolved = { ...product, images: resolvedImages }
+    const resolved = { ...product, images: await this.storage.resolve(product.images as string[]) }
     await this.redis.set(cacheKey, toCache(resolved), 60)
     return resolved
   }
@@ -147,11 +139,7 @@ export class ProductsService {
     })
     const resolved = await Promise.all(
       result.map(async (p) => {
-        const images = p.images as string[]
-        const thumb = images[0]
-          ? [this.isExternalUrl(images[0]) ? images[0] : await this.minio.getPresignedUrl(images[0], 3600)]
-          : []
-        return { ...p, images: thumb }
+        return { ...p, images: await this.thumbnail(p.images as string[]) }
       })
     )
     await this.redis.set(cacheKey, toCache(resolved), 60)
@@ -212,7 +200,7 @@ export class ProductsService {
     // Display URLs are a separate field.
     return {
       ...product,
-      imageUrls: await this.minio.resolveImageUrls(product.images),
+      imageUrls: await this.storage.resolve(product.images),
     }
   }
 

@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
-import { MinioService } from '../minio/minio.service'
+import { StorageAdapter } from '../storage/storage-adapter'
 // Namespace import, not a default import. tsconfig sets
 // allowSyntheticDefaultImports but not esModuleInterop: the first only relaxes
 // the type checker, it does not emit the interop helper. `import FileType from`
@@ -13,7 +13,7 @@ const MAX_BYTES = 5 * 1024 * 1024
 
 @Injectable()
 export class UploadsService {
-  constructor(private minio: MinioService) {}
+  constructor(private storage: StorageAdapter) {}
 
   async uploadImage(file: Express.Multer.File): Promise<{ key: string; url: string }> {
     if (!file) throw new BadRequestException('No file provided')
@@ -25,8 +25,8 @@ export class UploadsService {
       )
     }
     if (!ALLOWED_MIME.has(file.mimetype)) throw new BadRequestException('Only JPEG, PNG, WebP, GIF allowed')
-    const key = await this.minio.uploadFile(file.buffer, file.originalname, file.mimetype)
-    const url = await this.minio.getPresignedUrl(key, 3600)
+    const key = await this.storage.put(file.buffer, file.originalname, file.mimetype)
+    const url = await this.storage.presign(key, 3600)
     return { key, url }
   }
 }

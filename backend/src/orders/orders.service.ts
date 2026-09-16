@@ -6,7 +6,7 @@ import { StockAlertsService } from '../products/stock-alerts.service'
 import { PricingSettingsService } from './pricing-settings.service'
 import { LoyaltyService } from '../loyalty/loyalty.service'
 import { AnalyticsService } from '../analytics/analytics.service'
-import { MinioService } from '../minio/minio.service'
+import { StorageAdapter } from '../storage/storage-adapter'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { Decimal } from '@prisma/client/runtime/library'
 import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
@@ -41,7 +41,7 @@ export class OrdersService {
     private pricing: PricingSettingsService,
     private loyalty: LoyaltyService,
     private analytics: AnalyticsService,
-    private minio: MinioService,
+    private storage: StorageAdapter,
   ) {}
 
   async create(userId: string | null, userEmail: string | null, dto: CreateOrderDto) {
@@ -200,7 +200,7 @@ export class OrdersService {
     if (keys.size === 0) return orders
 
     const list = [...keys]
-    const resolved = await this.minio.resolveImageUrls(list)
+    const resolved = await this.storage.resolve(list)
     const byKey = new Map(list.map((key, i) => [key, resolved[i]]))
 
     for (const order of orders) {
