@@ -108,7 +108,7 @@ Modules must not:
 
 ## 7. Data and schema rules
 
-1. Core models (`User`, `Setting`, `NewsletterSubscriber`, `Notification`) carry no module-specific scalar columns. A Prisma model block must be complete in one file, so module back-relations on `User` are written inside `core.prisma` and annotated as module-owned there; the owning side of the relation lives in the module's file.
+1. Core models (`User`, `Setting`, `NewsletterSubscriber`, `Notification`) carry no module-specific scalar columns (the last one, `User.loyaltyPoints`, was removed in seam 2; the balance is `LoyaltyAccount.points`). A module that needs its data shown *on* a user in a client payload registers a user extension with Core's `UserExtensionsRegistry` (`users/user-extensions.registry.ts`) — `{ id, order, scopes, extend(userIds) }` — from its `onModuleInit`; Core applies extensions only where a user object is returned to the client (`/profile`, `PATCH /profile`, login/register/refresh, `/admin/customers`), never inside the JWT strategy. Loyalty reads and writes belong to the `loyalty/` domain: `LoyaltyService` is the only code that touches `loyaltyAccount` / `loyaltyTransaction`; orders, payments and guest-order linking call it inside their own transactions. A Prisma model block must be complete in one file, so module back-relations on `User` are written inside `core.prisma` and annotated as module-owned there; the owning side of the relation lives in the module's file.
 2. Modules reference users by `userId` (UUID) with an explicit relation in their own file.
 3. `ProcessedEvent` and similar technical ledgers are Infrastructure; modules use them through the pattern (insert inside the same transaction), not by adding domain columns to them.
 4. A commit that changes a schema file is owned by that file's layer and is never cherry-picked downstream without its migration.
@@ -154,7 +154,7 @@ The boundary verifier carries a **baseline** of violations that existed at Archi
 |---|---|---|---|
 | §6.1 | `backend/src/notifications/notifications.controller.ts` | `manage:inventory` on a Core controller | seam 5 (generic notifications) |
 | §6.1 | `backend/src/uploads/uploads.controller.ts` | `manage:catalog` on a Core controller | seam 7 (media / `manage:media`) |
-| §6.4 | `backend/src/profile/profile.service.ts` | reads `loyaltyTransaction` | seam 2 (loyalty out of `User`) |
+| ~~§6.4~~ | ~~`backend/src/profile/profile.service.ts`~~ | ~~reads `loyaltyTransaction`~~ | **removed (seam 2)** — history endpoint moved to `loyalty/loyalty.controller.ts`; baseline is now two entries |
 
 **Not yet enforced** (planned):
 
@@ -177,9 +177,10 @@ Listed so that nobody treats them as precedent. Locations are current paths.
 
 | Violation | Rule | Removal |
 |---|---|---|
-| ~~`backend/src/auth/auth.service.ts` `linkGuestOrders()` touches `order`, `loyaltyTransaction`, `setting`~~ | §3, §6.4 | **Removed (seam 1).** AuthService emits `user.authenticated` on `CoreEventBus`; `orders/guest-order-linker.service.ts` subscribes; loyalty award in `orders/loyalty.service.ts` |
-| `backend/src/users/users.service.ts` selects `loyaltyPoints` | §7.1 | seam 2 |
-| `backend/src/profile/*` exposes `GET /profile/loyalty` | §3 | seam 2 |
+| ~~`backend/src/auth/auth.service.ts` `linkGuestOrders()` touches `order`, `loyaltyTransaction`, `setting`~~ | §3, §6.4 | **Removed (seam 1).** AuthService emits `user.authenticated` on `CoreEventBus`; `orders/guest-order-linker.service.ts` subscribes and awards points through `loyalty/loyalty.service.ts` (seam 2) |
+| ~~`backend/src/users/users.service.ts` selects `loyaltyPoints` (and counts `orders`) — `User.loyaltyPoints` column~~ | §7.1 | **Removed (seam 2).** Column dropped by migration `20260917100000_loyalty_account` (backfilled into `loyalty_accounts`); `users.service` selects Core columns only and applies `UserExtensionsRegistry` (`loyaltyPoints` from the loyalty module, `_count.orders` from the orders module) on `/admin/customers` |
+| ~~`backend/src/profile/*` exposes `GET /profile/loyalty` and reads `loyaltyTransaction`~~ | §3, §6.4 | **Removed (seam 2).** `loyalty/loyalty.controller.ts` serves the same path and response; `profile.service.ts` has no Prisma access and applies user extensions to `/profile` payloads |
+| ~~`orders.service`, `payments.service`, `orders/loyalty.service.ts` write `loyaltyTransaction` + `user.loyaltyPoints` inline~~ | §6.4 (sub-domain convention) | **Removed (seam 2).** All loyalty writes go through `LoyaltyService.earn` / `earnWrites` / `redeem` |
 | ~~`backend/src/auth/permissions.ts` defines shop capabilities and roles~~ | §3 | **Removed (seam 3a).** Core keeps only the mechanism (`auth/permissions.registry.service.ts`, global via `auth/permissions.module.ts`; `PermissionsGuard`, `RequirePermissions`, `permissionsFor`, owner bypass, untagged = owner-only) and its own four capabilities. Module-owned registrations: `products/catalog-permissions.ts`, `orders/orders-permissions.ts` (incl. the `ACCOUNTANT`/`STOCK_MANAGER` presets), `analytics/analytics-permissions.ts` |
 | ~~`UserRole` Prisma enum carries `CUSTOMER`, `ACCOUNTANT`, `STOCK_MANAGER`; `staff.service` demotes to `UserRole.CUSTOMER`; `'CUSTOMER'` literal in `users.service`, `analytics.service`~~ | §3, §7.1 | **Removed (seam 3b).** `users.role` is a lowercase `text` column; Core names `admin`/`customer` (`OWNER_ROLE`/`MEMBER_ROLE`), modules register their own roles; no role enum may be reintroduced |
 | frontend `usePermissions.STAFF_ROLES` / `SECTION_CAPS` duplicate the role/section vocabulary | §5.2 | Phase 2 Admin Registry (frontend) |

@@ -1,4 +1,4 @@
-# Architecture Decision Records — v1 (D1–D12)
+# Architecture Decision Records — v1 (D1–D13)
 
 **Status:** Adopted with [ARCHITECTURE-BLUEPRINT.md](ARCHITECTURE-BLUEPRINT.md) · **Date:** 2026-09-14
 
@@ -153,6 +153,24 @@ Each record states the decision, why it was chosen over the alternatives the aud
 **Prevents.** Architecture drift; a downstream inheriting latent breakage; the blueprint becoming aspirational.
 
 **Deferred.** Coverage thresholds; E2E tests; performance budgets; release automation.
+
+---
+
+## D13 — Loyalty ownership and the user-extension hook
+
+**Decision.** The loyalty balance is module data and lives in the e-commerce `loyalty` sub-domain: `LoyaltyAccount { userId @id, points, updatedAt }` (`ecommerce.prisma`, table `loyalty_accounts`, one row per user, absent row = 0). `backend/src/loyalty/loyalty.service.ts` is the **only** code that reads or writes `loyaltyAccount` and `loyaltyTransaction`; every balance change is written together with its ledger row inside the caller's transaction (`earn`/`redeem` for interactive transactions, `earnWrites` for the payment webhook's batch `$transaction([...])`, so the `ProcessedEvent`-first idempotency pattern is untouched). Earn/redeem arithmetic and the minimum-redeem rule stay with the callers (order creation, webhook, guest-order linking) — the service owns where points are stored, not how many are due.
+
+Core does not lose the ability to show module data next to a user. **`UserExtensionsRegistry`** (`users/user-extensions.registry.ts`, provided by `UsersModule`) lets a module register `{ id, order, scopes: ('profile' | 'customers')[], extend(userIds) → Map<userId, fields> }` from its `onModuleInit`. Core applies the registered extensions at exactly the points where a user object is returned to a client — `ProfileService.me()`, `ProfileService.update()`, `AuthService.issueTokens()` (login/register/refresh), `UsersService.listCustomers()` — one query per extension per batch, never in the JWT strategy. The loyalty module contributes `loyaltyPoints` on both scopes; the orders module contributes `_count.orders` on `customers`. Core never names either module.
+
+**Preserved contracts.** Every client-facing payload keeps every field it had: `GET /profile`, `PATCH /profile`, login/register/refresh `user`, `GET /admin/customers` (`loyalty_points`, `_count.orders`). `GET /profile/loyalty` keeps its path and response; only the owner moved (`LoyaltyController` in `loyalty/`), the `/loyalty/*` rename foreseen in the blueprint was declined as a contract change with no benefit. Redeem validation messages, earn amounts, linked-order awards (paid orders only) and webhook idempotency are byte-identical in the before/after capture. The one observable difference is JSON key order — `loyalty_points` now follows `created_at` — accepted as non-breaking. No frontend file changed.
+
+**Migration contract (`20260917100000_loyalty_account`).** Hand-written, **single atomic step**, data-preserving: `CREATE TABLE loyalty_accounts` → FK to `users` (cascade) → `INSERT … SELECT id, loyalty_points FROM users` (every user, including zero balances) → `ALTER TABLE users DROP COLUMN loyalty_points`. Prisma runs the file in one transaction, so a failure leaves `users` intact. The blueprint's two-step (add + dual-write, then drop) was not used: `start.sh` runs `migrate deploy` before the new code boots, so there is no rolling window in which old code and new schema coexist, and a dual-write phase would only add temporary code to remove later. Schema, migration, generated client and code are one atomic change and ship together under the client-clone rule (`PETSHOPCY-MANUAL.md`). Rehearsed on a fresh `pg_dump` copy of the dev database: per-user `(id, email, points)` identical before and after, sum preserved, no NULLs, column gone, `migrate diff` reports no drift, migration history reproduces the schema exactly.
+
+**Why.** `User.loyaltyPoints` was the last module column on a Core model and the reason Core `users.service`, `profile.service` and `auth.service` knew about loyalty at all. An extension hook is the smallest mechanism that lets Core keep returning complete user payloads without knowing which module supplies what; it is also the backend half of the "`Profile` core type with module augmentation" the frontend architecture (blueprint §10.3) assumes.
+
+**Prevents.** Module columns creeping back onto `User` "because the profile needs them"; Core services reading shop tables; loyalty balance and ledger drifting apart (single writer, same transaction); the balance being counted twice on webhook redelivery.
+
+**Deferred.** Renaming `GET /profile/loyalty` to `/loyalty/*` (explicit contract step, needs the frontend); per-user 1:1 tables for other module data follow this pattern when they appear; the frontend `Profile` type still declares `loyalty_points` inline until Nuxt layers split the types.
 
 ---
 

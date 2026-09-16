@@ -89,7 +89,7 @@ See `docs/MODULE-DEVELOPMENT-GUIDE.md` for the full contract and checklist.
 ## Database rules
 
 - Core owns identity (`User`, `Setting`, `NewsletterSubscriber`, `Notification`). Infrastructure owns technical records (`ProcessedEvent`). Modules own domain models (`Product`, `Category`, `Order`, `OrderItem`, `Favourite`, `LoyaltyTransaction`, …).
-- Do not add domain-specific scalar fields to Core models. `User.loyaltyPoints` is an existing violation scheduled for removal — do not add another.
+- Do not add domain-specific scalar fields to Core models. The last one, `User.loyaltyPoints`, was removed in seam 2 (`LoyaltyAccount` owns the balance); if the client must see module data on a user object, register a user extension (`users/user-extensions.registry.ts`) instead.
 - Modules reference users by `userId` with a relation declared in the module's schema file; the Prisma back-relation on `User` is declared there too.
 - Do not write another module's rows directly (`prisma.<otherModel>.create/update/delete`). Use the owner's exported service or an event.
 - Migrations are one linear history. A schema-changing commit is never cherry-picked to a downstream project without its migration.
@@ -114,7 +114,7 @@ See `docs/MODULE-DEVELOPMENT-GUIDE.md` for the full contract and checklist.
 | Question | Answer |
 |---|---|
 | Where is the target architecture? | `docs/ARCHITECTURE-BLUEPRINT.md` |
-| Why was X decided? | `docs/ARCHITECTURE-DECISIONS.md` (D1–D12, E-series) |
+| Why was X decided? | `docs/ARCHITECTURE-DECISIONS.md` (D1–D13, E-series) |
 | May file A import file B? | `docs/DEPENDENCY-RULES.md` |
 | How do I add a module or a module feature? | `docs/MODULE-DEVELOPMENT-GUIDE.md` |
 | What do I check before finishing? | `docs/ARCHITECTURE-CHECKLIST.md` |

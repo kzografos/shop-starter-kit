@@ -211,6 +211,31 @@ docker compose exec postgres psql -U <db_user> -d <db_name> -c "SELECT count(*) 
 
 then sign in as the owner and open the admin panel.
 
+**Known instance:** `refactor: move loyalty ownership out of core user` —
+the loyalty balance moves from the `users.loyalty_points` column to the new
+`loyalty_accounts` table (one row per user, `points`), and every backend read
+and write of the balance moves to `backend/src/loyalty/`. The migration
+(`20260917100000_loyalty_account`) creates the table, copies every user's
+balance into it, and drops the column, all in one transaction; no balance is
+rewritten. Taken partially, order creation, the Stripe webhook and `/profile`
+fail with unknown-column / unknown-table errors, or customers see 0 points.
+Client payloads (`loyalty_points`, `_count.orders`) and `GET /profile/loyalty`
+are unchanged, so the frontend needs nothing.
+
+**Verify after the pull:**
+
+```
+docker compose exec postgres psql -U <db_user> -d <db_name> -c '\d loyalty_accounts'
+  -- user_id | uuid | not null (PK, FK → users, cascade);  points | integer | not null | default 0
+docker compose exec postgres psql -U <db_user> -d <db_name> -c "SELECT count(*) FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'loyalty_points'"
+  -- 0
+docker compose exec postgres psql -U <db_user> -d <db_name> -c 'SELECT count(*), sum(points) FROM loyalty_accounts'
+  -- count = number of users at migration time; sum = the users.loyalty_points total noted before the pull
+```
+
+then sign in as a customer with points and confirm the account page still
+shows the same balance.
+
 ---
 
 ## Notes

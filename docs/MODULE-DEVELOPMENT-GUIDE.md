@@ -133,8 +133,26 @@ Declare each list with `satisfies <Contract>[]` so a wrong entry fails type-chec
 
 - Models, enums and indexes in `backend/prisma/<id>.prisma`, beside `core.prisma`, `infrastructure.prisma` and the shared `migrations/` folder. The `prisma/` folder is the schema root (`package.json#prisma.schema`, `start.sh --schema prisma`); every `*.prisma` file in it is one schema, and only `core.prisma` carries the `generator`/`datasource` blocks.
 - Reference users with `userId String @db.Uuid` + `user User @relation(...)` in your file. Prisma keeps a model in **one block**, so the matching back-relation field on `User` (e.g. `orders Order[]`) is written inside the `User` block in `core.prisma`, annotated there as owned by your module; the owning side of the relation stays in your file.
-- Never add scalar columns to Core models. If you need per-user data, create your own 1:1 table (`LoyaltyAccount { userId @unique }`).
+- Never add scalar columns to Core models. If you need per-user data, create your own 1:1 table (`LoyaltyAccount { userId @id }` is the reference implementation) and, if the client must see it on the user object, register a user extension (§3.8a).
 - Content localization is yours to choose (D5). Document it in your README. If you use column-per-locale, expose a `useLocalized()`-style accessor in your layer so consumers do not inline locale ternaries.
+
+### 3.8a User extensions (fields on user payloads)
+
+Implemented in seam 2 (`backend/src/users/user-extensions.registry.ts`). When your module owns per-user data that the client expects to see *on the user object* — the loyalty balance is the model case — do not add a column to `User` and do not make Core read your table. Register a user extension from your module's `onModuleInit`:
+
+```ts
+this.registry.define({
+  id: 'loyalty',                    // unique; duplicate id fails boot
+  order: 10,                        // position of your fields in the merged object
+  scopes: ['profile', 'customers'], // 'profile' = /profile + login/register/refresh; 'customers' = /admin/customers
+  extend: async (userIds) => new Map(userIds.map((id) => [id, { loyaltyPoints: 0 /* … */ }])),
+})
+```
+
+- `extend()` receives every user id in the batch and returns fields per id in **one** query; return an entry for every id so the payload shape never depends on the data (`{ loyaltyPoints: 0 }` for a user without a row).
+- Core applies extensions only where a user object is returned to a client, never per request in the JWT strategy — keep `extend()` cheap.
+- Field names are camelCase; the Core interceptor snake-cases them on the wire (`loyaltyPoints` → `loyalty_points`).
+- Do not use an extension to smuggle behaviour into Core (no writes, no side effects); it is a read-only projection.
 
 ### 3.9 Mail
 
@@ -177,7 +195,7 @@ Never `prisma.<A's model>` from B. Never write A's rows.
 ## 6. Checklist before a module is "done"
 
 - [ ] `index.ts` is the only export point; nothing imports deeper.
-- [ ] Every capability, role preset, setting, admin section, nav item, event is declared in the module, not in Core.
+- [ ] Every capability, role preset, setting, admin section, nav item, user extension, event is declared in the module, not in Core.
 - [ ] Env fragment covers every variable read; no `process.env` at import time.
 - [ ] Schema file contains only this module's models and enums; any back-relation field your models need on `User` is added to the `User` block in `core.prisma` with a comment naming this module as its owner — no scalar columns on Core models.
 - [ ] No Prisma access to models outside this file except through Core/module services.
@@ -197,7 +215,7 @@ Never `prisma.<A's model>` from B. Never write A's rows.
 | `backend/src/products`, `categories`, `favourites` | `modules/ecommerce/catalog/` | catalog |
 | `backend/src/orders` + pricing keys from `settings` + `checkStock` from `notifications` + `linkGuestOrders` from `auth` | `modules/ecommerce/orders/` | orders |
 | `backend/src/payments` (orchestration) | `modules/ecommerce/payments/` over `infrastructure/payments/stripe` | payments |
-| `LoyaltyTransaction`, `User.loyaltyPoints`, `/profile/loyalty` | `modules/ecommerce/loyalty/` with `LoyaltyAccount` | loyalty |
+| `backend/src/loyalty` (`LoyaltyAccount`, `LoyaltyTransaction`, `GET /profile/loyalty`, `loyaltyPoints` user extension) — **done (seam 2)** | `modules/ecommerce/loyalty/` (folder move only) | loyalty |
 | `backend/src/analytics` | `modules/ecommerce/analytics/` | analytics |
 | `backend/src/uploads` + image resolution | `modules/ecommerce/media/` over `infrastructure/storage` (candidate for promotion to a shared `media` module) | media |
 | `backend/src/admin/admin.service.ts` (stats, orders, products, categories) | split into the sub-domains' admin controllers | — |
