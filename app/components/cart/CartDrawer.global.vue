@@ -65,7 +65,7 @@
 <script setup lang="ts">
 const cartStore = useCartStore()
 const { items, subtotal } = storeToRefs(cartStore)
-const cartOpen = useState('cart-open', () => false)
+const { isOpen: cartOpen } = useCartDrawer()
 const localePath = useLocalePath()
 const { formatPrice } = useCurrency()
 </script>

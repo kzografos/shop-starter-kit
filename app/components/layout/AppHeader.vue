@@ -25,18 +25,12 @@
           </NuxtLink>
         </nav>
 
-        <!-- Search (desktop) — hidden on /products where page has its own search -->
-        <div v-if="!route.path.includes('/products')" class="hidden md:flex flex-1 max-w-xs">
-          <UInput
-            v-model="searchQuery"
-            :placeholder="$t('header.search_placeholder')"
-            icon="i-heroicons-magnifying-glass"
-            size="sm"
-            class="w-full [&_input]:rounded-full [&_input]:bg-surface-card [&_input]:border [&_input]:border-[--color-border-warm] [&_input]:placeholder-[--color-bark-light] [&_input]:focus:border-terracotta [&_input]:text-bark [&_input]:text-sm"
-            :ui="{ base: 'rounded-full' }"
-            @keyup.enter="goToSearch"
-          />
-        </div>
+        <!-- Header center zone — contributed through app.config `headerActions` (area: 'center') -->
+        <component
+          :is="action.component"
+          v-for="action in headerCenter"
+          :key="action.component"
+        />
 
         <!-- Actions -->
         <div class="flex items-center gap-3">
@@ -147,23 +141,12 @@
             />
           </button>
 
-          <!-- Cart -->
-          <button
-            class="relative h-8 w-8 flex items-center justify-center rounded-full text-bark-light hover:text-bark hover:bg-cream-pale transition-all"
-            @click="cartOpen = true"
-          >
-            <UIcon
-              name="i-heroicons-shopping-bag"
-              class="w-5 h-5"
-              :class="cartBouncing ? 'cart-bounce' : ''"
-            />
-            <span
-              v-if="itemCount > 0"
-              class="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 flex items-center justify-center rounded-full bg-terracotta text-white text-[10px] font-bold px-1"
-            >
-              {{ itemCount }}
-            </span>
-          </button>
+          <!-- Header actions — contributed through app.config `headerActions` -->
+          <component
+            :is="action.component"
+            v-for="action in headerEnd"
+            :key="action.component"
+          />
         </div>
       </div>
     </div>
@@ -301,33 +284,26 @@
 const { locale, setLocale, t } = useI18n()
 const localePath = useLocalePath()
 const authStore = useAuthStore()
-const cartStore = useCartStore()
+const appConfig = useAppConfig()
 const { isLoggedIn, profile, isAdmin } = storeToRefs(authStore)
 const { isStaff } = usePermissions()
 void isAdmin // kept for backward compat; admin link now uses isStaff
-const { itemCount } = storeToRefs(cartStore)
-const cartOpen = useState('cart-open', () => false)
-const router = useRouter()
 
 const route = useRoute()
-const searchQuery = ref('')
 const scrolled = ref(false)
-const cartBouncing = ref(false)
 
-watch(itemCount, () => {
-    cartBouncing.value = true
-    setTimeout(() => {
-      cartBouncing.value = false
-    }, 400)
-  }
+// Links and header components are contributed through app.config (see app/types/contributions.ts).
+const navLinks = computed(() =>
+  [...(appConfig.navItems ?? [])]
+    .sort((a, b) => a.order - b.order)
+    .map((item) => ({ to: localePath(item.to), label: t(item.labelKey) })),
 )
 
-const navLinks = computed(() => [
-  { to: localePath('/products'), label: t('nav.products') },
-  { to: localePath('/brands'), label: t('nav.brands') },
-  { to: localePath('/about'), label: t('nav.about') },
-  { to: localePath('/contact'), label: t('nav.contact') },
-])
+const headerActions = computed(() =>
+  [...(appConfig.headerActions ?? [])].sort((a, b) => a.order - b.order),
+)
+const headerCenter = computed(() => headerActions.value.filter((a) => a.area === 'center'))
+const headerEnd = computed(() => headerActions.value.filter((a) => a.area !== 'center'))
 
 onMounted(() => {
   const onScroll = () => {
@@ -344,13 +320,6 @@ onMounted(() => {
   document.addEventListener('click', onClickOutside)
   onUnmounted(() => document.removeEventListener('click', onClickOutside))
 })
-
-function goToSearch() {
-  if (!searchQuery.value.trim()) return
-  const filtersStore = useFiltersStore()
-  filtersStore.search = searchQuery.value.trim()
-  router.push(localePath('/products'))
-}
 
 function switchLocale(lang: 'el' | 'en') {
   setLocale(lang)

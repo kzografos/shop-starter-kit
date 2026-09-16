@@ -46,14 +46,16 @@
 
 <script setup lang="ts">
 const authStore = useAuthStore()
+const appConfig = useAppConfig()
 const localePath = useLocalePath()
 const route = useRoute()
 
+// The dashboard link is Core; module links are contributed through app.config `accountItems`.
 const navItems = computed(() => [
   { to: localePath('/account'), icon: '🏠', labelKey: 'account.title' },
-  { to: localePath('/account/orders'), icon: '📦', labelKey: 'account.orders' },
-  { to: localePath('/account/favourites'), icon: '❤️', labelKey: 'account.favourites' },
-  { to: localePath('/account/loyalty'), icon: '⭐', labelKey: 'account.loyalty' },
+  ...[...(appConfig.accountItems ?? [])]
+    .sort((a, b) => a.order - b.order)
+    .map((item) => ({ to: localePath(item.to), icon: item.icon, labelKey: item.labelKey })),
 ])
 
 function isActive(path: string) {
