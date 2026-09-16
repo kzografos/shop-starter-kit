@@ -2,11 +2,15 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { PrismaService } from '../prisma/prisma.service'
 import { Prisma } from '@prisma/client'
 import { MEMBER_ROLE } from '../auth/permissions'
+import { UserExtensionsRegistry } from './user-extensions.registry'
 import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private extensions: UserExtensionsRegistry,
+  ) {}
 
   async findById(id: string) {
     return this.prisma.user.findUnique({
@@ -16,7 +20,6 @@ export class UsersService {
         email: true,
         fullName: true,
         phone: true,
-        loyaltyPoints: true,
         role: true,
         createdAt: true,
       },
@@ -69,7 +72,6 @@ export class UsersService {
         email: true,
         fullName: true,
         phone: true,
-        loyaltyPoints: true,
         role: true,
         createdAt: true,
       },
@@ -90,7 +92,6 @@ export class UsersService {
         email: true,
         fullName: true,
         phone: true,
-        loyaltyPoints: true,
         role: true,
         createdAt: true,
       },
@@ -104,10 +105,9 @@ export class UsersService {
   }
 
   /**
-   * Paginated customer list for the admin panel. Moved unchanged from
-   * AdminService.getCustomers(). The `loyaltyPoints` column and the `orders`
-   * relation count are shop enrichment living on the Core user model; they
-   * leave with the loyalty extraction (blueprint seam 2), not with this move.
+   * Paginated customer list for the admin panel. Core selects only its own
+   * columns; the loyalty balance and the order count the page also shows are
+   * merged in by the modules that own them through UserExtensionsRegistry.
    */
   async listCustomers({ page = 1, search }: { page?: number; search?: string } = {}) {
     const PAGE_SIZE = 20
@@ -133,14 +133,17 @@ export class UsersService {
           id: true,
           email: true,
           fullName: true,
-          loyaltyPoints: true,
           createdAt: true,
-          _count: { select: { orders: true } },
         },
       }),
       this.prisma.user.count({ where }),
     ])
-    return { customers, total, page, totalPages: Math.ceil(total / PAGE_SIZE) }
+    return {
+      customers: await this.extensions.apply(customers, 'customers'),
+      total,
+      page,
+      totalPages: Math.ceil(total / PAGE_SIZE),
+    }
   }
 
   async getOrThrow(id: string) {

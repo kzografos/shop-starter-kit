@@ -16,6 +16,7 @@ import { ProductsModule } from './products/products.module'
 import { CategoriesModule } from './categories/categories.module'
 import { OrdersModule } from './orders/orders.module'
 import { PaymentsModule } from './payments/payments.module'
+import { LoyaltyModule } from './loyalty/loyalty.module'
 import { FavouritesModule } from './favourites/favourites.module'
 import { NewsletterModule } from './newsletter/newsletter.module'
 import { ProfileModule } from './profile/profile.module'
@@ -51,6 +52,7 @@ import { SettingsModule } from './settings/settings.module'
     CategoriesModule,
     OrdersModule,
     PaymentsModule,
+    LoyaltyModule,
     FavouritesModule,
     NewsletterModule,
     ProfileModule,

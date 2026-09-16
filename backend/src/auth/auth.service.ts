@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config'
 import { randomUUID } from 'crypto'
 import { Response } from 'express'
 import { UsersService } from '../users/users.service'
+import { UserExtensionsRegistry } from '../users/user-extensions.registry'
 import { RedisService } from '../redis/redis.service'
 import { MailService } from '../mail/mail.service'
 import { CoreEventBus } from '../core/events/core-event-bus.service'
@@ -34,6 +35,7 @@ export class AuthService {
 
   constructor(
     private users: UsersService,
+    private extensions: UserExtensionsRegistry,
     private jwt: JwtService,
     private redis: RedisService,
     private mail: MailService,
@@ -189,7 +191,9 @@ export class AuthService {
     res.cookie('access_token', accessToken, { ...COOKIE_OPTS, maxAge: 15 * 60 * 1000 })
     res.cookie('refresh_token', refreshToken, { ...COOKIE_OPTS, maxAge: refreshTtlS * 1000 })
 
-    return { user: await this.users.findById(user.id) }
+    // Module-owned fields (e.g. the loyalty balance) join the payload here, as
+    // they do on GET /profile.
+    return { user: await this.extensions.applyOne(await this.users.findById(user.id), 'profile') }
   }
 
   private parseTtlToSeconds(ttl: string): number {

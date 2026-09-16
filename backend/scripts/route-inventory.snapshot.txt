@@ -28,7 +28,7 @@ GET    /products/:slug                          ProductsController         guard
 GET    /products/:slug/related                  ProductsController         guards=[] caps=null
 GET    /products/brands                         ProductsController         guards=[] caps=null
 GET    /profile                                 ProfileController          guards=[JwtAuthGuard] caps=null
-GET    /profile/loyalty                         ProfileController          guards=[JwtAuthGuard] caps=null
+GET    /profile/loyalty                         LoyaltyController          guards=[JwtAuthGuard] caps=null
 GET    /settings                                PricingSettingsController  guards=[] caps=null
 PATCH  /admin/categories/:id                    CategoriesAdminController  guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog"]
 PATCH  /admin/notifications/:id/read            NotificationsController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:inventory"]

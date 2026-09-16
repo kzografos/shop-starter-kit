@@ -31,7 +31,7 @@ const SRC = path.resolve(__dirname, '..', 'src')
 // ── Layer map (blueprint §2, current paths) ──────────────────────
 const INFRA = ['prisma', 'redis', 'minio', 'mail', 'health', 'common']
 const CORE = ['core', 'auth', 'users', 'profile', 'staff', 'settings', 'notifications', 'newsletter', 'uploads']
-const SHOP = ['products', 'categories', 'favourites', 'orders', 'payments', 'analytics']
+const SHOP = ['products', 'categories', 'favourites', 'orders', 'payments', 'loyalty', 'analytics']
 // app.module.ts / main.ts at the root are the composition root and may import everything.
 
 // Capabilities owned by the shop (permissions.ts is itself a documented seam-3
@@ -39,14 +39,13 @@ const SHOP = ['products', 'categories', 'favourites', 'orders', 'payments', 'ana
 const SHOP_CAPABILITIES = ['view:finance', 'view:orders', 'manage:orders', 'view:catalog', 'manage:catalog', 'manage:inventory']
 
 // Prisma models owned by the shop (blueprint §9).
-const SHOP_MODELS = ['order', 'orderItem', 'product', 'category', 'favourite', 'loyaltyTransaction']
+const SHOP_MODELS = ['order', 'orderItem', 'product', 'category', 'favourite', 'loyaltyTransaction', 'loyaltyAccount']
 
 // ── Baseline: known violations at Pass 10, with the seam that removes them ──
 // Format: rule, file (relative to src, forward slashes), detail (must match the finding text exactly)
 const BASELINE = [
   { rule: 'C', file: 'notifications/notifications.controller.ts', detail: "manage:inventory", seam: 'seam 5 (generic notifications) — Pass 10 M1' },
   { rule: 'C', file: 'uploads/uploads.controller.ts', detail: "manage:catalog", seam: 'seam 7 (media module / manage:media) — DEPENDENCY-RULES §11' },
-  { rule: 'D', file: 'profile/profile.service.ts', detail: 'loyaltyTransaction', seam: 'seam 2 (loyalty out of User) — Pass 10 M2' },
 ]
 
 // ── Helpers ──────────────────────────────────────────────────────

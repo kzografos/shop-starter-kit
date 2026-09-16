@@ -5,6 +5,7 @@ import { orderConfirmationMail } from './order-confirmation.mail'
 import { StockAlertsService } from '../products/stock-alerts.service'
 import { RedisService } from '../redis/redis.service'
 import { PricingSettingsService } from './pricing-settings.service'
+import { LoyaltyService } from '../loyalty/loyalty.service'
 import { MinioService } from '../minio/minio.service'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -39,6 +40,7 @@ export class OrdersService {
     private stockAlerts: StockAlertsService,
     private redis: RedisService,
     private pricing: PricingSettingsService,
+    private loyalty: LoyaltyService,
     private minio: MinioService,
   ) {}
 
@@ -65,7 +67,7 @@ export class OrdersService {
     if (pointsToRedeem > 0) {
       if (pointsToRedeem < s.loyalty_min_redeem)
         throw new BadRequestException(`Minimum ${s.loyalty_min_redeem} points to redeem`)
-      if (pointsToRedeem > user!.loyaltyPoints)
+      if (pointsToRedeem > (await this.loyalty.balance(user!.id)))
         throw new BadRequestException('Insufficient loyalty points')
     }
 
@@ -136,13 +138,7 @@ export class OrdersService {
 
       // Loyalty: redeem (logged-in only — guests can't redeem)
       if (uid && pointsToRedeem > 0) {
-        await tx.loyaltyTransaction.create({
-          data: { userId: uid, orderId: newOrder.id, pointsDelta: -pointsToRedeem, type: 'REDEEM' },
-        })
-        await tx.user.update({
-          where: { id: uid },
-          data: { loyaltyPoints: { decrement: pointsToRedeem } },
-        })
+        await this.loyalty.redeem(tx, uid, newOrder.id, pointsToRedeem)
       }
 
       // Non-Stripe orders are settled immediately (cash/card on pickup).
@@ -151,13 +147,7 @@ export class OrdersService {
         // Loyalty: earn (logged-in only — Stripe earns on webhook)
         if (uid) {
           const pointsEarned = Math.floor(total * s.loyalty_earn_rate)
-          await tx.loyaltyTransaction.create({
-            data: { userId: uid, orderId: newOrder.id, pointsDelta: pointsEarned, type: 'EARN' },
-          })
-          await tx.user.update({
-            where: { id: uid },
-            data: { loyaltyPoints: { increment: pointsEarned } },
-          })
+          await this.loyalty.earn(tx, uid, newOrder.id, pointsEarned)
         }
         await tx.order.update({
           where: { id: newOrder.id },

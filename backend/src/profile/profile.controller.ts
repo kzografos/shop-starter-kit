@@ -33,9 +33,4 @@ export class ProfileController {
   ) {
     return this.profile.update(user.id, dto)
   }
-
-  @Get('loyalty')
-  loyalty(@CurrentUser() user: { id: string }) {
-    return this.profile.getLoyalty(user.id)
-  }
 }

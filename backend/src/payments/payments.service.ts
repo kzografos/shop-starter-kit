@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
 import { orderConfirmationMail } from '../orders/order-confirmation.mail'
 import { PricingSettingsService } from '../orders/pricing-settings.service'
+import { LoyaltyService } from '../loyalty/loyalty.service'
 import { isPaymentsConfigured } from '../core/config/env.validation'
 import Stripe from 'stripe'
 
@@ -19,6 +20,7 @@ export class PaymentsService {
     private config: ConfigService,
     private mail: MailService,
     private pricing: PricingSettingsService,
+    private loyalty: LoyaltyService,
   ) {
     if (isPaymentsConfigured(config)) {
       this.stripe = new Stripe(config.getOrThrow('STRIPE_SECRET_KEY'))
@@ -185,15 +187,7 @@ export class PaymentsService {
       // retries the event once the store is configured.
       const { loyalty_earn_rate: earnRate } = await this.pricing.loadPricing()
       const pointsEarned = Math.floor(Number(order.total) * earnRate)
-      writes.push(
-        this.prisma.loyaltyTransaction.create({
-          data: { userId, orderId, pointsDelta: pointsEarned, type: 'EARN' },
-        }),
-        this.prisma.user.update({
-          where: { id: userId },
-          data: { loyaltyPoints: { increment: pointsEarned } },
-        }),
-      )
+      writes.push(...this.loyalty.earnWrites(this.prisma, userId, orderId, pointsEarned))
     }
 
     try {

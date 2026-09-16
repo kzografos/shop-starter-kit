@@ -137,6 +137,19 @@ enum PaymentStatus {
 
 // ─── Loyalty ─────────────────────────────────────────────────
 
+// One row per user who has ever earned points; absent row = 0 points. Replaces
+// the former `users.loyalty_points` column (seam 2). Written only by
+// src/loyalty/loyalty.service.ts, always alongside a LoyaltyTransaction.
+model LoyaltyAccount {
+  userId    String   @id @map("user_id") @db.Uuid
+  points    Int      @default(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("loyalty_accounts")
+}
+
 model LoyaltyTransaction {
   id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId      String          @map("user_id") @db.Uuid
