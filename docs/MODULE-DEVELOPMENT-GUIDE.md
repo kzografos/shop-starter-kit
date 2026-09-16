@@ -41,7 +41,7 @@ backend/prisma/<id>.prisma    # this module's models and enums (today: ecommerce
 
 app/modules/<id>/             # Nuxt layer
 ├── nuxt.config.ts            # components.prefix, i18n files, layer-specific config
-├── app.config.ts             # navItems, headerActions, accountItems, globalWidgets, adminSections
+├── app.config.ts             # navItems, headerActions, globalWidgets, accountItems, accountCards, adminSections
 ├── components/
 ├── composables/
 ├── stores/
@@ -106,12 +106,17 @@ Frontend side: the layer path (`app/modules/<id>`) is added to `extends` by the 
 
 ### 3.5 Navigation slot contributions (`app.config.ts` of the layer)
 
-- `navItems[]` — storefront header/footer links `{ to, labelKey, order }`.
-- `headerActions[]` — components rendered in the header actions area (e.g. cart button) `{ component: 'ShopCartButton', order }`.
-- `accountItems[]` — account sidebar links and account dashboard cards.
-- `globalWidgets[]` — components mounted once in the default layout (e.g. `ShopCartDrawer`).
+Implemented in seam 9; contracts in `app/types/contributions.ts`. The Core shells (`AppHeader`, `layouts/default.vue`, `AccountSidebar`, `pages/account/index.vue`) read these lists with `useAppConfig()`, sort each by `order` and render them; they never import a module. Until layers exist the entries live in the root `app/app.config.ts`; they move into your layer's `app.config.ts` unchanged (Nuxt concatenates the arrays across layers).
 
-Component references are by registered name (prefixed), never by import path.
+- `navItems[]` — storefront header links `{ to, labelKey, order }`. `to` is unlocalised; the shell applies `localePath()`.
+- `headerActions[]` — components rendered in the header `{ component, order, area? }`. `area: 'actions'` (default) is the right-hand action cluster (e.g. `CartButton`); `area: 'center'` is the flexible desktop zone between the nav and the actions (e.g. `HeaderSearch`). The component owns its own wrapper and any route-based `v-if`.
+- `globalWidgets[]` — components mounted once in the default layout `{ component, order }` (e.g. `CartDrawer`).
+- `accountItems[]` — account sidebar links `{ to, icon, labelKey, order }`, rendered after the Core dashboard link.
+- `accountCards[]` — dashboard blocks rendered below the welcome header `{ component, order }` (e.g. `LoyaltyCard`, `AccountStats`).
+
+Declare each list with `satisfies <Contract>[]` so a wrong entry fails type-checking at the source.
+
+**`.global.vue` convention.** `component` is a **registered component name**, never an import path; the shells render it with `<component :is="name">`, which resolves only globally registered components. A contributed shell component must therefore carry the `.global.vue` suffix (`CartButton.global.vue` → name `CartButton`): Nuxt registers such files globally, as lazy chunks, with no `nuxt.config` change. The suffix is not part of the name, and the name still follows the layer's component prefix rule once prefixes exist (`ShopCartButton.global.vue`). Components that are only used by tag inside your own layer do not need the suffix.
 
 ### 3.6 Events
 
