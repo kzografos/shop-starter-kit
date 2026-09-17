@@ -46,9 +46,13 @@
             >
               <div class="space-y-1">
                 <div class="flex items-center gap-3 flex-wrap">
-                  <span class="font-display font-bold text-[--color-bark]">
+                  <NuxtLink
+                    :to="localePath(`/account/orders/${order.id}`)"
+                    class="font-display font-bold text-[--color-bark] hover:text-terracotta transition-colors"
+                    @click.stop
+                  >
                     #{{ order.id.slice(0, 8).toUpperCase() }}
-                  </span>
+                  </NuxtLink>
                   <UBadge
                     :label="$t(`orders.status_${order.status}`)"
                     :color="statusColor(order.status)"
@@ -56,13 +60,7 @@
                     size="sm"
                   />
                 </div>
-                <p class="text-xs text-[--color-bark-light]">
-                  {{
-                    new Date(order.created_at!).toLocaleDateString(
-                      locale === 'el' ? 'el-GR' : 'en-GB'
-                    )
-                  }}
-                </p>
+                <p class="text-xs text-[--color-bark-light]">{{ formatDate(order.created_at) }}</p>
                 <p class="text-sm text-[--color-bark-light]">
                   {{ order.items?.length ?? 0 }} {{ $t('orders.items') }} ·
                   <span class="font-semibold text-[--color-bark]"
@@ -109,7 +107,13 @@
                 </div>
               </div>
 
-              <div class="border-t border-[--color-border-warm] px-5 py-3 flex justify-end">
+              <div class="border-t border-[--color-border-warm] px-5 py-3 flex justify-between items-center gap-4">
+                <NuxtLink
+                  :to="localePath(`/account/orders/${order.id}`)"
+                  class="text-sm font-medium text-[--color-bark-light] hover:text-[--color-bark] transition-colors"
+                >
+                  {{ $t('orders.view_details') }}
+                </NuxtLink>
                 <button
                   class="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors"
                   @click.stop="repeatOrder(order)"
@@ -126,15 +130,16 @@
 </template>
 
 <script setup lang="ts">
-import type { Order, OrderItem } from '~~/types'
+import type { Order } from '~~/types'
 
 definePageMeta({ middleware: 'auth' })
 
 const api = useApi()
-const cartStore = useCartStore()
 const localePath = useLocalePath()
 const { locale } = useI18n()
-const router = useRouter()
+// Status colours, item names, dates and "repeat order" are shared with the
+// detail page (composables/useOrderPresentation.ts).
+const { statusColor, itemName, formatDate, repeatOrder } = useOrderPresentation()
 
 const error = ref<string | null>(null)
 
@@ -160,38 +165,4 @@ function isExpanded(id: string) {
   return expandedOrders.value.has(id)
 }
 
-type BadgeColor = 'error' | 'warning' | 'primary' | 'success' | 'neutral' | 'secondary' | 'info'
-
-function statusColor(status: string): BadgeColor {
-  const map: Record<string, BadgeColor> = {
-    pending: 'warning',
-    confirmed: 'primary',
-    processing: 'primary',
-    ready: 'success',
-    completed: 'success',
-    cancelled: 'error',
-  }
-  return map[status] ?? 'neutral'
-}
-
-// Prefer the live product name so it follows the current locale; fall back to
-// the snapshot captured at order time, which is all that survives once a product
-// is deleted (the relation is SetNull).
-function itemName(item: OrderItem): string {
-  if (item.product) {
-    return locale.value === 'el' ? item.product.name_el : item.product.name_en
-  }
-  return item.product_name
-}
-
-async function repeatOrder(order: Order) {
-  if (!order.items) return
-  // Deleted, deactivated and out-of-stock lines are skipped — they cannot be
-  // bought again.
-  const products = order.items
-    .filter((i) => i.product && i.product.is_active && i.product.stock > 0)
-    .map((i) => ({ product: i.product!, quantity: i.quantity }))
-  cartStore.loadFromOrder(products)
-  await router.push(localePath('/checkout'))
-}
 </script>
