@@ -161,7 +161,19 @@ this.registry.define({
 
 ### 3.10 Storage
 
-- Use `StorageAdapter.put()` / `resolve(refs[], expiry?)` / `presign(key, expiry)` (`backend/src/storage/storage-adapter.ts`, injected by the abstract class). Store what `put()` returns; resolve on read. Never inspect whether a stored reference is a key or a URL — that logic is the adapter's. Uploads themselves go through Core's `POST /uploads/image` (`manage:media`); add that capability to your preset if your staff role uploads images.
+- Use `StorageAdapter.put()` / `resolve(refs[], expiry?)` / `presign(key, expiry)` / `remove(key)` (`backend/src/storage/storage-adapter.ts`, injected by the abstract class). Store what `put()` returns; resolve on read. Never inspect whether a stored reference is a key or a URL — that logic is the adapter's. Uploads themselves go through Core's `POST /uploads/image` (`manage:media`); add that capability to your preset if your staff role uploads images. `remove(key)` takes an object key only: the caller decides whether a reference is its own to delete (see §3.10a).
+
+### 3.10a Product images (reference implementation)
+
+The e-commerce module's product images are the worked example of a module owning per-entity media over the storage adapter (`backend/src/products/products.service.ts`, `products-admin.controller.ts`, `dto/product-images.dto.ts`; admin UI in `app/components/admin/ProductDrawer.vue`).
+
+- **`Product.images String[]` is the single source of truth.** There is no image table. The array order is the display order and `images[0]` is the primary image — every storefront, cart and order view reads it that way. A reference is either an object key returned by `StorageAdapter.put()` or an absolute `http(s)` URL (seeded or imported); a product may not hold the same reference twice (`ArrayUnique` on every write, including the product upsert).
+- **Endpoints** (`/admin/products/:id/images`, guards `JwtAuthGuard` + `PermissionsGuard`; each returns the updated `{ images, image_urls }` and invalidates the product caches; unknown product → 404 `Product not found`):
+  - `POST /admin/products/:id/images` — multipart `file`, validated by the Core upload path (size, magic bytes, MIME), stored with `put()` and appended. Requires `manage:catalog` **and** `manage:media`. Unconfigured storage → 503 before any write.
+  - `PATCH /admin/products/:id/images/order` — body `{ images: string[] }`: **exactly the product's current references**, in the new order (`images[0]` becomes the primary). Missing, extra or duplicate references → 400. Requires `manage:catalog`.
+  - `DELETE /admin/products/:id/images/:ref` — detaches one reference. `:ref` is a storage key or an absolute URL; the client sends it through **`encodeURIComponent`** and the router decodes it once (keys contain no `%`, so there is no second decode). Reference not on the product → 404 `Image not found on this product`. Requires `manage:catalog` **and** `manage:media`.
+- **Storage cleanup is best-effort and never fails the row update.** After a detach — and after a product update that drops references — a key is passed to `StorageAdapter.remove()` only when it is not an absolute URL and no product still references it (`images has key` count = 0). Absolute URLs are removed from the array but never deleted from storage. A storage error, or storage not being configured, is logged and swallowed: the database is the source of truth and the product has already been saved.
+- **Admin drawer.** Editing an existing product uses the three endpoints and shows exactly the order the API returns; removal asks for confirmation; one image request runs at a time. Creating a product has no id yet, so its images stay local (`POST /uploads/image` for the files, local reorder/remove) until `POST /admin/products` persists the array.
 
 ---
 
