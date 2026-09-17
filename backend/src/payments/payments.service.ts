@@ -5,6 +5,7 @@ import { MailService } from '../mail/mail.service'
 import { orderConfirmationMail } from '../orders/order-confirmation.mail'
 import { PricingSettingsService } from '../orders/pricing-settings.service'
 import { OrdersService } from '../orders/orders.service'
+import { OrderNotificationsService } from '../orders/order-notifications.service'
 import { LoyaltyService } from '../loyalty/loyalty.service'
 import { CheckoutExpired, CheckoutLine, PaymentProvider } from '../payments-provider/payment-provider'
 
@@ -25,6 +26,7 @@ export class PaymentsService {
     private pricing: PricingSettingsService,
     private loyalty: LoyaltyService,
     private orders: OrdersService,
+    private orderNotifications: OrderNotificationsService,
   ) {}
 
   get isEnabled(): boolean {
@@ -154,6 +156,11 @@ export class PaymentsService {
       writes.push(...this.loyalty.earnWrites(this.prisma, userId, orderId, pointsEarned))
     }
 
+    // The customer's "order confirmed" notification rides the same transaction
+    // as the confirmation. The order row, not the session, says who owns it.
+    const notify = this.orderNotifications.statusWrite(this.prisma, order, 'CONFIRMED')
+    if (notify) writes.push(notify)
+
     try {
       await this.prisma.$transaction(writes)
     } catch (err) {
@@ -166,6 +173,7 @@ export class PaymentsService {
       }
       throw err
     }
+    await this.orderNotifications.invalidate(order)
 
     // Payment has cleared and the writes are committed, so this is the first
     // point at which "your order is confirmed" is true for a Stripe order.

@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
 import { NotificationType, Prisma } from '@prisma/client'
 
+type Client = Prisma.TransactionClient | PrismaService
+
 const STAFF_UNREAD_COUNT_KEY = 'notifications:unread:count'
 const userUnreadCountKey = (userId: string) => `notifications:unread:${userId}`
 const UNREAD_COUNT_TTL = 30
@@ -67,6 +69,18 @@ export class NotificationsService {
     return row
   }
 
+  /**
+   * The insert behind `create()` as a single write for a caller's own
+   * transaction (batch or interactive). Idempotent on `key` without raising:
+   * a duplicate is `ON CONFLICT DO NOTHING`, so it neither fails a batch nor
+   * aborts an interactive transaction the way a caught P2002 would. The
+   * caller invalidates the unread counter with `invalidateUnread()` once its
+   * transaction has committed.
+   */
+  createWrite(client: Client, data: CreateNotification): Prisma.PrismaPromise<{ count: number }> {
+    return client.notification.createMany({ data, skipDuplicates: true })
+  }
+
   /** Updates an existing notification's payload; does not touch read state. */
   update(id: string, data: { stock?: number; meta?: Prisma.InputJsonValue }) {
     return this.prisma.notification.update({ where: { id }, data })
@@ -82,7 +96,8 @@ export class NotificationsService {
     return res.count
   }
 
-  private async invalidateUnread(userId: string | undefined) {
+  /** Drops the cached unread counter of one user, or of the staff inbox when no user is given. */
+  async invalidateUnread(userId: string | undefined) {
     await this.redis.del(userId ? userUnreadCountKey(userId) : STAFF_UNREAD_COUNT_KEY)
   }
 

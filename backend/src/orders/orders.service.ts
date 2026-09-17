@@ -8,6 +8,7 @@ import { PricingSettingsService } from './pricing-settings.service'
 import { LoyaltyService } from '../loyalty/loyalty.service'
 import { AnalyticsService } from '../analytics/analytics.service'
 import { StorageAdapter } from '../storage/storage-adapter'
+import { OrderNotificationsService } from './order-notifications.service'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { allowedTransitions, canTransition } from './order-status'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -47,6 +48,7 @@ export class OrdersService {
     private loyalty: LoyaltyService,
     private analytics: AnalyticsService,
     private storage: StorageAdapter,
+    private orderNotifications: OrderNotificationsService,
   ) {}
 
   async create(userId: string | null, userEmail: string | null, dto: CreateOrderDto) {
@@ -158,10 +160,12 @@ export class OrdersService {
           where: { id: newOrder.id },
           data: { status: 'CONFIRMED', paymentStatus: 'PAID' },
         })
+        await this.orderNotifications.statusWrite(tx, newOrder, OrderStatus.CONFIRMED)
       }
 
       return newOrder
     })
+    if (dto.paymentMethod !== 'STRIPE') await this.orderNotifications.invalidate(order)
 
     // Only cash/card-on-pickup orders are settled here. A Stripe order is still
     // unpaid at this point, so its confirmation is sent from the webhook once
@@ -416,14 +420,21 @@ export class OrdersService {
     if (!mapped) throw new NotFoundException(`Unknown status: ${status}`)
     // Cancelling has side effects (restock, loyalty); one implementation owns it.
     if (mapped === OrderStatus.CANCELLED) return this.cancel(id)
-    const current = await this.prisma.order.findUnique({ where: { id }, select: { status: true } })
+    const current = await this.prisma.order.findUnique({ where: { id }, select: { status: true, userId: true } })
     if (!current) throw new NotFoundException('Order not found')
     if (!canTransition(current.status, mapped)) {
       throw new BadRequestException(
         `Cannot change status from ${current.status.toLowerCase()} to ${status}`,
       )
     }
-    return this.prisma.order.update({ where: { id }, data: { status: mapped } })
+    // The customer's notification commits with the status, or not at all.
+    const notify = this.orderNotifications.statusWrite(this.prisma, { id, userId: current.userId }, mapped)
+    const [order] = await this.prisma.$transaction([
+      this.prisma.order.update({ where: { id }, data: { status: mapped } }),
+      ...(notify ? [notify] : []),
+    ])
+    await this.orderNotifications.invalidate({ id, userId: current.userId })
+    return order
   }
 
   /**
@@ -456,6 +467,8 @@ export class OrdersService {
       })
       if (moved.count === 0) throw new ConflictException('Order changed while it was being cancelled')
 
+      await this.orderNotifications.statusWrite(tx, { id, userId: current.userId }, OrderStatus.CANCELLED)
+
       const restocked: string[] = []
       for (const item of current.items) {
         if (!item.productId) continue // product deleted since; nothing to restock
@@ -469,6 +482,8 @@ export class OrdersService {
     })
 
     this.logger.log(`Order ${id} cancelled${reason ? ` (${reason})` : ''}: ${restocked.length} line(s) restocked`)
+
+    await this.orderNotifications.invalidate(order)
 
     // Stock and reports changed; same owners, same fire-and-forget as order creation.
     await this.products.invalidate()
