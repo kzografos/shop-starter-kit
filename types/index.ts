@@ -68,6 +68,8 @@ export interface Order {
   created_at: string
   updated_at: string
   items?: OrderItem[]
+  /** Customer payloads only: the order is still pending and unpaid, so the customer may cancel it. */
+  can_cancel?: boolean
 }
 
 export interface OrderItem {

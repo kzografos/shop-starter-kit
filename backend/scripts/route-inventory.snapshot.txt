@@ -55,6 +55,7 @@ POST   /auth/reset-password                     AuthController             guard
 POST   /favourites/toggle                       FavouritesController       guards=[JwtAuthGuard] caps=null
 POST   /newsletter/subscribe                    NewsletterController       guards=[] caps=null
 POST   /orders                                  OrdersController           guards=[OptionalJwtAuthGuard] caps=null
+POST   /orders/:id/cancel                       OrdersController           guards=[JwtAuthGuard] caps=null
 POST   /payments/create-checkout                PaymentsController         guards=[OptionalJwtAuthGuard] caps=null
 POST   /payments/webhook                        PaymentsController         guards=[] caps=null
 POST   /uploads/image                           UploadsController          guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:media"]

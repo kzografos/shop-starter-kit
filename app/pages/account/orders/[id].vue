@@ -181,11 +181,24 @@
             <p class="text-[--color-bark] whitespace-pre-line">{{ order.notes }}</p>
           </div>
 
-          <div class="flex justify-end">
+          <div class="flex flex-col sm:flex-row sm:justify-end gap-3">
+            <!-- Only while the API says so: pending and unpaid -->
+            <UButton
+              v-if="order.can_cancel"
+              :label="$t('orders.cancel_order')"
+              icon="i-heroicons-x-circle"
+              color="error"
+              variant="outline"
+              :loading="cancelling"
+              :disabled="cancelling"
+              data-action="cancel-order"
+              @click="cancelOrder"
+            />
             <UButton
               :label="$t('orders.repeat')"
               icon="i-heroicons-arrow-path"
               variant="outline"
+              :disabled="cancelling"
               @click="repeatOrder(order)"
             />
           </div>
@@ -206,13 +219,17 @@ const route = useRoute()
 const localePath = useLocalePath()
 const { statusColor, lifecycleSteps, itemName, formatDate, repeatOrder } = useOrderPresentation()
 
+const { t } = useI18n()
+const toast = useToast()
+
 const id = computed(() => String(route.params.id))
 const notFound = ref(false)
 const error = ref(false)
+const cancelling = ref(false)
 
 // GET /orders/:id is owner-scoped on the server: another customer's id (or a
 // guest order) comes back as 404, so nothing foreign is ever rendered here.
-const { data: order, pending } = useAsyncData(
+const { data: order, pending, refresh } = useAsyncData(
   () => `order-${id.value}`,
   () =>
     api<Order>(`/orders/${id.value}`).catch((e: unknown) => {
@@ -225,6 +242,26 @@ const { data: order, pending } = useAsyncData(
 )
 
 const steps = computed<LifecycleStep[]>(() => (order.value ? lifecycleSteps(order.value.status) : []))
+
+async function cancelOrder() {
+  if (cancelling.value || !order.value) return
+  if (!confirm(t('orders.cancel_confirm'))) return
+  cancelling.value = true
+  try {
+    await api(`/orders/${id.value}/cancel`, { method: 'POST' })
+    toast.add({ title: t('orders.cancelled_success'), color: 'success', icon: 'i-heroicons-check-circle' })
+    // The detail re-reads the order (CANCELLED, lifecycle branch, no cancel
+    // button); the cached order list is refreshed so it is current on return.
+    await refresh()
+    await refreshNuxtData('orders')
+  } catch (e: unknown) {
+    const msg = (e as { data?: { message?: string | string[] } })?.data?.message
+    toast.add({ title: (Array.isArray(msg) ? msg[0] : msg) ?? t('orders.cancel_failed'), color: 'error', icon: 'i-heroicons-exclamation-circle' })
+    await refresh()
+  } finally {
+    cancelling.value = false
+  }
+}
 
 function stepClass(state: LifecycleStep['state']) {
   if (state === 'done') return 'bg-terracotta border-terracotta text-white'

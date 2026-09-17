@@ -255,7 +255,7 @@ export class OrdersService {
       },
       orderBy: { createdAt: 'desc' },
     })
-    return this.withResolvedImages(orders)
+    return (await this.withResolvedImages(orders)).map((o) => this.withCanCancel(o))
   }
 
   async findOneForUser(orderId: string, userId: string) {
@@ -295,7 +295,46 @@ export class OrdersService {
     })
     if (!order) throw new NotFoundException('Order not found')
     const [resolved] = await this.withResolvedImages([order])
-    return resolved
+    return this.withCanCancel(resolved)
+  }
+
+  /**
+   * What a customer may cancel themselves: a pending order that has not been
+   * paid. Everything else goes through the store. Only customer-facing
+   * payloads carry the flag; admin payloads are untouched.
+   */
+  private customerCanCancel(order: { status: OrderStatus; paymentStatus: PaymentStatus }): boolean {
+    return order.status === OrderStatus.PENDING && order.paymentStatus !== PaymentStatus.PAID
+  }
+
+  private withCanCancel<T extends { status: OrderStatus; paymentStatus: PaymentStatus }>(order: T) {
+    return { ...order, canCancel: this.customerCanCancel(order) }
+  }
+
+  /**
+   * Customer self-cancellation. Ownership is part of the lookup, so a foreign
+   * order is indistinguishable from a missing one (404). A paid order, or one
+   * the store has already moved on, is refused with a clear 400; the actual
+   * cancellation — restock, loyalty reversal, idempotency — is the same
+   * cancel() the admin path uses.
+   */
+  async cancelForCustomer(orderId: string, userId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, userId },
+      select: { status: true, paymentStatus: true },
+    })
+    if (!order) throw new NotFoundException('Order not found')
+    if (order.paymentStatus === PaymentStatus.PAID) {
+      throw new BadRequestException('A paid order cannot be cancelled online — please contact the store')
+    }
+    if (order.status !== OrderStatus.PENDING) {
+      if (!canTransition(order.status, OrderStatus.CANCELLED)) {
+        throw new BadRequestException(`Cannot change status from ${order.status.toLowerCase()} to cancelled`)
+      }
+      throw new BadRequestException('Only a pending order can be cancelled online — please contact the store')
+    }
+    await this.cancel(orderId, 'customer')
+    return this.findOneForUser(orderId, userId)
   }
 
   // ── Admin (moved unchanged from AdminService) ────────────────

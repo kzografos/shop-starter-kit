@@ -194,6 +194,10 @@
     "not_found_title": "Order not found",
     "not_found_text": "This order does not exist or does not belong to your account.",
     "load_failed": "Could not load the order. Please try again.",
+    "cancel_order": "Cancel order",
+    "cancel_confirm": "Cancel this order? Reserved stock is released and any points return to your balance.",
+    "cancelled_success": "Your order was cancelled",
+    "cancel_failed": "The order could not be cancelled. Please try again.",
     "subtitle": "Your order history and status",
     "items": "items"
   },
