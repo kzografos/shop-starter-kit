@@ -107,6 +107,13 @@ export class PaymentsService {
       return { received: true }
     }
 
+    // A cancelled order has already been restocked; confirming it now would
+    // resurrect it. The payment that came in is left for a manual refund.
+    if (order.status === 'CANCELLED') {
+      this.logger.warn(`Order ${orderId} was cancelled before payment completed — event ${event.id} ignored, refund manually`)
+      return { received: true }
+    }
+
     // Verify amount paid matches order total
     const paidCents  = amountTotalMinor ?? 0
     const orderCents = Math.round(Number(order.total) * 100)

@@ -1,7 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common'
+import { Injectable, BadRequestException, ConflictException, Logger, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
 import { orderConfirmationMail } from './order-confirmation.mail'
+import { ProductsService } from '../products/products.service'
 import { StockAlertsService } from '../products/stock-alerts.service'
 import { PricingSettingsService } from './pricing-settings.service'
 import { LoyaltyService } from '../loyalty/loyalty.service'
@@ -35,9 +36,12 @@ const STATUS_MAP: Record<string, OrderStatus> = {
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name)
+
   constructor(
     private prisma: PrismaService,
     private mail: MailService,
+    private products: ProductsService,
     private stockAlerts: StockAlertsService,
     private pricing: PricingSettingsService,
     private loyalty: LoyaltyService,
@@ -371,6 +375,8 @@ export class OrdersService {
   async updateStatus(id: string, status: string) {
     const mapped = STATUS_MAP[status]
     if (!mapped) throw new NotFoundException(`Unknown status: ${status}`)
+    // Cancelling has side effects (restock, loyalty); one implementation owns it.
+    if (mapped === OrderStatus.CANCELLED) return this.cancel(id)
     const current = await this.prisma.order.findUnique({ where: { id }, select: { status: true } })
     if (!current) throw new NotFoundException('Order not found')
     if (!canTransition(current.status, mapped)) {
@@ -379,5 +385,63 @@ export class OrdersService {
       )
     }
     return this.prisma.order.update({ where: { id }, data: { status: mapped } })
+  }
+
+  /**
+   * Cancels an order and undoes what placing it did: every line's quantity
+   * goes back into stock and, for a customer order, the loyalty ledger is
+   * reversed. Runs in one transaction keyed on the status transition, so a
+   * repeated or concurrent cancellation cannot restock or reverse twice — the
+   * second attempt sees CANCELLED and is rejected like any other illegal
+   * transition. Payment is not touched: a refund, where one is due, is a
+   * separate decision.
+   */
+  async cancel(id: string, reason?: string) {
+    const { order, restocked } = await this.prisma.$transaction(async (tx) => {
+      const current = await tx.order.findUnique({
+        where: { id },
+        select: { status: true, userId: true, items: { select: { productId: true, quantity: true } } },
+      })
+      if (!current) throw new NotFoundException('Order not found')
+      if (!canTransition(current.status, OrderStatus.CANCELLED)) {
+        throw new BadRequestException(
+          `Cannot change status from ${current.status.toLowerCase()} to cancelled`,
+        )
+      }
+
+      // Conditional on the status we just read: if another cancellation (or
+      // any other transition) got in first, nothing below runs.
+      const moved = await tx.order.updateMany({
+        where: { id, status: current.status },
+        data: { status: OrderStatus.CANCELLED },
+      })
+      if (moved.count === 0) throw new ConflictException('Order changed while it was being cancelled')
+
+      const restocked: string[] = []
+      for (const item of current.items) {
+        if (!item.productId) continue // product deleted since; nothing to restock
+        await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } })
+        restocked.push(item.productId)
+      }
+
+      if (current.userId) await this.loyalty.reverseForOrder(tx, current.userId, id)
+
+      return { order: await tx.order.findUniqueOrThrow({ where: { id } }), restocked }
+    })
+
+    this.logger.log(`Order ${id} cancelled${reason ? ` (${reason})` : ''}: ${restocked.length} line(s) restocked`)
+
+    // Stock and reports changed; same owners, same fire-and-forget as order creation.
+    await this.products.invalidate()
+    this.analytics.invalidate().catch(() => null)
+    if (restocked.length) {
+      const products = await this.prisma.product.findMany({
+        where: { id: { in: restocked } },
+        select: { id: true, stock: true, nameEl: true, nameEn: true },
+      })
+      for (const p of products) this.stockAlerts.checkStock(p).catch(() => null)
+    }
+
+    return order
   }
 }

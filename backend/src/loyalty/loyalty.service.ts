@@ -71,6 +71,51 @@ export class LoyaltyService {
   }
 
   /**
+   * Undoes an order's loyalty effect inside the caller's transaction, using
+   * only the existing ledger types: points the order earned are taken back
+   * with a negative EARN row, points it redeemed are given back with a
+   * positive REDEEM row. Works from the ledger's own net per type, so running
+   * it again — or on an order that never earned or redeemed — writes nothing.
+   */
+  async reverseForOrder(
+    tx: Client,
+    userId: string,
+    orderId: string,
+  ): Promise<{ earnReversed: number; redeemRestored: number }> {
+    const rows = await tx.loyaltyTransaction.findMany({
+      where: { userId, orderId },
+      select: { type: true, pointsDelta: true },
+    })
+    const net = (type: 'EARN' | 'REDEEM') =>
+      rows.filter((r) => r.type === type).reduce((sum, r) => sum + r.pointsDelta, 0)
+
+    const earnReversed = Math.max(net('EARN'), 0)
+    if (earnReversed > 0) {
+      await tx.loyaltyTransaction.create({
+        data: { userId, orderId, pointsDelta: -earnReversed, type: 'EARN' },
+      })
+      await tx.loyaltyAccount.update({
+        where: { userId },
+        data: { points: { decrement: earnReversed } },
+      })
+    }
+
+    const redeemRestored = Math.max(-net('REDEEM'), 0)
+    if (redeemRestored > 0) {
+      await tx.loyaltyTransaction.create({
+        data: { userId, orderId, pointsDelta: redeemRestored, type: 'REDEEM' },
+      })
+      await tx.loyaltyAccount.upsert({
+        where: { userId },
+        create: { userId, points: redeemRestored },
+        update: { points: { increment: redeemRestored } },
+      })
+    }
+
+    return { earnReversed, redeemRestored }
+  }
+
+  /**
    * Debits `points` for an order inside the caller's transaction. The caller
    * has already checked the balance covers it, so the account row exists.
    */
