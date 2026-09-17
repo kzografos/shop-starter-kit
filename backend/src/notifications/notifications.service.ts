@@ -1,13 +1,25 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
 import { NotificationType, Prisma } from '@prisma/client'
 
-const UNREAD_COUNT_KEY = 'notifications:unread:count'
+const STAFF_UNREAD_COUNT_KEY = 'notifications:unread:count'
+const userUnreadCountKey = (userId: string) => `notifications:unread:${userId}`
 const UNREAD_COUNT_TTL = 30
 const PAGE_SIZE = 20
 
 export type OpenNotificationFilter = { productId?: string; type?: NotificationType }
+
+export type CreateNotification = {
+  type: NotificationType
+  /** Addressee; absent = the staff inbox. */
+  userId?: string
+  /** Idempotency key: a second create with the same key is a no-op. */
+  key?: string
+  productId?: string
+  stock?: number
+  meta?: Prisma.InputJsonValue
+}
 
 @Injectable()
 export class NotificationsService {
@@ -18,22 +30,40 @@ export class NotificationsService {
 
   // ── Persistence primitives (domain-free) ─────────────────────
   // Modules own the rules that decide WHEN a notification opens, refreshes or
-  // resolves (e.g. products/stock-alerts.service.ts); this service only knows
-  // rows and the unread-count cache. `productId`/`stock` are the columns the
-  // schema has today (blueprint §9); they generalise with the schema step.
+  // resolves (e.g. products/stock-alerts.service.ts, order status changes);
+  // this service only knows rows and the unread-count caches. A row without a
+  // userId belongs to the staff inbox; with one, to that user's feed.
+  // `productId`/`stock` are the columns the schema has today (blueprint §9).
 
-  /** First open (unread) notification matching the filter, or null. */
+  /** First open (unread) staff notification matching the filter, or null. */
   findOpen(where: OpenNotificationFilter) {
     return this.prisma.notification.findFirst({
-      where: { ...where, isRead: false },
+      where: { ...where, userId: null, isRead: false },
       select: { id: true },
     })
   }
 
-  /** Opens a notification and invalidates the unread counter. */
-  async create(data: { type: NotificationType; productId?: string; stock?: number; meta?: Prisma.InputJsonValue }) {
-    const row = await this.prisma.notification.create({ data })
-    await this.redis.del(UNREAD_COUNT_KEY)
+  /**
+   * Opens a notification and invalidates the right unread counter. With a
+   * `key`, a duplicate is a no-op that returns null: only the unique-index
+   * violation on `key` (P2002) is swallowed, any other failure propagates.
+   */
+  async create(data: CreateNotification) {
+    let row
+    try {
+      row = await this.prisma.notification.create({ data })
+    } catch (err) {
+      if (
+        data.key &&
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002' &&
+        (err.meta?.target as string[] | undefined)?.includes('key')
+      ) {
+        return null
+      }
+      throw err
+    }
+    await this.invalidateUnread(data.userId)
     return row
   }
 
@@ -42,50 +72,89 @@ export class NotificationsService {
     return this.prisma.notification.update({ where: { id }, data })
   }
 
-  /** Marks every open notification matching the filter as read. Returns the count. */
+  /** Marks every open staff notification matching the filter as read. Returns the count. */
   async resolveOpen(where: OpenNotificationFilter): Promise<number> {
     const res = await this.prisma.notification.updateMany({
-      where: { ...where, isRead: false },
+      where: { ...where, userId: null, isRead: false },
       data: { isRead: true },
     })
-    if (res.count) await this.redis.del(UNREAD_COUNT_KEY)
+    if (res.count) await this.invalidateUnread(undefined)
     return res.count
   }
 
-  // ── Inbox ───────────────────────────────────────────────────
+  private async invalidateUnread(userId: string | undefined) {
+    await this.redis.del(userId ? userUnreadCountKey(userId) : STAFF_UNREAD_COUNT_KEY)
+  }
+
+  // ── Staff inbox (userId null) ───────────────────────────────
 
   async list({ page = 1, unreadOnly = false }: { page?: number; unreadOnly?: boolean }) {
-    const where = unreadOnly ? { isRead: false } : {}
-    const [items, total, unread] = await this.prisma.$transaction([
-      this.prisma.notification.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * PAGE_SIZE,
-        take: PAGE_SIZE,
-      }),
-      this.prisma.notification.count({ where }),
-      this.prisma.notification.count({ where: { isRead: false } }),
-    ])
-    return { items, total, page, totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)), unread }
+    return this.page({ userId: null }, page, unreadOnly)
   }
 
   async unreadCount() {
-    const cached = await this.redis.get(UNREAD_COUNT_KEY)
-    if (cached !== null) return { count: Number(cached) }
-    const count = await this.prisma.notification.count({ where: { isRead: false } })
-    await this.redis.set(UNREAD_COUNT_KEY, String(count), UNREAD_COUNT_TTL)
-    return { count }
+    return this.countUnread(STAFF_UNREAD_COUNT_KEY, { userId: null })
   }
 
   async markRead(id: string) {
-    await this.prisma.notification.updateMany({ where: { id }, data: { isRead: true } })
-    await this.redis.del(UNREAD_COUNT_KEY)
+    await this.prisma.notification.updateMany({ where: { id, userId: null }, data: { isRead: true } })
+    await this.invalidateUnread(undefined)
     return { ok: true }
   }
 
   async markAllRead() {
-    await this.prisma.notification.updateMany({ where: { isRead: false }, data: { isRead: true } })
-    await this.redis.del(UNREAD_COUNT_KEY)
+    await this.prisma.notification.updateMany({ where: { userId: null, isRead: false }, data: { isRead: true } })
+    await this.invalidateUnread(undefined)
     return { ok: true }
+  }
+
+  // ── Customer feed (userId set) ──────────────────────────────
+  // Every query carries the owner, so a foreign notification is
+  // indistinguishable from a missing one.
+
+  async listForUser(userId: string, { page = 1, unreadOnly = false }: { page?: number; unreadOnly?: boolean } = {}) {
+    return this.page({ userId }, page, unreadOnly)
+  }
+
+  async unreadCountForUser(userId: string) {
+    return this.countUnread(userUnreadCountKey(userId), { userId })
+  }
+
+  async markReadForUser(id: string, userId: string) {
+    const res = await this.prisma.notification.updateMany({ where: { id, userId }, data: { isRead: true } })
+    if (res.count === 0) throw new NotFoundException('Notification not found')
+    await this.invalidateUnread(userId)
+    return { ok: true }
+  }
+
+  async markAllReadForUser(userId: string) {
+    await this.prisma.notification.updateMany({ where: { userId, isRead: false }, data: { isRead: true } })
+    await this.invalidateUnread(userId)
+    return { ok: true }
+  }
+
+  // ── Shared ──────────────────────────────────────────────────
+
+  private async page(scope: { userId: string | null }, page: number, unreadOnly: boolean) {
+    const where = unreadOnly ? { ...scope, isRead: false } : scope
+    const [items, total, unread] = await this.prisma.$transaction([
+      this.prisma.notification.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (Math.max(1, page) - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+      }),
+      this.prisma.notification.count({ where }),
+      this.prisma.notification.count({ where: { ...scope, isRead: false } }),
+    ])
+    return { items, total, page, totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)), unread }
+  }
+
+  private async countUnread(cacheKey: string, scope: { userId: string | null }) {
+    const cached = await this.redis.get(cacheKey)
+    if (cached !== null) return { count: Number(cached) }
+    const count = await this.prisma.notification.count({ where: { ...scope, isRead: false } })
+    await this.redis.set(cacheKey, String(count), UNREAD_COUNT_TTL)
+    return { count }
   }
 }

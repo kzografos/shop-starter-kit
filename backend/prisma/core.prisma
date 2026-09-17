@@ -51,6 +51,7 @@ model User {
   loyaltyTransactions LoyaltyTransaction[]
   loyaltyAccount      LoyaltyAccount?
   refreshTokens       RefreshToken[]
+  notifications       Notification[]
 
   @@map("users")
 }
@@ -80,24 +81,35 @@ model NewsletterSubscriber {
 
 // ─── Notifications (admin) ───────────────────────────────────
 
+// A notification is either staff-wide (userId null — the admin inbox, e.g.
+// stock alerts) or addressed to one user (userId set — the customer feed).
+// `key` is an optional idempotency key: producers that may fire twice for the
+// same fact give it a stable value and the unique index makes the second
+// create a no-op.
 model Notification {
   id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   type      NotificationType
+  userId    String?          @map("user_id") @db.Uuid
+  key       String?          @unique
   productId String?          @map("product_id") @db.Uuid
   stock     Int?
   meta      Json?
   isRead    Boolean          @default(false) @map("is_read")
   createdAt DateTime         @default(now()) @map("created_at")
 
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([isRead])
   @@index([createdAt])
   @@index([productId])
+  @@index([userId])
   @@map("notifications")
 }
 
 enum NotificationType {
   LOW_STOCK    @map("low_stock")
   OUT_OF_STOCK @map("out_of_stock")
+  ORDER_STATUS @map("order_status")
 
   @@map("notification_type")
 }

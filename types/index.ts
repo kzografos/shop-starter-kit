@@ -51,6 +51,21 @@ export interface ShippingAddress {
   phone: string
 }
 
+export type NotificationType = 'low_stock' | 'out_of_stock' | 'order_status'
+
+/** A row of the signed-in user's notification feed (GET /notifications). */
+export interface Notification {
+  id: string
+  type: NotificationType
+  user_id: string | null
+  key: string | null
+  product_id: string | null
+  stock: number | null
+  meta: Record<string, unknown> | null
+  is_read: boolean
+  created_at: string
+}
+
 export interface Order {
   id: string
   user_id: string
