@@ -66,6 +66,15 @@ export interface Notification {
   created_at: string
 }
 
+/** GET /notifications — one page of the feed plus its unread figure. */
+export interface NotificationList {
+  items: Notification[]
+  total: number
+  page: number
+  total_pages: number
+  unread: number
+}
+
 export interface Order {
   id: string
   user_id: string

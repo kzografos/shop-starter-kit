@@ -29,6 +29,7 @@ export default defineAppConfig({
   ] satisfies NavItemContribution[],
   headerActions: [
     { component: 'HeaderSearch', order: 10, area: 'center' },
+    { component: 'NotificationBell', order: 5 },
     { component: 'CartButton', order: 10 },
   ] satisfies HeaderActionContribution[],
   globalWidgets: [
