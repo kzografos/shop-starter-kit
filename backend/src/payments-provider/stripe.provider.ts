@@ -101,8 +101,18 @@ export class StripePaymentProvider extends PaymentProvider {
       throw new BadRequestException('Invalid webhook signature')
     }
 
+    if (event.type === 'checkout.session.expired') {
+      const session = event.data.object as Stripe.Checkout.Session
+      return {
+        id: event.id,
+        type: event.type,
+        checkoutCompleted: null,
+        checkoutExpired: { orderId: session.metadata?.order_id ?? null },
+      }
+    }
+
     if (event.type !== 'checkout.session.completed') {
-      return { id: event.id, type: event.type, checkoutCompleted: null }
+      return { id: event.id, type: event.type, checkoutCompleted: null, checkoutExpired: null }
     }
 
     const session = event.data.object as Stripe.Checkout.Session
@@ -115,6 +125,7 @@ export class StripePaymentProvider extends PaymentProvider {
         amountTotalMinor: session.amount_total ?? null,
         paymentIntentId: session.payment_intent as string,
       },
+      checkoutExpired: null,
     }
   }
 }

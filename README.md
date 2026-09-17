@@ -360,7 +360,8 @@ Downstream client projects that pull changes from this repository follow [PETSHO
 
 **Required webhook events:**
 
-- `checkout.session.completed`
+- `checkout.session.completed` — settles the order
+- `checkout.session.expired` — releases the stock of an abandoned checkout (the order is cancelled)
 - `payment_intent.payment_failed`
 
 ### Resend (Email)

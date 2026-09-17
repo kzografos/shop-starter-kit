@@ -50,14 +50,22 @@ export interface CheckoutCompleted {
   paymentIntentId: string | null
 }
 
+/** A checkout the provider reports as abandoned (its session expired unpaid). */
+export interface CheckoutExpired {
+  orderId: string | null
+}
+
 /**
  * A verified webhook event. `id`/`type` are the provider's own values and are
- * stored verbatim in the ProcessedEvent ledger; `checkoutCompleted` is set
- * only for the event type that settles an order.
+ * stored verbatim in the ProcessedEvent ledger. Exactly one of
+ * `checkoutCompleted` (the event that settles an order) and `checkoutExpired`
+ * (the event that releases an abandoned one) is set; both are null for any
+ * other event type.
  */
 export type WebhookEvent =
-  | { id: string; type: string; checkoutCompleted: null }
-  | { id: string; type: 'checkout.session.completed'; checkoutCompleted: CheckoutCompleted }
+  | { id: string; type: string; checkoutCompleted: null; checkoutExpired: null }
+  | { id: string; type: 'checkout.session.completed'; checkoutCompleted: CheckoutCompleted; checkoutExpired: null }
+  | { id: string; type: 'checkout.session.expired'; checkoutCompleted: null; checkoutExpired: CheckoutExpired }
 
 export abstract class PaymentProvider {
   /** True when a provider is configured; every operation below throws 503 otherwise. */

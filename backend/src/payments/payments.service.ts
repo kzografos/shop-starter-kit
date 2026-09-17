@@ -1,11 +1,12 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common'
+import { Injectable, BadRequestException, ConflictException, Logger } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { MailService } from '../mail/mail.service'
 import { orderConfirmationMail } from '../orders/order-confirmation.mail'
 import { PricingSettingsService } from '../orders/pricing-settings.service'
+import { OrdersService } from '../orders/orders.service'
 import { LoyaltyService } from '../loyalty/loyalty.service'
-import { CheckoutLine, PaymentProvider } from '../payments-provider/payment-provider'
+import { CheckoutExpired, CheckoutLine, PaymentProvider } from '../payments-provider/payment-provider'
 
 /**
  * Order-side orchestration of online payments. Which PSP is behind it, how a
@@ -23,6 +24,7 @@ export class PaymentsService {
     private mail: MailService,
     private pricing: PricingSettingsService,
     private loyalty: LoyaltyService,
+    private orders: OrdersService,
   ) {}
 
   get isEnabled(): boolean {
@@ -88,6 +90,7 @@ export class PaymentsService {
     // Signature verification and payload parsing are the provider's; a bad
     // signature is a 400, an unconfigured provider a 503, both before any DB work.
     const event = this.provider.parseWebhook(rawBody, signature)
+    if (event.checkoutExpired) return this.handleCheckoutExpired(event.id, event.type, event.checkoutExpired)
     if (!event.checkoutCompleted) return { received: true }
 
     const { orderId, userId, amountTotalMinor, paymentIntentId } = event.checkoutCompleted
@@ -177,6 +180,59 @@ export class PaymentsService {
       this.logger.warn(`Order ${orderId} has no email address — no confirmation sent`)
     }
 
+    return { received: true }
+  }
+
+  /**
+   * An abandoned online checkout: the session expired without payment, so the
+   * stock the order reserved goes back on the shelf through the one
+   * cancellation path. Only a PENDING, unpaid Stripe order is released; an
+   * order that was paid, moved on or already cancelled is left alone, so the
+   * event can never resurrect or double-cancel anything, whatever order the
+   * provider delivers events in. The status transition inside cancel() is the
+   * idempotency guard; the ProcessedEvent row is the delivery ledger and is
+   * written after the order is released, so a crash in between just makes the
+   * retry a no-op.
+   */
+  private async handleCheckoutExpired(eventId: string, eventType: string, expired: CheckoutExpired) {
+    const { orderId } = expired
+    if (!orderId) return { received: true }
+
+    if (await this.prisma.processedEvent.findUnique({ where: { eventId } })) {
+      this.logger.log(`Event ${eventId} already processed — duplicate ignored`)
+      return { received: true }
+    }
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: { status: true, paymentStatus: true, paymentMethod: true },
+    })
+    if (!order) return { received: true }
+
+    if (order.paymentMethod !== 'STRIPE' || order.paymentStatus === 'PAID' || order.status !== 'PENDING') {
+      this.logger.log(
+        `Order ${orderId} is ${order.status.toLowerCase()}/${order.paymentStatus.toLowerCase()} — expired checkout ${eventId} ignored`,
+      )
+      return { received: true }
+    }
+
+    try {
+      await this.orders.cancel(orderId, `checkout expired (${eventId})`)
+    } catch (err) {
+      // Someone (admin cancel, a concurrent delivery, a payment that landed
+      // first) moved the order between our read and the cancel: nothing to do.
+      if (err instanceof BadRequestException || err instanceof ConflictException) {
+        this.logger.log(`Order ${orderId} changed before release — expired checkout ${eventId} ignored`)
+        return { received: true }
+      }
+      throw err
+    }
+
+    try {
+      await this.prisma.processedEvent.create({ data: { eventId, eventType, orderId } })
+    } catch (err) {
+      if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002')) throw err
+    }
     return { received: true }
   }
 }
