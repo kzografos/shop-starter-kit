@@ -168,6 +168,8 @@
     "status_ready": "Ready",
     "status_completed": "Completed",
     "status_cancelled": "Cancelled",
+    "status_final": "This order is final and cannot change status",
+    "status_update_failed": "Could not update the order status. Please try again.",
     "subtitle": "Your order history and status",
     "items": "items"
   },

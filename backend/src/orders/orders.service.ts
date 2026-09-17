@@ -8,6 +8,7 @@ import { LoyaltyService } from '../loyalty/loyalty.service'
 import { AnalyticsService } from '../analytics/analytics.service'
 import { StorageAdapter } from '../storage/storage-adapter'
 import { CreateOrderDto } from './dto/create-order.dto'
+import { allowedTransitions, canTransition } from './order-status'
 import { Decimal } from '@prisma/client/runtime/library'
 import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
 
@@ -349,12 +350,34 @@ export class OrdersService {
       this.prisma.order.count({ where }),
     ])
 
-    return { orders, total, page, totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)) }
+    // Each row carries the statuses it may move to next, so the admin UI
+    // offers exactly what updateStatus() will accept.
+    return {
+      orders: orders.map((o) => ({
+        ...o,
+        allowedStatuses: allowedTransitions(o.status).map((s) => s.toLowerCase()),
+      })),
+      total,
+      page,
+      totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    }
   }
 
+  /**
+   * Moves an order along the lifecycle in ./order-status.ts. Anything that is
+   * not a listed forward transition — going back, repeating the current
+   * status, leaving COMPLETED or CANCELLED — is rejected with 400.
+   */
   async updateStatus(id: string, status: string) {
     const mapped = STATUS_MAP[status]
     if (!mapped) throw new NotFoundException(`Unknown status: ${status}`)
+    const current = await this.prisma.order.findUnique({ where: { id }, select: { status: true } })
+    if (!current) throw new NotFoundException('Order not found')
+    if (!canTransition(current.status, mapped)) {
+      throw new BadRequestException(
+        `Cannot change status from ${current.status.toLowerCase()} to ${status}`,
+      )
+    }
     return this.prisma.order.update({ where: { id }, data: { status: mapped } })
   }
 }

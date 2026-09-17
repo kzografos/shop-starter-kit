@@ -60,12 +60,16 @@
               </span>
             </td>
             <td>
+              <!-- Only the current status and the transitions the API allows
+                   (order.allowed_statuses); a completed or cancelled order is final. -->
               <select
                 class="ac-pill-select"
                 :value="order.status"
+                :disabled="!order.allowed_statuses.length"
+                :title="!order.allowed_statuses.length ? $t('orders.status_final') : undefined"
                 @change="updateStatus(order.id, ($event.target as HTMLSelectElement).value)"
               >
-                <option v-for="s in statusOptions" :key="s.value" :value="s.value">{{ s.label }}</option>
+                <option v-for="s in optionsFor(order)" :key="s.value" :value="s.value">{{ s.label }}</option>
               </select>
             </td>
             <td style="text-align: right; font-weight: 600;">€{{ Number(order.total).toFixed(2) }}</td>
@@ -90,6 +94,7 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const { public: { apiBase } } = useRuntimeConfig()
 const { t } = useI18n()
+const toast = useToast()
 
 const search = ref('')
 const paymentFilter = ref('all')
@@ -110,6 +115,7 @@ type OrderRow = {
   payment_status: string
   total: number
   status: string
+  allowed_statuses: string[]
 }
 
 type OrdersResponse = { orders: OrderRow[]; total: number; page: number; totalPages: number }
@@ -143,12 +149,22 @@ watch(search, () => {
 
 watch(paymentFilter, () => { page.value = 1; refresh() })
 
+function optionsFor(order: OrderRow) {
+  const visible = new Set([order.status, ...order.allowed_statuses])
+  return statusOptions.filter((s) => visible.has(s.value))
+}
+
 async function updateStatus(orderId: string, status: string) {
-  await $fetch(`${apiBase}/admin/orders/${orderId}/status`, {
-    method: 'PATCH',
-    body: { status },
-    credentials: 'include',
-  })
+  try {
+    await $fetch(`${apiBase}/admin/orders/${orderId}/status`, {
+      method: 'PATCH',
+      body: { status },
+      credentials: 'include',
+    })
+  } catch (e: unknown) {
+    const msg = (e as { data?: { message?: string | string[] } })?.data?.message
+    toast.add({ title: (Array.isArray(msg) ? msg[0] : msg) ?? t('orders.status_update_failed'), color: 'error', icon: 'i-heroicons-exclamation-circle' })
+  }
   refresh()
 }
 
