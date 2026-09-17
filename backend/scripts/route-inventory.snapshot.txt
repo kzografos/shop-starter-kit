@@ -1,4 +1,5 @@
 DELETE /admin/categories/:id                    CategoriesAdminController  guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog"]
+DELETE /admin/products/:id/images/:ref          ProductsAdminController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog","manage:media"]
 DELETE /admin/staff/:id                         StaffController            guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:staff"]
 DELETE /newsletter/unsubscribe                  NewsletterController       guards=[] caps=null
 GET    /admin/analytics                         AnalyticsController        guards=[JwtAuthGuard,PermissionsGuard] caps=["view:finance"]
@@ -36,12 +37,14 @@ PATCH  /admin/notifications/read-all            NotificationsController    guard
 PATCH  /admin/orders/:id/status                 OrdersAdminController      guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:orders"]
 PATCH  /admin/products/:id                      ProductsAdminController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog"]
 PATCH  /admin/products/:id/deactivate           ProductsAdminController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog"]
+PATCH  /admin/products/:id/images/order         ProductsAdminController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog"]
 PATCH  /admin/settings                          SettingsAdminController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:settings"]
 PATCH  /admin/staff/:id/password                StaffController            guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:staff"]
 PATCH  /admin/staff/:id/role                    StaffController            guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:staff"]
 PATCH  /profile                                 ProfileController          guards=[JwtAuthGuard] caps=null
 POST   /admin/categories                        CategoriesAdminController  guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog"]
 POST   /admin/products                          ProductsAdminController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog"]
+POST   /admin/products/:id/images               ProductsAdminController    guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:catalog","manage:media"]
 POST   /admin/staff                             StaffController            guards=[JwtAuthGuard,PermissionsGuard] caps=["manage:staff"]
 POST   /auth/forgot-password                    AuthController             guards=[] caps=null
 POST   /auth/login                              AuthController             guards=[] caps=null

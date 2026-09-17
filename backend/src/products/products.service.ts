@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { RedisService } from '../redis/redis.service'
 import { StorageAdapter } from '../storage/storage-adapter'
+import { UploadsService } from '../uploads/uploads.service'
 import { StockAlertsService } from './stock-alerts.service'
 import { toCache } from '../common/utils/serialize'
 import { Prisma } from '@prisma/client'
@@ -10,12 +11,17 @@ import { UpsertProductDto } from './dto/product.dto'
 
 const PAGE_SIZE = 12
 
+const isExternalUrl = (ref: string) => ref.startsWith('http://') || ref.startsWith('https://')
+
 @Injectable()
 export class ProductsService {
+  private readonly logger = new Logger(ProductsService.name)
+
   constructor(
     private prisma: PrismaService,
     private redis: RedisService,
     private storage: StorageAdapter,
+    private uploads: UploadsService,
     private stockAlerts: StockAlertsService,
   ) {}
 
@@ -254,6 +260,10 @@ export class ProductsService {
   }
 
   async update(id: string, dto: UpsertProductDto) {
+    // Remember the current references so objects the update drops can be
+    // cleaned up once the row is saved. A missing product still fails in the
+    // update below, exactly as before.
+    const before = await this.prisma.product.findUnique({ where: { id }, select: { images: true } })
     const product = await this.prisma.product
       .update({
         where: { id },
@@ -267,7 +277,70 @@ export class ProductsService {
       })
     await this.invalidate()
     await this.stockAlerts.checkStock(product)
+    if (before) await this.pruneOrphans(before.images.filter((ref) => !product.images.includes(ref)))
     return product
+  }
+
+  // ── Product images (sub-resource of the admin product) ────────
+  // `Product.images` is the single source of truth: array order is display
+  // order and index 0 is the primary image. These operations rewrite the
+  // array; object cleanup is best-effort and never fails the row update.
+
+  /** Stores an uploaded file through the Core upload validation and appends it. */
+  async addImage(id: string, file: Express.Multer.File) {
+    const images = await this.imagesOf(id)
+    const { key } = await this.uploads.uploadImage(file)
+    if (images.includes(key)) throw new BadRequestException('Image is already attached to this product')
+    return this.saveImages(id, [...images, key])
+  }
+
+  /** Replaces the order: the same references the product holds, reordered. */
+  async reorderImages(id: string, images: string[]) {
+    const current = await this.imagesOf(id)
+    const same =
+      images.length === current.length && images.every((ref) => current.includes(ref))
+    if (!same) throw new BadRequestException("images must contain exactly the product's current images")
+    return this.saveImages(id, images)
+  }
+
+  /** Detaches one reference; the stored object is removed if nothing else uses it. */
+  async removeImage(id: string, ref: string) {
+    const images = await this.imagesOf(id)
+    if (!images.includes(ref)) throw new NotFoundException('Image not found on this product')
+    const result = await this.saveImages(id, images.filter((r) => r !== ref))
+    await this.pruneOrphans([ref])
+    return result
+  }
+
+  private async imagesOf(id: string): Promise<string[]> {
+    const product = await this.prisma.product.findUnique({ where: { id }, select: { images: true } })
+    if (!product) throw new NotFoundException('Product not found')
+    return product.images
+  }
+
+  private async saveImages(id: string, images: string[]) {
+    const product = await this.prisma.product.update({ where: { id }, data: { images }, select: { images: true } })
+    await this.invalidate()
+    return { images: product.images, imageUrls: await this.storage.resolve(product.images) }
+  }
+
+  /**
+   * Deletes stored objects that no product references any more. Absolute URLs
+   * are never ours to delete. Storage failures (including "not configured")
+   * are logged and swallowed: the database is the source of truth and the row
+   * has already been saved.
+   */
+  private async pruneOrphans(refs: string[]) {
+    for (const ref of refs) {
+      if (isExternalUrl(ref)) continue
+      const stillUsed = await this.prisma.product.count({ where: { images: { has: ref } } })
+      if (stillUsed > 0) continue
+      try {
+        await this.storage.remove(ref)
+      } catch (err) {
+        this.logger.warn(`Could not delete stored image "${ref}": ${(err as Error).message}`)
+      }
+    }
   }
 
   /**

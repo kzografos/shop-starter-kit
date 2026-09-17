@@ -1,9 +1,15 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
+import {
+  Body, Controller, Delete, Get, Param, Patch, Post, Query,
+  UploadedFile, UseGuards, UseInterceptors,
+} from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { memoryStorage } from 'multer'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { PermissionsGuard } from '../auth/guards/permissions.guard'
 import { RequirePermissions } from '../auth/decorators/permissions.decorator'
 import { ProductsService } from './products.service'
 import { UpsertProductDto } from './dto/product.dto'
+import { ReorderImagesDto } from './dto/product-images.dto'
 
 // Admin surface of products, owned next to the resource like the other
 // admin/* controllers. The public catalogue stays in ProductsController.
@@ -50,5 +56,30 @@ export class ProductsAdminController {
   @RequirePermissions('manage:catalog')
   deactivate(@Param('id') id: string) {
     return this.products.deactivate(id)
+  }
+
+  // ── Images: `Product.images` in display order, index 0 = primary ──
+  // Storing and deleting objects is a media operation (Core `manage:media`);
+  // changing what the product shows is a catalogue write (`manage:catalog`).
+
+  @Post(':id/images')
+  @RequirePermissions('manage:catalog', 'manage:media')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }))
+  addImage(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    return this.products.addImage(id, file)
+  }
+
+  @Patch(':id/images/order')
+  @RequirePermissions('manage:catalog')
+  reorderImages(@Param('id') id: string, @Body() dto: ReorderImagesDto) {
+    return this.products.reorderImages(id, dto.images)
+  }
+
+  // `:ref` is a storage key or an absolute URL, sent URL-encoded by the client
+  // and decoded once by the router; keys contain no `%`, so no second decode.
+  @Delete(':id/images/:ref')
+  @RequirePermissions('manage:catalog', 'manage:media')
+  removeImage(@Param('id') id: string, @Param('ref') ref: string) {
+    return this.products.removeImage(id, ref)
   }
 }

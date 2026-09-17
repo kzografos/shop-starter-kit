@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer'
 import {
+  ArrayUnique,
   IsArray,
   IsBoolean,
   IsInt,
@@ -113,9 +114,10 @@ export class UpsertProductDto {
   is_active?: boolean
 
   // Object-storage keys produced by the uploads endpoint, or absolute URLs for
-  // externally hosted images.
+  // externally hosted images. Order is display order; index 0 is the primary.
   @IsOptional()
   @IsArray()
+  @ArrayUnique({ message: 'images must not contain duplicates' })
   @IsString({ each: true })
   @MaxLength(500, { each: true })
   images?: string[]
