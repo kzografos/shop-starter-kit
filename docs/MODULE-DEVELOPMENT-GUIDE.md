@@ -175,6 +175,52 @@ The e-commerce module's product images are the worked example of a module owning
 - **Storage cleanup is best-effort and never fails the row update.** After a detach — and after a product update that drops references — a key is passed to `StorageAdapter.remove()` only when it is not an absolute URL and no product still references it (`images has key` count = 0). Absolute URLs are removed from the array but never deleted from storage. A storage error, or storage not being configured, is logged and swallowed: the database is the source of truth and the product has already been saved.
 - **Admin drawer.** Editing an existing product uses the three endpoints and shows exactly the order the API returns; removal asks for confirmation; one image request runs at a time. Creating a product has no id yet, so its images stay local (`POST /uploads/image` for the files, local reorder/remove) until `POST /admin/products` persists the array.
 
+### 3.10b Order lifecycle (reference implementation)
+
+The e-commerce orders sub-domain is the worked example of a module owning a state machine with side effects across the storage of stock, a ledger (loyalty) and a provider webhook (`backend/src/orders/order-status.ts`, `orders.service.ts`, `backend/src/payments/payments.service.ts`, `backend/src/payments-provider/`).
+
+**Transitions.** `Order.status` only moves forward:
+
+| From | Allowed next |
+|---|---|
+| `PENDING` | `CONFIRMED`, `CANCELLED` |
+| `CONFIRMED` | `PROCESSING`, `CANCELLED` |
+| `PROCESSING` | `READY`, `CANCELLED` |
+| `READY` | `COMPLETED`, `CANCELLED` |
+| `COMPLETED` | — (final) |
+| `CANCELLED` | — (final) |
+
+`OrdersService.updateStatus()` (`PATCH /admin/orders/:id/status`, `manage:orders`) rejects anything else — going back, repeating the current status, leaving a final status — with 400 `Cannot change status from <current> to <requested>`; an unknown order is 404. The admin list returns `allowed_statuses` per row so the admin UI offers exactly those transitions and disables final orders. The table is the single source: nothing else decides what a status may become.
+
+**Cancellation** is one method, `OrdersService.cancel(id, reason?)`, reached from `updateStatus('cancelled')` and from the payment webhook. Inside a single transaction it re-checks the table, moves the order to `CANCELLED` with an update **conditional on the status it just read**, puts every line's quantity back into `Product.stock`, and for a customer order calls `LoyaltyService.reverseForOrder()`. Afterwards it invalidates the product and analytics caches and runs `StockAlertsService.checkStock()` on the restocked products (an open low-stock alert resolves once the shelf is full again). The `reason` is logged, not stored.
+
+- *Restock* applies to every order, guest or customer; a line whose product was deleted is skipped.
+- *Loyalty reversal* uses only the existing ledger types: the order's net `EARN` is taken back as a negative `EARN` row and its net `REDEEM` returned as a positive `REDEEM` row, each with the matching balance change. It works from the ledger's own net, so an order that never earned or redeemed, or one already reversed, writes nothing. The balance may go negative if the customer already spent points the order earned — consistent with the ledger, deliberately not blocked.
+- *Idempotency* is the status transition: a repeated or concurrent cancellation finds `CANCELLED` (or loses the conditional update) and is rejected — 400, or 409 on the race — without restocking or reversing twice.
+- Payment is **not** touched: there is no automatic refund. Cancelling a paid order is an operator decision and the refund is a manual Stripe action; the webhook logs "refund manually" if a payment lands on a cancelled order.
+
+**Abandoned online checkouts.** A Stripe order reserves its stock when placed. Stripe expires an unpaid Checkout Session after 24 hours (its default) and sends `checkout.session.expired`; there is no cron or scheduler — release depends on that webhook, so the Stripe Dashboard endpoint (`POST /payments/webhook`, same `STRIPE_WEBHOOK_SECRET`) must be subscribed to **both** `checkout.session.completed` and `checkout.session.expired` (README, *Required webhook events*). The layering:
+
+1. `StripePaymentProvider.parseWebhook()` verifies the signature and turns the event into the neutral `WebhookEvent` — `checkoutCompleted { orderId, userId, amountTotalMinor, paymentIntentId }` or `checkoutExpired { orderId }` from the session's `order_id` metadata. The provider never touches the database.
+2. `PaymentsService.handleWebhook()` decides: a completed checkout settles the order (ProcessedEvent-first transaction, loyalty award); an expired checkout releases it by calling `OrdersService.cancel()`.
+3. `OrdersService.cancel()` owns the side effects, as above.
+
+What `checkout.session.expired` does, by order state:
+
+| Order when the event arrives | Effect |
+|---|---|
+| `PENDING`, unpaid, Stripe | cancelled through `cancel()`: stock back, loyalty reversed if any, `ProcessedEvent` recorded afterwards |
+| paid (`PAID`, or status beyond `PENDING`) | ignored, acknowledged (`received: true`) — nothing is resurrected or refunded |
+| already `CANCELLED` (admin, or an earlier delivery) | ignored, acknowledged; no second restock |
+| not a Stripe order, unknown order, no `order_id` | ignored, acknowledged |
+| duplicate delivery (same event id) | `ProcessedEvent` hit → ignored |
+| concurrent deliveries / admin cancel racing the event | the status-conditional update lets exactly one win; the others are acknowledged as no-ops |
+| `checkout.session.completed` arriving **after** the order was cancelled | acknowledged, not settled; logged as a manual refund case |
+
+For the expired event the idempotency guard is the status transition and the `ProcessedEvent` row is written **after** the release, so a crash in between leaves the order cancelled and the retry a no-op; the completed event keeps its ProcessedEvent-first transaction because settlement (payment status, loyalty award) is not status-idempotent on its own.
+
+Not implemented, by decision: customer self-cancellation (no endpoint or UI), automatic refunds, a scheduler for expiry, status-change emails.
+
 ---
 
 ## 4. Public surface rules

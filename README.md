@@ -97,7 +97,7 @@ The current folder layout predates the blueprint; the blueprint maps every exist
 - 👤 **Authentication** — JWT with refresh token rotation, cookie-based
 - 🎁 **Loyalty points** — Earned on purchases, redeemable at checkout
 - ❤️ **Favourites** — Save products, synced to account
-- 📦 **Order management** — Full order history with status tracking
+- 📦 **Order management** — Full order history, forward-only status lifecycle, cancellation with restock and loyalty reversal, abandoned online checkouts released on Stripe expiry
 - 🛡️ **Admin panel** — Product CRUD with image upload, ordering and primary image, order status management, stats
 - 📧 **Transactional email** — Order confirmations, password reset via Resend
 - 🖼️ **Image storage** — Self-hosted Minio with pre-signed URLs
