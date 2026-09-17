@@ -79,20 +79,36 @@
             <!-- Images -->
             <div>
               <span style="display: block; font-size: 13px; font-weight: 500; margin-bottom: 8px;">{{ $t('admin.photos') }}</span>
-              <div v-if="form.images.length" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;">
-                <div v-for="(_, idx) in form.images" :key="form.images[idx]" class="ac-img-cell">
-                  <img v-if="previewUrls[idx]" :src="previewUrls[idx]" :alt="`Image ${idx + 1}`" >
-                  <div v-else class="ac-img-fallback">{{ form.images[idx] }}</div>
-                  <button type="button" class="ac-img-remove" @click="removeImage(idx)">
-                    <UIcon name="i-heroicons-trash" class="w-5 h-5" />
-                  </button>
+              <!-- `form.images` order is the display order; index 0 is the primary image. -->
+              <div v-if="form.images.length" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
+                <div v-for="(ref, idx) in form.images" :key="ref" class="ac-img-item" :class="{ 'is-busy': imagesBusy }">
+                  <div class="ac-img-cell">
+                    <img v-if="previewUrls[idx]" :src="previewUrls[idx]" :alt="`Image ${idx + 1}`" >
+                    <div v-else class="ac-img-fallback">{{ ref }}</div>
+                    <span v-if="idx === 0" class="ac-img-primary">{{ $t('admin.primary_image') }}</span>
+                  </div>
+                  <div class="ac-img-actions">
+                    <button type="button" class="ac-img-action" :title="$t('admin.move_left')" :aria-label="$t('admin.move_left')" :disabled="imagesBusy || idx === 0" @click="moveImage(idx, idx - 1)">
+                      <UIcon name="i-heroicons-chevron-left" class="w-4 h-4" />
+                    </button>
+                    <button type="button" class="ac-img-action" :title="$t('admin.set_primary')" :aria-label="$t('admin.set_primary')" :disabled="imagesBusy || idx === 0" @click="setPrimary(idx)">
+                      <UIcon name="i-heroicons-star" class="w-4 h-4" />
+                    </button>
+                    <button type="button" class="ac-img-action" :title="$t('admin.move_right')" :aria-label="$t('admin.move_right')" :disabled="imagesBusy || idx === form.images.length - 1" @click="moveImage(idx, idx + 1)">
+                      <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
+                    </button>
+                    <button type="button" class="ac-img-action is-danger" :title="$t('admin.remove_image')" :aria-label="$t('admin.remove_image')" :disabled="imagesBusy" @click="removeImage(idx)">
+                      <UIcon name="i-heroicons-trash" class="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
               <!-- Drag & drop zone -->
               <div
                 class="ac-dropzone"
-                :class="{ 'is-drag': dragging }"
-                @click="fileInput?.click()"
+                :class="{ 'is-drag': dragging, 'is-busy': imagesBusy }"
+                :aria-busy="imagesBusy"
+                @click="!imagesBusy && fileInput?.click()"
                 @dragover.prevent="dragging = true"
                 @dragleave.prevent="dragging = false"
                 @drop.prevent="onDrop"
@@ -102,7 +118,7 @@
                 <div class="acf-hint">JPEG, PNG, WebP or GIF (max 5MB)</div>
               </div>
               <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display: none;" @change="onPick" >
-              <span v-if="uploadError" style="font-size: 13px; color: var(--ac-warm-red);">{{ uploadError }}</span>
+              <span v-if="uploadError" style="display: block; margin-top: 8px; font-size: 13px; color: var(--ac-warm-red);">{{ uploadError }}</span>
             </div>
 
             <p v-if="error" style="color: var(--ac-warm-red); font-size: 13px; margin: 0;">{{ error }}</p>
@@ -141,6 +157,9 @@ onMounted(() => {
 
 const saving = ref(false)
 const uploading = ref(false)
+// One image request at a time (upload, reorder or remove): buttons and the
+// dropzone are disabled while it runs, so a double click cannot fire twice.
+const imagesBusy = ref(false)
 const uploadError = ref('')
 const error = ref('')
 const dragging = ref(false)
@@ -224,24 +243,73 @@ watch(open, async (isOpen) => {
   }
 })
 
+// ── Images ──
+// Editing an existing product talks to the product's image sub-resource and
+// persists immediately; the API response is the source of truth for the order
+// shown. A new product has no id yet, so its images stay local (uploaded via
+// /uploads/image) until the product is created with them.
+type ImagesPayload = { images: string[]; image_urls: string[] }
+const imagesBase = () => `${apiBase}/admin/products/${props.productId}/images`
+
+function applyImages(payload: ImagesPayload) {
+  form.images = [...payload.images]
+  previewUrls.value = [...payload.image_urls]
+}
+
 async function uploadList(files: FileList | File[]) {
+  if (imagesBusy.value) return
   uploading.value = true
+  imagesBusy.value = true
   uploadError.value = ''
   try {
     for (const file of Array.from(files)) {
       const fd = new FormData()
       fd.append('file', file)
-      const { key, url } = await $fetch<{ key: string; url: string }>(`${apiBase}/uploads/image`, {
-        method: 'POST', credentials: 'include', body: fd,
-      })
-      form.images.push(key)
-      previewUrls.value.push(url)
+      if (editing.value) {
+        applyImages(await $fetch<ImagesPayload>(imagesBase(), { method: 'POST', credentials: 'include', body: fd }))
+      } else {
+        const { key, url } = await $fetch<{ key: string; url: string }>(`${apiBase}/uploads/image`, {
+          method: 'POST', credentials: 'include', body: fd,
+        })
+        form.images.push(key)
+        previewUrls.value.push(url)
+      }
     }
   } catch {
     uploadError.value = t('admin.upload_failed')
   } finally {
     uploading.value = false
+    imagesBusy.value = false
   }
+}
+
+/** Moves one image to a new position; position 0 makes it the primary image. */
+async function moveImage(from: number, to: number) {
+  if (imagesBusy.value || to < 0 || to >= form.images.length || from === to) return
+  const images = [...form.images]
+  const [moved] = images.splice(from, 1)
+  images.splice(to, 0, moved)
+  if (!editing.value) {
+    const urls = [...previewUrls.value]
+    const [movedUrl] = urls.splice(from, 1)
+    urls.splice(to, 0, movedUrl)
+    form.images = images
+    previewUrls.value = urls
+    return
+  }
+  imagesBusy.value = true
+  uploadError.value = ''
+  try {
+    applyImages(await $fetch<ImagesPayload>(`${imagesBase()}/order`, { method: 'PATCH', credentials: 'include', body: { images } }))
+  } catch {
+    uploadError.value = t('admin.image_update_failed')
+  } finally {
+    imagesBusy.value = false
+  }
+}
+
+function setPrimary(idx: number) {
+  return moveImage(idx, 0)
 }
 
 function onPick(e: Event) {
@@ -254,9 +322,26 @@ function onDrop(e: DragEvent) {
   const files = e.dataTransfer?.files
   if (files?.length) uploadList(files)
 }
-function removeImage(idx: number) {
-  form.images.splice(idx, 1)
-  previewUrls.value.splice(idx, 1)
+async function removeImage(idx: number) {
+  if (imagesBusy.value) return
+  if (!confirm(t('admin.remove_image_confirm'))) return
+  if (!editing.value) {
+    form.images.splice(idx, 1)
+    previewUrls.value.splice(idx, 1)
+    return
+  }
+  imagesBusy.value = true
+  uploadError.value = ''
+  try {
+    // `ref` may be a storage key or an absolute URL (spaces, query strings):
+    // always one encodeURIComponent, decoded once by the API router.
+    const ref = form.images[idx]
+    applyImages(await $fetch<ImagesPayload>(`${imagesBase()}/${encodeURIComponent(ref)}`, { method: 'DELETE', credentials: 'include' }))
+  } catch {
+    uploadError.value = t('admin.image_update_failed')
+  } finally {
+    imagesBusy.value = false
+  }
 }
 
 async function save() {

@@ -151,6 +151,22 @@
   opacity: 0; transition: opacity 0.15s; border: none; cursor: pointer;
 }
 .ac-img-cell:hover .ac-img-remove { opacity: 1; }
+.ac-img-item { display: flex; flex-direction: column; gap: 6px; }
+.ac-img-item.is-busy { opacity: 0.6; }
+.ac-img-primary {
+  position: absolute; left: 6px; top: 6px;
+  padding: 2px 7px; border-radius: 999px;
+  background: var(--ac-terracotta); color: #fff; font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+}
+.ac-img-actions { display: flex; justify-content: center; gap: 4px; }
+.ac-img-action {
+  width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--ac-card-border);
+  background: transparent; color: var(--ac-text); display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.ac-img-action:hover:not(:disabled) { background: var(--ac-bg-tint); }
+.ac-img-action.is-danger:hover:not(:disabled) { color: var(--ac-warm-red); border-color: var(--ac-warm-red); }
+.ac-img-action:disabled { opacity: 0.35; cursor: default; }
+.ac-dropzone.is-busy { pointer-events: none; opacity: 0.6; }
 
 .ac-section-icon {
   width: 40px; height: 40px; border-radius: 10px;
