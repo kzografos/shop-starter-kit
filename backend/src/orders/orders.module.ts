@@ -7,7 +7,6 @@ import { AnalyticsModule } from '../analytics/analytics.module'
 import { NotificationsModule } from '../notifications/notifications.module'
 import { OrdersController } from './orders.controller'
 import { OrdersAdminController } from './orders-admin.controller'
-import { PricingSettingsController } from './pricing-settings.controller'
 import { PricingSettingsService } from './pricing-settings.service'
 import { OrdersPermissions } from './orders-permissions'
 import { OrdersService } from './orders.service'
@@ -19,9 +18,10 @@ import { OrderNotificationsService } from './order-notifications.service'
   // NotificationsModule: order status changes are announced to the customer
   // through Core's notification rows (OrderNotificationsService).
   imports: [ProductsModule, SettingsModule, UsersModule, LoyaltyModule, AnalyticsModule, NotificationsModule],
-  controllers: [OrdersController, OrdersAdminController, PricingSettingsController],
+  controllers: [OrdersController, OrdersAdminController],
   // GuestOrderLinkerService subscribes to Core's user.authenticated event on init.
-  // PricingSettingsService registers the pricing keys with Core settings on init.
+  // PricingSettingsService registers the pricing settings (definitions, defaults,
+  // groups) with Core settings on init; Core serves the public read at GET /settings.
   // OrdersPermissions registers the order capabilities and the shop staff-role presets.
   // OrdersUserExtension registers the `_count.orders` field of /admin/customers.
   providers: [OrdersService, GuestOrderLinkerService, PricingSettingsService, OrdersPermissions, OrdersUserExtension, OrderNotificationsService],

@@ -41,6 +41,35 @@ export interface Profile {
   created_at: string
 }
 
+/** Settings Registry wire shapes (GET /admin/settings). Mirrors backend/src/settings/setting-definition.ts. */
+export interface SettingDefinition {
+  key: string
+  type: 'number' | 'string'
+  default: string
+  group: string
+  label_key: string
+  description_key?: string
+  order?: number
+  public?: boolean
+  editable?: boolean
+  min?: number
+  max?: number
+  step?: number
+  unit?: string
+}
+export interface SettingGroup {
+  id: string
+  label_key: string
+  description_key?: string
+  icon?: string
+  order: number
+}
+export interface AdminSettingsPayload {
+  groups: SettingGroup[]
+  definitions: SettingDefinition[]
+  values: Record<string, string>
+}
+
 export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'ready' | 'completed' | 'cancelled'
 export type FulfillmentType = 'shipping' | 'pickup'
 export type PaymentMethod = 'stripe' | 'cash_on_pickup' | 'card_on_pickup'

@@ -84,15 +84,21 @@ Frontend side: the layer path (`app/modules/<id>`) is added to `extends` by the 
 - Role presets: `{ role: 'stock_manager', capabilities: ['view:catalog', 'manage:catalog', 'manage:inventory', 'view:notifications', 'manage:media'] }`. Roles are lowercase strings stored as-is in `users.role`; adding one is a registration, never a schema change. `admin` (owner) and `customer` (member) are Core; do not redefine them. A preset may include Core capabilities (here the admin inbox and image upload) so the role gets the Core surfaces it needs; `accountant` carries none of them.
 - Guard your controllers with your own capabilities. Never guard with another module's. Core controllers are guarded only by Core capabilities (`view:notifications`, `manage:media`, …) — if a Core endpoint should be reachable by your role, add the Core capability to your preset rather than re-guarding the endpoint.
 
-### 3.3 Settings Registry contributions
+### 3.3 Settings Registry contributions (implemented — see `docs/SETTINGS-REGISTRY.md`)
 
 ```ts
-{ key: 'shipping_cost', type: 'number', default: 5, public: true, group: 'ecommerce.shipping', labelKey: 'admin.settings.shipping_cost', validate: v => v >= 0 }
+// <module>/my-settings.ts — the only place the setting is described
+export const MY_GROUPS: readonly SettingGroupDefinition[] = [{ id: 'fulfilment', labelKey: 'admin.fulfilment_settings', icon: 'box', order: 30 }]
+export const MY_SETTINGS: readonly SettingDefinition[] = [
+  { key: 'pickup_lead_hours', type: 'number', default: '2', group: 'fulfilment', labelKey: 'admin.pickup_lead_hours', order: 10, min: 0, step: 1, public: true },
+]
+// a provider's onModuleInit: this.settings.defineGroups(MY_GROUPS); this.settings.define(MY_SETTINGS)
 ```
 
 - `public: true` exposes the key on `GET /settings`; use it only for values the storefront must display (prices, thresholds). Secrets are never settings.
-- Read through the Core `SettingsService` typed accessor; never `prisma.setting` directly.
-- Provide defaults; the Core seed materialises them.
+- `default` is the one authoritative default: `SettingsService.getAll()` applies it when no row exists, so nothing is seeded. Never overwrite a stored row.
+- `min`/`max`/`editable`/`type` are enforced by Core on `PATCH /admin/settings`; the admin form renders the card and fields from the definition (label/hint i18n keys, unit, min/step) — do not touch `app/pages/admin/settings/index.vue`.
+- Read through the Core `SettingsService` (`getAll()`), or your own typed view like `PricingSettingsService.loadPricing()`; never `prisma.setting` directly.
 
 ### 3.4 Admin Registry contributions (`app.config.ts`, implemented — see `docs/ADMIN-REGISTRY.md`)
 

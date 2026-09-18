@@ -1,104 +1,105 @@
 <template>
   <div style="display: flex; flex-direction: column; gap: 20px; max-width: 760px;">
-    <!-- Shipping -->
-    <div class="ac-card" style="padding: 24px;">
-      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-        <div class="ac-section-icon">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2 12h12l2-8H7" /><circle cx="9" cy="20" r="1.25" /><circle cx="18" cy="20" r="1.25" /></svg>
-        </div>
-        <div>
-          <h2 style="font-family: Fraunces, serif; font-size: 17px; font-weight: 500; margin: 0;">{{ $t('admin.shipping_settings') }}</h2>
-          <p style="font-size: 13px; color: var(--ac-text-muted); margin: 2px 0 0;">{{ $t('admin.shipping_settings_sub') }}</p>
-        </div>
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-        <label class="acf">
-          <span>{{ $t('admin.shipping_cost') }} (€)</span>
-          <input v-model.number="form.shipping_cost" type="number" min="0" step="0.01" />
-        </label>
-        <label class="acf">
-          <span>{{ $t('admin.free_shipping_threshold') }} (€)</span>
-          <input v-model.number="form.free_shipping_threshold" type="number" min="0" step="0.01" />
-        </label>
-      </div>
+    <!-- Loading -->
+    <div v-if="pending && !data" class="ac-card" style="padding: 24px; color: var(--ac-text-muted); font-size: 13px;" data-state="loading">
+      {{ $t('common.loading') }}
     </div>
 
-    <!-- Loyalty -->
-    <div class="ac-card" style="padding: 24px;">
-      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-        <div class="ac-section-icon">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7 7 .5-5.5 4.5 2 7-6.5-4-6.5 4 2-7L2 9.5 9 9z" /></svg>
-        </div>
-        <div>
-          <h2 style="font-family: Fraunces, serif; font-size: 17px; font-weight: 500; margin: 0;">{{ $t('admin.loyalty_settings') }}</h2>
-          <p style="font-size: 13px; color: var(--ac-text-muted); margin: 2px 0 0;">{{ $t('admin.loyalty_settings_sub') }}</p>
-        </div>
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-        <label class="acf">
-          <span>{{ $t('admin.loyalty_earn_rate') }}</span>
-          <input v-model.number="form.loyalty_earn_rate" type="number" min="0" step="1" />
-          <span class="acf-hint">{{ $t('admin.loyalty_earn_hint') }}</span>
-        </label>
-        <label class="acf">
-          <span>{{ $t('admin.loyalty_redeem_rate') }}</span>
-          <input v-model.number="form.loyalty_redeem_rate" type="number" min="1" step="1" />
-          <span class="acf-hint">{{ $t('admin.loyalty_redeem_hint') }}</span>
-        </label>
-        <label class="acf">
-          <span>{{ $t('admin.loyalty_min_redeem') }}</span>
-          <input v-model.number="form.loyalty_min_redeem" type="number" min="0" step="1" />
-          <span class="acf-hint">{{ $t('admin.loyalty_min_hint') }}</span>
-        </label>
-      </div>
+    <!-- Error -->
+    <div v-else-if="error && !data" class="ac-card" style="padding: 24px;" data-state="error">
+      <p style="font-size: 13px; color: var(--ac-text-muted); margin: 0 0 12px;">{{ $t('admin.settings_load_failed') }}</p>
+      <button class="ac-btn-primary" @click="refresh()">{{ $t('common.retry') }}</button>
     </div>
 
-    <div style="display: flex; justify-content: flex-end;">
-      <button class="ac-btn-primary" :disabled="saving || pending" @click="save">
-        <svg v-if="!saving" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" /></svg>
-        {{ saving ? '…' : $t('common.save') }}
-      </button>
+    <!-- Nothing registered -->
+    <div v-else-if="cards.length === 0" class="ac-card" style="padding: 24px; color: var(--ac-text-muted); font-size: 13px;" data-state="empty">
+      {{ $t('admin.no_settings') }}
     </div>
+
+    <!-- One card per registered group, one field per registered setting -->
+    <template v-else>
+      <div v-for="card in cards" :key="card.id" class="ac-card" style="padding: 24px;" :data-settings-group="card.id">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+          <div class="ac-section-icon">
+            <AdminIcon :name="card.icon ?? ''" style="width: 20px; height: 20px;" />
+          </div>
+          <div>
+            <h2 style="font-family: Fraunces, serif; font-size: 17px; font-weight: 500; margin: 0;">{{ label(card.label_key) }}</h2>
+            <p v-if="card.description_key" style="font-size: 13px; color: var(--ac-text-muted); margin: 2px 0 0;">{{ label(card.description_key) }}</p>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <label v-for="field in card.fields" :key="field.key" class="acf" :data-setting="field.key">
+            <span>{{ label(field.label_key) }}<template v-if="field.unit"> ({{ field.unit }})</template></span>
+            <input
+              v-if="field.type === 'number'"
+              v-model.number="form[field.key]"
+              type="number"
+              :min="field.min"
+              :max="field.max"
+              :step="field.step ?? 'any'"
+              :disabled="field.editable === false"
+            >
+            <input
+              v-else
+              v-model="form[field.key]"
+              type="text"
+              :disabled="field.editable === false"
+            >
+            <span v-if="field.description_key" class="acf-hint">{{ label(field.description_key) }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button class="ac-btn-primary" :disabled="saving || pending" data-action="save" @click="save">
+          <svg v-if="!saving" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" /></svg>
+          {{ saving ? '…' : $t('common.save') }}
+        </button>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
+// Registry-driven: the API returns the groups and definitions modules
+// registered (Settings Registry, docs/SETTINGS-REGISTRY.md) with the current
+// values; this page renders exactly that list and never names a setting.
+import type { AdminSettingsPayload } from '~~/types'
+import { initialFormValues, patchBody, settingsCards, type SettingFormValue } from '~/utils/settings-form'
+
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const { public: { apiBase } } = useRuntimeConfig()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const toast = useToast()
 
 const saving = ref(false)
-const form = reactive({
-  shipping_cost: 5,
-  free_shipping_threshold: 50,
-  loyalty_earn_rate: 100,
-  loyalty_redeem_rate: 100,
-  loyalty_min_redeem: 500,
-})
+const form = reactive<Record<string, SettingFormValue>>({})
 
-const { data, pending } = await useAsyncData('admin-settings', () =>
-  $fetch<Record<string, string>>(`${apiBase}/admin/settings`, { credentials: 'include' }),
+const { data, pending, error, refresh } = await useAsyncData('admin-settings', () =>
+  $fetch<AdminSettingsPayload>(`${apiBase}/admin/settings`, { credentials: 'include' }),
   { server: false, lazy: true },
 )
 
-watch(data, (s) => {
-  if (!s) return
-  for (const k of Object.keys(form) as Array<keyof typeof form>) {
-    if (s[k] !== undefined) form[k] = Number(s[k])
-  }
+const cards = computed(() => settingsCards(data.value))
+// A definition whose key has no translation shows the key rather than nothing.
+const label = (key: string) => (te(key) ? t(key) : key)
+
+watch(data, (payload) => {
+  if (!payload) return
+  Object.assign(form, initialFormValues(payload))
 }, { immediate: true })
 
 async function save() {
-  if (saving.value) return
+  if (saving.value || !data.value) return
   saving.value = true
   try {
-    await $fetch(`${apiBase}/admin/settings`, { method: 'PATCH', credentials: 'include', body: { ...form } })
+    data.value = await $fetch<AdminSettingsPayload>(`${apiBase}/admin/settings`, { method: 'PATCH', credentials: 'include', body: patchBody(data.value.definitions, form) })
     toast.add({ title: t('admin.saved'), color: 'success', icon: 'i-heroicons-check-circle' })
   } catch (e: unknown) {
-    const msg = (e as { data?: { message?: string } })?.data?.message
-    toast.add({ title: msg ?? t('admin.save_failed'), color: 'error', icon: 'i-heroicons-exclamation-triangle' })
+    const msg = (e as { data?: { message?: string | string[] } })?.data?.message
+    toast.add({ title: (Array.isArray(msg) ? msg[0] : msg) ?? t('admin.save_failed'), color: 'error', icon: 'i-heroicons-exclamation-triangle' })
   } finally {
     saving.value = false
   }

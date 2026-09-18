@@ -343,6 +343,8 @@
     "chat": "Chat on WhatsApp"
   },
   "admin": {
+    "settings_load_failed": "Could not load the settings.",
+    "no_settings": "No settings are registered.",
     "title": "Admin",
     "group_workspace": "Workspace",
     "subtitle_dashboard": "Welcome back — here's what's happening at the shop today.",

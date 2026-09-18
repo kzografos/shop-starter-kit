@@ -13,24 +13,11 @@ const SEED_DEMO_DATA = process.env.SEED_DEMO_DATA === 'true';
 // capability in the system, so a weak one is refused rather than silently accepted.
 const MIN_OWNER_PASSWORD_LENGTH = 12;
 
-/**
- * Baseline settings. These are NOT demo data — orders.service reads every one of
- * them to price an order, and a missing row produces a NaN total. They must exist
- * in every environment, so they seed unconditionally.
- */
-async function seedSettings() {
-  const settings = [
-    { key: 'loyalty_earn_rate', value: '100' },
-    { key: 'loyalty_redeem_rate', value: '100' },
-    { key: 'loyalty_min_redeem', value: '500' },
-    { key: 'shipping_cost', value: '5.00' },
-    { key: 'free_shipping_threshold', value: '50.00' },
-  ];
-  for (const s of settings) {
-    await prisma.setting.upsert({ where: { key: s.key }, update: {}, create: s });
-  }
-  console.log(`Settings ensured (${settings.length} keys).`);
-}
+// Settings are not seeded. Every setting's default lives in its definition
+// (Settings Registry, docs/SETTINGS-REGISTRY.md) and SettingsService applies
+// it whenever no row exists; a row is written only when the owner saves the
+// admin form. Rows that exist are never touched here, so customised values
+// survive every seed run.
 
 /**
  * Creates the store's first owner from OWNER_EMAIL / OWNER_PASSWORD.
@@ -183,7 +170,6 @@ async function seedDemoData() {
 }
 
 async function main() {
-  await seedSettings();
   await seedOwner();
 
   if (!SEED_DEMO_DATA) {
