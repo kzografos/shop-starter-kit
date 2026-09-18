@@ -70,21 +70,18 @@ export default defineNuxtConfig({
     detectBrowserLanguage: false,
   },
 
+  // Public only: every secret lives with the backend (backend/.env), the
+  // frontend never talks to a provider directly.
   runtimeConfig: {
-    stripeSecretKey: process.env.STRIPE_SECRET_KEY,
-    stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-    resendApiKey: process.env.RESEND_API_KEY,
-    emailFrom: process.env.EMAIL_FROM || 'Sample Store <orders@example.com>',
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
-      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
     },
   },
 
   vite: {
     optimizeDeps: {
-      include: ['@vue/devtools-kit', '@vue/devtools-core', '@stripe/stripe-js'],
+      include: ['@vue/devtools-kit', '@vue/devtools-core'],
     },
   },
 

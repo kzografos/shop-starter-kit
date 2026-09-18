@@ -288,11 +288,12 @@ async function moveImage(from: number, to: number) {
   if (imagesBusy.value || to < 0 || to >= form.images.length || from === to) return
   const images = [...form.images]
   const [moved] = images.splice(from, 1)
+  if (moved === undefined) return
   images.splice(to, 0, moved)
   if (!editing.value) {
     const urls = [...previewUrls.value]
     const [movedUrl] = urls.splice(from, 1)
-    urls.splice(to, 0, movedUrl)
+    if (movedUrl !== undefined) urls.splice(to, 0, movedUrl)
     form.images = images
     previewUrls.value = urls
     return
@@ -336,6 +337,7 @@ async function removeImage(idx: number) {
     // `ref` may be a storage key or an absolute URL (spaces, query strings):
     // always one encodeURIComponent, decoded once by the API router.
     const ref = form.images[idx]
+    if (ref === undefined) return
     applyImages(await $fetch<ImagesPayload>(`${imagesBase()}/${encodeURIComponent(ref)}`, { method: 'DELETE', credentials: 'include' }))
   } catch {
     uploadError.value = t('admin.image_update_failed')

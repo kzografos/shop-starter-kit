@@ -82,6 +82,14 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-}
       PORT: 3001
+    # /health answers 503 when Postgres or Redis is unreachable, so the container
+    # goes unhealthy instead of running with sessions that cannot refresh.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     depends_on:
       postgres:
         condition: service_healthy
@@ -97,7 +105,6 @@ services:
     environment:
       NODE_ENV: production
       NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE}
-      NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
       # Absolute public origin. Without it siteUrl falls back to localhost:3000
       # and the schema.org Store entity plus og:image publish localhost URLs.
       NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL}

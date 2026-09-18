@@ -93,7 +93,7 @@ See `docs/MODULE-DEVELOPMENT-GUIDE.md` for the full contract and checklist.
 - Modules reference users by `userId` with a relation declared in the module's schema file; the Prisma back-relation on `User` is declared there too.
 - Do not write another module's rows directly (`prisma.<otherModel>.create/update/delete`). Use the owner's exported service or an event.
 - Migrations are one linear history. A schema-changing commit is never cherry-picked to a downstream project without its migration.
-- `RefreshToken` is dead (tokens live in Redis) and is scheduled for removal; do not build on it.
+- Refresh tokens live in Redis (`refresh:<userId>:<jti>`), not in the database; the old `RefreshToken` table was dropped. Do not reintroduce a token table.
 
 ---
 

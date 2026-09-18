@@ -254,8 +254,8 @@ const lowStock = ref<{ id: string; name_el: string; stock: number }[]>([])
 
 const revenueCategories = { 'Έσοδα': { name: 'Έσοδα', color: '#C97B5A' } }
 
-function revenueXFormatter(_: unknown, i: number) {
-  return revenueDates.value[i] ?? ''
+function revenueXFormatter(_: number | Date, i?: number) {
+  return revenueDates.value[i ?? 0] ?? ''
 }
 
 // ── Donut chart ─────────────────────────────────────────────

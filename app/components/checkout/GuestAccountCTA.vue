@@ -85,7 +85,7 @@ async function createAccount() {
     emit('done')
   } catch (e: unknown) {
     const msg = (e as { data?: { message?: string | string[] } })?.data?.message
-    error.value = Array.isArray(msg) ? msg[0] : (msg ?? t('checkout.account_error'))
+    error.value = (Array.isArray(msg) ? msg[0] : msg) ?? t('checkout.account_error')
   } finally {
     loading.value = false
   }

@@ -343,7 +343,7 @@ watch(
 
 const avatarInitial = computed(() => {
   const name = profile.value?.full_name || profile.value?.email || '?'
-  return name[0].toUpperCase()
+  return (name[0] ?? '?').toUpperCase()
 })
 
 const displayName = computed(() => {

@@ -64,7 +64,7 @@ function isActive(path: string) {
 
 const avatarInitial = computed(() => {
   const name = authStore.profile?.full_name || authStore.profile?.email || '?'
-  return name[0].toUpperCase()
+  return (name[0] ?? '?').toUpperCase()
 })
 
 const displayName = computed(() => {

@@ -240,7 +240,7 @@ const { data: categories, pending } = useAsyncData('root-categories', async () =
 const CATEGORY_BGS = ['bg-forest', 'bg-terracotta', 'bg-sage-dark', 'bg-bark']
 
 function catBg(index: number): string {
-  return CATEGORY_BGS[index % CATEGORY_BGS.length]
+  return CATEGORY_BGS[index % CATEGORY_BGS.length] ?? CATEGORY_BGS[0]!
 }
 
 // ── Category carousel (native scroll-snap) ───────────────────

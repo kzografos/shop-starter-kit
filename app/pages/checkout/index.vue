@@ -272,6 +272,13 @@ const total = computed(() =>
   Math.max(0, cartStore.subtotal + shippingCost.value - loyaltyDiscount.value)
 )
 
+// Idempotency-Key for POST /orders: a double click or a retry after a timeout
+// resends the same key and gets the same order back instead of a second one.
+// Anything that changes what would be ordered (cart, delivery, payment,
+// address, points, notes, guest email) starts a new key.
+const idempotencyKey = ref(crypto.randomUUID())
+watch([() => cartStore.items, form, pointsToRedeem], () => { idempotencyKey.value = crypto.randomUUID() }, { deep: true })
+
 async function placeOrder() {
   if (isGuest.value && !emailValid.value) {
     orderError.value = t('checkout.email_required')
@@ -291,6 +298,7 @@ async function placeOrder() {
     const order = await $fetch<{ id: string }>(`${apiBase}/orders`, {
       method: 'POST',
       credentials: 'include',
+      headers: { 'Idempotency-Key': idempotencyKey.value },
       body: {
         items: cartStore.items.map(i => ({
           productId: i.product.id,

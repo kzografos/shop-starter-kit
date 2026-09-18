@@ -71,6 +71,12 @@ model Order {
   total                 Decimal       @db.Decimal(10, 2)
   shippingAddress       Json?         @map("shipping_address")
   notes                 String?
+  // Client idempotency (POST /orders `Idempotency-Key`): the key, scoped to the
+  // buyer, and a digest of the payload it was first used with. Written in the
+  // same transaction as the order, so a key is "taken" exactly when its order
+  // commits and never by a failed attempt.
+  idempotencyKey        String?       @unique @map("idempotency_key")
+  idempotencyHash       String?       @map("idempotency_hash")
   createdAt             DateTime      @default(now()) @map("created_at")
   updatedAt             DateTime      @default(now()) @updatedAt @map("updated_at")
 

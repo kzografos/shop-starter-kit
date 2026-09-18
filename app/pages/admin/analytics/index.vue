@@ -244,8 +244,8 @@ const revCategories = computed(() => {
   if (data.value?.series?.prevRevenue) base.previous = { name: t('admin.prev_period'), color: '#9CA3AF' }
   return base
 })
-function xFormatter(_: unknown, i: number) {
-  const l = data.value?.series?.labels?.[i] ?? ''
+function xFormatter(_: number | Date, i?: number) {
+  const l = data.value?.series?.labels?.[i ?? 0] ?? ''
   return l.length === 7 ? l : l.slice(5) // month "YYYY-MM" full, else "MM-DD"
 }
 const granLabel = computed(() => {

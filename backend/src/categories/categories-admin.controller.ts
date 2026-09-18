@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards, ParseUUIDPipe } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { PermissionsGuard } from '../auth/guards/permissions.guard'
 import { RequirePermissions } from '../auth/decorators/permissions.decorator'
@@ -26,13 +26,13 @@ export class CategoriesAdminController {
 
   @Patch(':id')
   @RequirePermissions('manage:catalog')
-  update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateCategoryDto) {
     return this.categories.update(id, dto)
   }
 
   @Delete(':id')
   @RequirePermissions('manage:catalog')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.categories.remove(id)
   }
 }

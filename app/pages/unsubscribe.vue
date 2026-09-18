@@ -71,7 +71,9 @@ const api = useApi()
 
 const brandName = BUSINESS.name
 const email = typeof route.query.email === 'string' ? route.query.email.trim() : ''
-const isValid = !!email && email.includes('@')
+const token = typeof route.query.token === 'string' ? route.query.token.trim() : ''
+// Both halves come from the link in the email; a bare address is not enough.
+const isValid = !!email && email.includes('@') && !!token
 
 // Confirm-first: never call the API on load (email clients / scanners pre-fetch links).
 const status = ref<'confirm' | 'pending' | 'success' | 'invalid' | 'error'>(isValid ? 'confirm' : 'invalid')
@@ -79,10 +81,11 @@ const status = ref<'confirm' | 'pending' | 'success' | 'invalid' | 'error'>(isVa
 async function onConfirm() {
   status.value = 'pending'
   try {
-    await api(`/newsletter/unsubscribe?email=${encodeURIComponent(email)}`, { method: 'DELETE' })
+    await api(`/newsletter/unsubscribe?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`, { method: 'DELETE' })
     status.value = 'success'
-  } catch {
-    status.value = 'error'
+  } catch (e: unknown) {
+    const code = (e as { response?: { status?: number } })?.response?.status
+    status.value = code === 403 || code === 400 ? 'invalid' : 'error'
   }
 }
 

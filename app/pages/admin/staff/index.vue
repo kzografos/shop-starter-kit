@@ -125,7 +125,7 @@ const { public: { apiBase } } = useRuntimeConfig()
 const { t } = useI18n()
 const toast = useToast()
 const authStore = useAuthStore()
-const selfId = computed(() => (authStore.profile as any)?.id ?? '')
+const selfId = computed(() => authStore.profile?.id ?? '')
 
 const adminTheme = ref<'light' | 'dark'>('light')
 onMounted(() => {

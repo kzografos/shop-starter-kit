@@ -115,7 +115,7 @@
           </p>
           <UInput type="file" accept=".csv" @change="handleCsvUpload" />
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
-            <UButton :label="$t('common.cancel')" variant="outline" @click="showCsvUpload = false" />
+            <UButton :label="$t('common.cancel')" variant="outline" @click="() => { showCsvUpload = false }" />
             <UButton :label="$t('admin.import_csv')" :disabled="!csvFile" @click="importCsv" />
           </div>
         </div>

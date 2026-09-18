@@ -42,6 +42,24 @@ export class RedisService {
     }
   }
 
+  /**
+   * Liveness probe for /health: PING with a short deadline. Unlike the cache
+   * operations above this does not swallow the failure — the caller wants to
+   * know. Never throws; false means "down" (error or no answer in time).
+   */
+  async ping(timeoutMs = 2000): Promise<boolean> {
+    try {
+      const reply = await Promise.race([
+        this.client.ping(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs).unref()),
+      ])
+      return reply === 'PONG'
+    } catch (err) {
+      this.logger.warn(`Redis ping failed: ${err.message}`)
+      return false
+    }
+  }
+
   async delPattern(pattern: string): Promise<void> {
     try {
       const stream = this.client.scanStream({ match: pattern, count: 100 })

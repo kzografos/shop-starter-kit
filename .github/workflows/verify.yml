@@ -37,3 +37,31 @@ jobs:
 
       - name: Verify architecture
         run: npm run verify
+
+  frontend:
+    name: frontend verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        # version comes from package.json#packageManager
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies (lockfile)
+        run: pnpm install --frozen-lockfile
+
+      # Lint, typecheck and build need no secrets: runtimeConfig has defaults
+      # for the two public values and nothing else is read at build time.
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build

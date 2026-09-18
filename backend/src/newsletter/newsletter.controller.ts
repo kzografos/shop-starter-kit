@@ -1,6 +1,7 @@
 import { Controller, Post, Delete, Body, Query, HttpCode } from '@nestjs/common'
 import { NewsletterService } from './newsletter.service'
 import { SubscribeDto } from './dto/subscribe.dto'
+import { UnsubscribeDto } from './dto/unsubscribe.dto'
 
 @Controller('newsletter')
 export class NewsletterController {
@@ -14,7 +15,7 @@ export class NewsletterController {
 
   @Delete('unsubscribe')
   @HttpCode(200)
-  unsubscribe(@Query('email') email: string) {
-    return this.newsletter.unsubscribe(email)
+  unsubscribe(@Query() dto: UnsubscribeDto) {
+    return this.newsletter.unsubscribe(dto.email, dto.token)
   }
 }

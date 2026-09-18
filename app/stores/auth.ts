@@ -1,5 +1,5 @@
 import { defineStore, skipHydrate } from 'pinia'
-import type { Profile } from '~/types'
+import type { Profile } from '~~/types'
 
 export const useAuthStore = defineStore('auth', () => {
   const api = useApi()

@@ -292,6 +292,20 @@ npm run start:dev
 | Backend API   | http://localhost:3001 |
 | Minio Console | http://localhost:9001 |
 
+### Verification (what CI runs)
+
+Both halves have a gate; run them before pushing.
+
+```bash
+# backend — typecheck → build → architecture boundaries → route inventory → provider matrix
+cd backend && npm run verify
+
+# frontend — lint → typecheck → build (no secrets needed)
+pnpm lint && pnpm typecheck && pnpm build
+```
+
+`GET /health` reports PostgreSQL and Redis (`503` when either is down) and backs the backend container's healthcheck.
+
 ---
 
 ## Environment Variables
@@ -315,7 +329,6 @@ Copy `.env.example` to `.env` and fill in all values.
 | `MINIO_BUCKET`                | Minio bucket name for images            | ✅       |
 | `MINIO_PUBLIC_URL`            | Public URL for Minio                    | ✅       |
 | `STRIPE_SECRET_KEY`           | Stripe secret key                       | ✅       |
-| `STRIPE_PUBLISHABLE_KEY`      | Stripe publishable key                  | ✅       |
 | `STRIPE_WEBHOOK_SECRET`       | Stripe webhook signing secret           | ✅       |
 | `RESEND_API_KEY`              | Resend email API key                    | ✅       |
 | `EMAIL_FROM`                  | Sender email address                    | ✅       |

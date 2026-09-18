@@ -34,7 +34,10 @@ export interface Profile {
   full_name: string | null
   phone: string | null
   loyalty_points: number
-  role: 'customer' | 'admin'
+  /** Core `customer` / `admin`, or a module-registered staff role (`accountant`, `stock_manager`, …). */
+  role: string
+  /** Capabilities resolved for the role by the backend registry. */
+  permissions: string[]
   created_at: string
 }
 

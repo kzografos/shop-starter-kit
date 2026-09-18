@@ -1,5 +1,5 @@
 import {
-  Body, Controller, Delete, Get, Param, Patch, Post, Query,
+  Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query,
   UploadedFile, UseGuards, UseInterceptors,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
@@ -36,7 +36,7 @@ export class ProductsAdminController {
 
   @Get(':id')
   @RequirePermissions('view:catalog')
-  byId(@Param('id') id: string) {
+  byId(@Param('id', ParseUUIDPipe) id: string) {
     return this.products.findByIdForAdmin(id)
   }
 
@@ -48,13 +48,13 @@ export class ProductsAdminController {
 
   @Patch(':id')
   @RequirePermissions('manage:catalog')
-  update(@Param('id') id: string, @Body() dto: UpsertProductDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpsertProductDto) {
     return this.products.update(id, dto)
   }
 
   @Patch(':id/deactivate')
   @RequirePermissions('manage:catalog')
-  deactivate(@Param('id') id: string) {
+  deactivate(@Param('id', ParseUUIDPipe) id: string) {
     return this.products.deactivate(id)
   }
 
@@ -65,13 +65,13 @@ export class ProductsAdminController {
   @Post(':id/images')
   @RequirePermissions('manage:catalog', 'manage:media')
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }))
-  addImage(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+  addImage(@Param('id', ParseUUIDPipe) id: string, @UploadedFile() file: Express.Multer.File) {
     return this.products.addImage(id, file)
   }
 
   @Patch(':id/images/order')
   @RequirePermissions('manage:catalog')
-  reorderImages(@Param('id') id: string, @Body() dto: ReorderImagesDto) {
+  reorderImages(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ReorderImagesDto) {
     return this.products.reorderImages(id, dto.images)
   }
 
@@ -79,7 +79,7 @@ export class ProductsAdminController {
   // and decoded once by the router; keys contain no `%`, so no second decode.
   @Delete(':id/images/:ref')
   @RequirePermissions('manage:catalog', 'manage:media')
-  removeImage(@Param('id') id: string, @Param('ref') ref: string) {
+  removeImage(@Param('id', ParseUUIDPipe) id: string, @Param('ref') ref: string) {
     return this.products.removeImage(id, ref)
   }
 }

@@ -12,7 +12,8 @@ import { OrderNotificationsService } from './order-notifications.service'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { allowedTransitions, canTransition } from './order-status'
 import { Decimal } from '@prisma/client/runtime/library'
-import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
+import { Order, OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
+import { createHash } from 'crypto'
 
 const PAYMENT_STATUS_MAP: Record<string, PaymentStatus> = {
   pending: PaymentStatus.PENDING,
@@ -25,6 +26,22 @@ const PAYMENT_STATUS_MAP: Record<string, PaymentStatus> = {
 // prefix. Anchored and length-capped so it cannot be used to smuggle anything
 // into the LIKE pattern below.
 const UUID_PREFIX = /^[0-9a-f-]{1,36}$/i
+
+/**
+ * Deterministic JSON with sorted keys, so two requests carrying the same
+ * order (whatever the property order on the wire) hash identically.
+ */
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value as Record<string, unknown>).sort().map((k) => `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`).join(',')}}`
+  }
+  return JSON.stringify(value ?? null)
+}
+
+// Bookkeeping columns of the idempotency mechanism: read only by
+// findIdempotentReplay(), never part of an order payload.
+const ORDER_PRIVATE = { idempotencyKey: true, idempotencyHash: true } as const
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   pending: OrderStatus.PENDING,
@@ -51,7 +68,16 @@ export class OrdersService {
     private orderNotifications: OrderNotificationsService,
   ) {}
 
-  async create(userId: string | null, userEmail: string | null, dto: CreateOrderDto) {
+  /**
+   * Places an order. With an `idempotencyKey` (the `Idempotency-Key` request
+   * header) a repeat of the same request returns the order the first one
+   * created instead of placing a second: the key is scoped to the buyer
+   * (user id, or the guest email) and stored on the order row inside the
+   * creation transaction, so it is taken only by a committed order — a
+   * failed attempt (out of stock, bad points) leaves the key free for the
+   * retry. The same key with a different payload is refused with 409.
+   */
+  async create(userId: string | null, userEmail: string | null, dto: CreateOrderDto, idempotencyKey?: string) {
     // Guest checkout: must supply an email for the order confirmation.
     const guestEmail = userId ? null : dto.guestEmail
     if (!userId && !guestEmail)
@@ -59,6 +85,17 @@ export class OrdersService {
     const confirmationEmail = userEmail ?? guestEmail!
     // Capture as const so TS narrows it inside the transaction closure below.
     const uid = userId
+
+    const scopedKey = idempotencyKey
+      ? `${uid ? `user:${uid}` : `guest:${guestEmail!.trim().toLowerCase()}`}:${idempotencyKey}`
+      : null
+    const payloadHash = scopedKey
+      ? createHash('sha256').update(stableStringify({ ...dto, guestEmail: guestEmail?.trim().toLowerCase() })).digest('hex')
+      : null
+    if (scopedKey) {
+      const replay = await this.findIdempotentReplay(scopedKey, payloadHash!)
+      if (replay) return replay
+    }
 
     // Load settings. Throws if any pricing key is missing or non-numeric rather
     // than letting NaN propagate into subtotal, shipping and total.
@@ -103,68 +140,87 @@ export class OrdersService {
     const total = Math.max(0, subtotal + shippingCost - loyaltyDiscount)
 
     // Create order + items + loyalty in a transaction
-    const order = await this.prisma.$transaction(async (tx) => {
-      const newOrder = await tx.order.create({
-        data: {
-          userId,
-          guestEmail,
-          fulfillmentType: dto.fulfillmentType,
-          paymentMethod: dto.paymentMethod,
-          subtotal,
-          shippingCost,
-          loyaltyDiscount,
-          total,
-          shippingAddress: dto.shippingAddress ? { ...dto.shippingAddress } : undefined,
-          notes: dto.notes,
-          status: 'PENDING',
-          paymentStatus: 'PENDING',
-        },
-      })
-
-      // Decrement stock + create items
-      for (const item of dto.items) {
-        const product = products.find((p) => p.id === item.productId)!
-        const updated = await tx.product.updateMany({
-          where: { id: item.productId, stock: { gte: item.quantity } },
-          data: { stock: { decrement: item.quantity } },
-        })
-        if (updated.count === 0)
-          throw new BadRequestException(`Insufficient stock for: ${product.nameEn}`)
-
-        await tx.orderItem.create({
+    let order: Order
+    try {
+      order = await this.prisma.$transaction(async (tx) => {
+        const newOrder = await tx.order.create({
           data: {
-            orderId: newOrder.id,
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPrice: Number(product.price),
-            productName: product.nameEl || product.nameEn,
-            productPrice: Number(product.price),
+            userId,
+            guestEmail,
+            idempotencyKey: scopedKey,
+            idempotencyHash: payloadHash,
+            fulfillmentType: dto.fulfillmentType,
+            paymentMethod: dto.paymentMethod,
+            subtotal,
+            shippingCost,
+            loyaltyDiscount,
+            total,
+            shippingAddress: dto.shippingAddress ? { ...dto.shippingAddress } : undefined,
+            notes: dto.notes,
+            status: 'PENDING',
+            paymentStatus: 'PENDING',
           },
         })
-      }
 
-      // Loyalty: redeem (logged-in only — guests can't redeem)
-      if (uid && pointsToRedeem > 0) {
-        await this.loyalty.redeem(tx, uid, newOrder.id, pointsToRedeem)
-      }
+        // Decrement stock + create items
+        for (const item of dto.items) {
+          const product = products.find((p) => p.id === item.productId)!
+          const updated = await tx.product.updateMany({
+            where: { id: item.productId, stock: { gte: item.quantity } },
+            data: { stock: { decrement: item.quantity } },
+          })
+          if (updated.count === 0)
+            throw new BadRequestException(`Insufficient stock for: ${product.nameEn}`)
 
-      // Non-Stripe orders are settled immediately (cash/card on pickup).
-      // Stripe orders are confirmed on webhook instead.
-      if (dto.paymentMethod !== 'STRIPE') {
-        // Loyalty: earn (logged-in only — Stripe earns on webhook)
-        if (uid) {
-          const pointsEarned = Math.floor(total * s.loyalty_earn_rate)
-          await this.loyalty.earn(tx, uid, newOrder.id, pointsEarned)
+          await tx.orderItem.create({
+            data: {
+              orderId: newOrder.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: Number(product.price),
+              productName: product.nameEl || product.nameEn,
+              productPrice: Number(product.price),
+            },
+          })
         }
-        await tx.order.update({
-          where: { id: newOrder.id },
-          data: { status: 'CONFIRMED', paymentStatus: 'PAID' },
-        })
-        await this.orderNotifications.statusWrite(tx, newOrder, OrderStatus.CONFIRMED)
-      }
 
-      return newOrder
-    })
+        // Loyalty: redeem (logged-in only — guests can't redeem)
+        if (uid && pointsToRedeem > 0) {
+          await this.loyalty.redeem(tx, uid, newOrder.id, pointsToRedeem)
+        }
+
+        // Non-Stripe orders are settled immediately (cash/card on pickup).
+        // Stripe orders are confirmed on webhook instead.
+        if (dto.paymentMethod !== 'STRIPE') {
+          // Loyalty: earn (logged-in only — Stripe earns on webhook)
+          if (uid) {
+            const pointsEarned = Math.floor(total * s.loyalty_earn_rate)
+            await this.loyalty.earn(tx, uid, newOrder.id, pointsEarned)
+          }
+          await tx.order.update({
+            where: { id: newOrder.id },
+            data: { status: 'CONFIRMED', paymentStatus: 'PAID' },
+          })
+          await this.orderNotifications.statusWrite(tx, newOrder, OrderStatus.CONFIRMED)
+        }
+
+        return newOrder
+      })
+    } catch (err) {
+      // Two requests with the same key raced: the other one committed first
+      // and this transaction rolled back (no stock, points or rows written).
+      // Answer with the order that won, exactly as a later retry would.
+      if (
+        scopedKey &&
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002' &&
+        (err.meta?.target as string[] | undefined)?.includes('idempotency_key')
+      ) {
+        const replay = await this.findIdempotentReplay(scopedKey, payloadHash!)
+        if (replay) return replay
+      }
+      throw err
+    }
     if (dto.paymentMethod !== 'STRIPE') await this.orderNotifications.invalidate(order)
 
     // Only cash/card-on-pickup orders are settled here. A Stripe order is still
@@ -189,6 +245,25 @@ export class OrdersService {
     }
 
     return { id: order.id }
+  }
+
+  /**
+   * The order a key was already used for, as the creation response, or null
+   * when the key is free. A key reused with a different payload is a client
+   * error: the caller wanted a *different* order under a key that already
+   * names one.
+   */
+  private async findIdempotentReplay(scopedKey: string, payloadHash: string): Promise<{ id: string } | null> {
+    const existing = await this.prisma.order.findUnique({
+      where: { idempotencyKey: scopedKey },
+      select: { id: true, idempotencyHash: true },
+    })
+    if (!existing) return null
+    if (existing.idempotencyHash !== payloadHash) {
+      throw new ConflictException('Idempotency key was already used for a different order')
+    }
+    this.logger.log(`Order ${existing.id} returned for a repeated idempotency key`)
+    return { id: existing.id }
   }
 
   /**
@@ -226,6 +301,7 @@ export class OrdersService {
   async findByUser(userId: string) {
     const orders = await this.prisma.order.findMany({
       where: { userId },
+      omit: ORDER_PRIVATE,
       include: {
         items: {
           select: {
@@ -265,6 +341,7 @@ export class OrdersService {
   async findOneForUser(orderId: string, userId: string) {
     const order = await this.prisma.order.findFirst({
       where: { id: orderId, userId },
+      omit: ORDER_PRIVATE,
       include: {
         items: {
           select: {
@@ -390,6 +467,7 @@ export class OrdersService {
     const [orders, total] = await this.prisma.$transaction([
       this.prisma.order.findMany({
         where,
+        omit: ORDER_PRIVATE,
         orderBy: { createdAt: 'desc' },
         skip,
         take: PAGE_SIZE,
@@ -413,7 +491,10 @@ export class OrdersService {
   /**
    * Moves an order along the lifecycle in ./order-status.ts. Anything that is
    * not a listed forward transition — going back, repeating the current
-   * status, leaving COMPLETED or CANCELLED — is rejected with 400.
+   * status, leaving COMPLETED or CANCELLED — is rejected with 400. The write
+   * is conditional on the status that was checked, so two staff members
+   * moving the same order at once cannot both win: the second sees 409 and
+   * re-reads, exactly like cancel().
    */
   async updateStatus(id: string, status: string) {
     const mapped = STATUS_MAP[status]
@@ -428,11 +509,12 @@ export class OrdersService {
       )
     }
     // The customer's notification commits with the status, or not at all.
-    const notify = this.orderNotifications.statusWrite(this.prisma, { id, userId: current.userId }, mapped)
-    const [order] = await this.prisma.$transaction([
-      this.prisma.order.update({ where: { id }, data: { status: mapped } }),
-      ...(notify ? [notify] : []),
-    ])
+    const order = await this.prisma.$transaction(async (tx) => {
+      const moved = await tx.order.updateMany({ where: { id, status: current.status }, data: { status: mapped } })
+      if (moved.count === 0) throw new ConflictException('Order changed while its status was being updated')
+      await this.orderNotifications.statusWrite(tx, { id, userId: current.userId }, mapped)
+      return tx.order.findUniqueOrThrow({ where: { id }, omit: ORDER_PRIVATE })
+    })
     await this.orderNotifications.invalidate({ id, userId: current.userId })
     return order
   }
@@ -478,7 +560,7 @@ export class OrdersService {
 
       if (current.userId) await this.loyalty.reverseForOrder(tx, current.userId, id)
 
-      return { order: await tx.order.findUniqueOrThrow({ where: { id } }), restocked }
+      return { order: await tx.order.findUniqueOrThrow({ where: { id }, omit: ORDER_PRIVATE }), restocked }
     })
 
     this.logger.log(`Order ${id} cancelled${reason ? ` (${reason})` : ''}: ${restocked.length} line(s) restocked`)

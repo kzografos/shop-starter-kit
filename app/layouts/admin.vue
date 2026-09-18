@@ -242,37 +242,37 @@ const adminTheme = ref<'light' | 'dark'>('light')
 
 function setTheme(t: 'light' | 'dark') {
   adminTheme.value = t
-  try { localStorage.setItem('admin-theme', t) } catch {}
+  try { localStorage.setItem('admin-theme', t) } catch { /* storage unavailable (private mode) */ }
 }
 
 onMounted(() => {
   try {
     const saved = localStorage.getItem('admin-theme') as 'light' | 'dark' | null
     if (saved === 'light' || saved === 'dark') adminTheme.value = saved
-  } catch {}
+  } catch { /* storage unavailable (private mode) */ }
 })
 
 // ── User display ────────────────────────────────────────────
 const displayName = computed(() => {
   const p = authStore.profile
   if (!p) return 'Admin'
-  const name = (p as any).full_name
+  const name = p.full_name
   if (name) {
     const parts = name.trim().split(' ')
-    return parts.length >= 2 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0]
+    return parts.length >= 2 ? `${parts[0]} ${parts[parts.length - 1]?.[0] ?? ''}.` : (parts[0] ?? 'Admin')
   }
-  return (p as any).email?.split('@')[0] ?? 'Admin'
+  return p.email.split('@')[0] ?? 'Admin'
 })
 
 const initials = computed(() => {
   const p = authStore.profile
   if (!p) return 'A'
-  const name = (p as any).full_name
+  const name = p.full_name
   if (name) {
     const parts = name.trim().split(' ').filter(Boolean)
-    if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-    return parts[0][0]?.toUpperCase() ?? 'A'
+    if (parts.length >= 2) return `${parts[0]?.[0] ?? ''}${parts[parts.length - 1]?.[0] ?? ''}`.toUpperCase()
+    return parts[0]?.[0]?.toUpperCase() ?? 'A'
   }
-  return ((p as any).email?.[0] ?? 'A').toUpperCase()
+  return (p.email[0] ?? 'A').toUpperCase()
 })
 </script>

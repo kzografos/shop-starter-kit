@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards, ParseUUIDPipe } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { PermissionsGuard } from '../auth/guards/permissions.guard'
 import { RequirePermissions } from '../auth/decorators/permissions.decorator'
@@ -23,17 +23,17 @@ export class StaffController {
   }
 
   @Patch(':id/role')
-  updateRole(@Param('id') id: string, @Body() dto: UpdateStaffRoleDto, @CurrentUser() user: { id: string }) {
+  updateRole(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateStaffRoleDto, @CurrentUser() user: { id: string }) {
     return this.staff.updateRole(id, dto, user.id)
   }
 
   @Patch(':id/password')
-  resetPassword(@Param('id') id: string, @Body() dto: ResetStaffPasswordDto) {
+  resetPassword(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ResetStaffPasswordDto) {
     return this.staff.resetPassword(id, dto.password)
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: { id: string }) {
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: { id: string }) {
     return this.staff.remove(id, user.id)
   }
 }

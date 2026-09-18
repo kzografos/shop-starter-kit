@@ -115,8 +115,7 @@ export class MailService {
       .catch((err) => this.logger.error('Password reset email failed', err))
   }
 
-  async sendWelcomeEmail(to: string) {
-    const unsubscribeUrl = `${this.siteUrl}/unsubscribe?email=${encodeURIComponent(to)}`
+  async sendWelcomeEmail(to: string, unsubscribeUrl: string) {
     const content = `
       <p style="margin:0 0 16px;">Thanks for subscribing to ${this.brandName}!</p>
       <p style="margin:0 0 26px;">You'll be first to hear about new arrivals and exclusive offers.</p>

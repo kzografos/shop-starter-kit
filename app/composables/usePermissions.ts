@@ -33,8 +33,8 @@ export const STAFF_ROLES = ['admin', 'accountant', 'stock_manager']
 
 export function usePermissions() {
   const auth = useAuthStore()
-  const permissions = computed<string[]>(() => ((auth.profile as any)?.permissions as string[]) ?? [])
-  const role = computed<string>(() => (auth.profile as any)?.role ?? '')
+  const permissions = computed<string[]>(() => auth.profile?.permissions ?? [])
+  const role = computed<string>(() => auth.profile?.role ?? '')
   const isStaff = computed(() => STAFF_ROLES.includes(role.value))
   const can = (cap: Cap) => permissions.value.includes(cap)
 
