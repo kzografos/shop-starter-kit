@@ -162,6 +162,8 @@ this.registry.define({
 - Core applies extensions only where a user object is returned to a client, never per request in the JWT strategy — keep `extend()` cheap.
 - Field names are camelCase; the Core interceptor snake-cases them on the wire (`loyaltyPoints` → `loyalty_points`).
 - Do not use an extension to smuggle behaviour into Core (no writes, no side effects); it is a read-only projection.
+- **Reading it on the frontend:** Core's `Profile` type carries extensions as `[extension: string]: unknown` and names none of them. Declare your field's type next to your module's types (`LoyaltyProfileExtension { loyalty_points: number }`) and read it through a module composable (`useLoyalty()` → `loyaltyPointsOf(profile)`, `app/utils/loyalty.ts`), never by adding a computed to the Core auth store.
+- Role values Core writes (`OWNER_ROLE`, `MEMBER_ROLE`) live in `backend/src/users/roles.ts`; import them from there in `users/`, and from `auth/permissions` (which re-exports them) elsewhere. `users/` never imports `auth/` at runtime — boundary rule E.
 
 ### 3.9 Mail
 
@@ -256,6 +258,17 @@ Never `prisma.<A's model>` from B. Never write A's rows.
 - Pages that need auth use `definePageMeta({ middleware: 'auth' })`; admin pages `{ layout: 'admin', middleware: 'admin' }`. Do not add global middleware.
 - Currency, locale list and formatting options come from project config through Core composables; do not hardcode `EUR` or `el-GR`.
 - Do not edit Core components to add your link, button or drawer. If a slot you need does not exist, propose it as a Core change first.
+- **Notification wording is a contribution.** Core's bell, panel and history page render every row through `describeNotification()` (`app/utils/notification-presenters.ts`); a type nobody registered gets the generic line. If your module writes notification rows, register a presenter from a universal plugin in your layer:
+
+```ts
+// plugins/<module>-notifications.ts
+import { registerNotificationPresenter } from '~/utils/notification-presenters'
+export default defineNuxtPlugin(() => {
+  registerNotificationPresenter('order_status', (row, { t, localePath }) => ({ title: t('…'), body: t('…'), to: localePath('/account/orders/' + row.meta?.order_id) }))
+})
+```
+
+  The presenter owns its `meta` shape and its i18n keys; it must not throw (a throw falls back to the generic line, so it would silently lose your wording). Reference: `app/utils/order-notification-presenter.ts`.
 
 ---
 

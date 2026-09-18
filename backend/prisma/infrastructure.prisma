@@ -14,7 +14,9 @@
 model ProcessedEvent {
   eventId     String   @id @map("event_id")
   eventType   String   @map("event_type")
-  orderId     String?  @map("order_id") @db.Uuid
+  /// What the event was about, as the provider named it (an order id today).
+  /// Provider-neutral text: the ledger belongs to Infrastructure, not to orders.
+  subjectId   String?  @map("subject_id")
   processedAt DateTime @default(now()) @map("processed_at")
 
   @@index([processedAt])

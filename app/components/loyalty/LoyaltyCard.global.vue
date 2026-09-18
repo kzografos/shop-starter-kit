@@ -42,7 +42,6 @@
 
 <script setup lang="ts">
 // Contributed to the account dashboard through app.config `accountCards` (registered globally).
-const authStore = useAuthStore()
-const { loyaltyPoints } = storeToRefs(authStore)
+const { points: loyaltyPoints } = useLoyalty()
 const localePath = useLocalePath()
 </script>

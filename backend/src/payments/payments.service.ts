@@ -138,7 +138,7 @@ export class PaymentsService {
     // provider redelivering after a timeout, and against two deliveries racing.
     const writes: Prisma.PrismaPromise<unknown>[] = [
       this.prisma.processedEvent.create({
-        data: { eventId: event.id, eventType: event.type, orderId },
+        data: { eventId: event.id, eventType: event.type, subjectId: orderId },
       }),
       this.prisma.order.update({
         where: { id: orderId },
@@ -245,7 +245,7 @@ export class PaymentsService {
     }
 
     try {
-      await this.prisma.processedEvent.create({ data: { eventId, eventType, orderId } })
+      await this.prisma.processedEvent.create({ data: { eventId, eventType, subjectId: orderId } })
     } catch (err) {
       if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002')) throw err
     }

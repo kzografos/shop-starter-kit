@@ -37,8 +37,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const isAdmin = computed(() => profile.value?.role === 'admin')
-  const loyaltyPoints = computed(() => profile.value?.loyalty_points ?? 0)
   const isLoggedIn = computed(() => !!profile.value)
 
-  return { profile: skipHydrate(profile), loading, error, isAdmin, loyaltyPoints, isLoggedIn, fetchProfile, clearSession, signOut }
+  return { profile: skipHydrate(profile), loading, error, isAdmin, isLoggedIn, fetchProfile, clearSession, signOut }
 })

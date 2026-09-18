@@ -28,17 +28,29 @@ export interface Product {
   category?: Category
 }
 
+/**
+ * GET /profile — Core columns plus whatever user extensions the backend's
+ * `UserExtensionsRegistry` merged in. Core names none of the extension fields;
+ * a module declares its own (e.g. `LoyaltyProfileExtension`) and reads it
+ * through its own composable.
+ */
 export interface Profile {
   id: string
   email: string
   full_name: string | null
   phone: string | null
-  loyalty_points: number
   /** Core `customer` / `admin`, or a module-registered staff role (`accountant`, `stock_manager`, …). */
   role: string
   /** Capabilities resolved for the role by the backend registry. */
   permissions: string[]
   created_at: string
+  /** Module-registered user extension fields, snake_cased on the wire. */
+  [extension: string]: unknown
+}
+
+/** Shop (loyalty module): the field its user extension adds to `/profile`. Read via `useLoyalty()`. */
+export interface LoyaltyProfileExtension {
+  loyalty_points: number
 }
 
 /** Settings Registry wire shapes (GET /admin/settings). Mirrors backend/src/settings/setting-definition.ts. */

@@ -16,12 +16,9 @@ export type Capability = string
 
 // Role values are the strings stored in `users.role` (lowercase). Core names
 // only the two it needs; every other staff role is a module-registered preset.
-
-/** The role that bypasses every check and may sign into the admin panel unconditionally. */
-export const OWNER_ROLE = 'admin'
-
-/** The default, non-staff role every account holds unless promoted. */
-export const MEMBER_ROLE = 'customer'
+// The values live with the row that stores them (users/roles.ts) and are
+// re-exported here so permission code keeps one import for its vocabulary.
+export { OWNER_ROLE, MEMBER_ROLE } from '../users/roles'
 
 /**
  * Position of a contribution in the merged capability list (what the owner

@@ -50,7 +50,7 @@ A1–A4 are small and should land **before any new module**, because each new mo
 | C5 | Refunds (Stripe refund via the provider interface + `REFUNDED` payment status flow), VAT lines, product variants, shipping providers/rates | Shop features explicitly out of v1 |
 | C6 | Image variants/resizing at upload (sharp), upload quotas | Media sub-domain |
 | C7 | Customer detail page in admin (orders, loyalty ledger, notifications) | Admin polish |
-| C8 | Notification presenter registry (per-module `describe()`), bell focus trap, real-time push (SSE) for the badge | Only when a second notification type appears |
+| C8 | ~~Notification presenter registry (per-module `describe()`)~~ done (`app/utils/notification-presenters.ts`, shop plugin); bell focus trap, real-time push (SSE) for the badge | Only when a second notification type appears |
 | C9 | Order status emails as an opt-in channel next to in-app | Decided against for v1; would reuse `MailService` + the producer |
 | C10 | New-project cloning guide and script (`scripts/new-project`), generalised from `PETSHOPCY-MANUAL.md` | Phase 4; the reason the starter exists |
 | C11 | Second small module built against the guide (contact form or blog stub) | Phase 4 validation of the module contract |

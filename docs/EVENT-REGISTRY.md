@@ -107,15 +107,15 @@ No frontend code subscribes to backend events (no SSE/WebSocket); the unread bad
 |---|---|---|---|
 | `user.authenticated` | Core (`core/events/core-event.types.ts`) | Core `auth` | Any module (Shop today: `orders`). Core subscribes to nothing from modules |
 | `WebhookEvent` (`checkout.session.completed` / `expired`) | Infrastructure (`payments-provider`) — provider-neutral shape | External provider decides the fact; Shop `payments` decides what it means for the order | Shop `payments` only; nothing else reads webhooks |
-| Order-status notification (`order:<id>:status:<s>`) | Core owns the row contract (`NotificationsService`); Shop `orders` owns the key format, statuses and `meta` | Shop `orders` (and `payments` through `OrderNotificationsService`) | Core feed/bell (renders by type); the *wording* lives in Core `useCustomerNotifications.describe()` — ownership is split, see B5 |
+| Order-status notification (`order:<id>:status:<s>`) | Core owns the row contract (`NotificationsService`); Shop `orders` owns the key format, statuses and `meta` | Shop `orders` (and `payments` through `OrderNotificationsService`) | Core feed/bell renders every row through `describeNotification()`; the `order_status` *wording* is Shop's `utils/order-notification-presenter.ts`, registered by `plugins/order-notifications.ts` (B5 closed for the customer feed) |
 | Stock alert (`LOW_STOCK` / `OUT_OF_STOCK`) | Core row contract; Shop `products` owns the rule and `meta` | Shop `products` | Core staff inbox |
 | Cache invalidation | Each cache owner (`invalidate()`) | The writer that changed the data | Only the owner deletes its namespace (seam 8) |
 | Mail sends | Infrastructure `MailService` (transport + layout); templates owned by the sending module | Sending module | — |
 | `api:unauthenticated` | Core frontend (`useApi`) | `useApi` | Session owner (`auth` store via plugin) |
 
 **Unclear or split ownership**
-- Order-status wording: produced by Shop, rendered by Core (B5 below).
-- `ProcessedEvent`: Infrastructure table (`infrastructure.prisma`), but written only by Shop `payments`, and it carries `orderId` — a Shop column on an Infrastructure ledger (blueprint §9 already plans `subjectId`).
+- ~~Order-status wording: produced by Shop, rendered by Core~~ resolved: Shop registers the presenter, Core only calls it (B5).
+- ~~`ProcessedEvent` carries `orderId`~~ resolved: the column is `subjectId` (text), the blueprint §9 shape; still written only by Shop `payments`, which is expected until a second webhook consumer exists (B8).
 - Shop role presets (`accountant`, `stock_manager`) are registered from `orders/` — a registry contribution, not an event, but the same "no shop root yet" gap.
 
 ---
@@ -130,17 +130,17 @@ No frontend code subscribes to backend events (no SSE/WebSocket); the unread bad
 | B2 | Shop publishes Core-specific events | **No.** Shop publishes nothing on the bus; its reactions are direct calls into its own sub-domains or into Core services it is allowed to use (`NotificationsService`) |
 | B3 | Infrastructure events leak business logic | **No.** `parseWebhook` only verifies and maps; amount checks, order state, loyalty and mail decisions are in Shop `payments`; `MailService` renders a layout and sends — templates are the modules' |
 | B4 | Auth/session events consumed by unrelated modules | **No.** One consumer (`orders` guest linking) with a legitimate need; consumption is through the typed bus, not by importing `auth` |
-| B5 | Notification events tightly coupled to implementations | **Partly.** Row contract, keys and `meta` are stable and module-owned; but the customer-facing text for `order_status` rows is hard-coded in Core `useCustomerNotifications.describe()` (documented deferral: a presenter registry once a second type exists). The staff inbox page likewise knows the two stock types (`out_of_stock`/`low_stock`) |
+| B5 | Notification events tightly coupled to implementations | **Customer feed: resolved.** Core `app/utils/notification-presenters.ts` is a registry (`registerNotificationPresenter(type, presenter)` / `describeNotification(row, { t, localePath })`) with the generic fallback for unregistered types and for a presenter that throws; Shop's `order_status` presenter (`utils/order-notification-presenter.ts`, unchanged wording and keys) is registered by `plugins/order-notifications.ts`. **Staff inbox: open** — `pages/admin/notifications/index.vue` still knows `out_of_stock`/`low_stock` (the whole page is a stock page; it moves with the shop admin pages) |
 | B6 | Webhook processing separated from domain processing | **Yes.** Provider verification/mapping (Infrastructure) → `PaymentsService` orchestration (Shop) → `OrdersService.cancel()` / `OrderNotificationsService` (Shop domain) → `NotificationsService` (Core persistence). Webhooks never touch the `CoreEventBus` |
 | B7 | Event contracts shared through appropriate abstractions | **Yes for the bus and the webhook** (`CoreEventMap`, `WebhookEvent`); **no contract at all** for the "events" that are really direct calls — they are ordinary service method signatures, which is acceptable at this size but is the thing an Event Registry would formalise |
-| B8 | `ProcessedEvent` carries a Shop column (`orderId`) in an Infrastructure table | **Confirmed leak** (schema-level, documented in the blueprint as a future `subjectId` rename) |
+| B8 | `ProcessedEvent` carries a Shop column (`orderId`) in an Infrastructure table | **Resolved.** `subjectId String? @map("subject_id")` (text) by migration `20260919120000_processed_event_subject` (`RENAME COLUMN` + `TYPE TEXT`, values kept); both `payments.service.ts` writes store the order id in it; nothing reads the column; PK and idempotency unchanged (verified: settle, redeliver, 3 concurrent, expired, expired redelivery) |
 
 No confirmed rule violation on the bus itself. B5 and B8 are boundary findings; the rest are clean.
 
 ### 3.2 Recommendations (not done)
 
 - Give the two notification producers explicit contracts (`OrderStatusNotification`, `StockAlertNotification` types next to their producers) so the frontend presenters can import the `meta` shape instead of guessing it.
-- Rename `ProcessedEvent.orderId` → `subjectId` with the next Infrastructure migration.
+- ~~Rename `ProcessedEvent.orderId` → `subjectId` with the next Infrastructure migration.~~ Done (`20260919120000_processed_event_subject`).
 - When a second bus event exists, add an event name registry (typed map per module, merged in the composition root) rather than growing `CoreEventMap` with module events — see §6.
 
 ---
@@ -177,7 +177,8 @@ Confirmed findings: none open. **R3** (double loyalty award on concurrent authen
 | `orders/guest-order-linker.service.ts` | **Safe to move with Shop** | Subscribes through the exported bus; R3 fixed |
 | `orders/order-notifications.service.ts`, `products/stock-alerts.service.ts` | **Safe to move with Shop** | Depend only on Core's exported `NotificationsService` |
 | `notifications/` (rows, inboxes, `createWrite`) | **Safe to move with Core** | No producer knowledge |
-| `useCustomerNotifications.describe()` order-status wording; admin inbox's stock-type branches | **Requires contract extraction first** | Core code rendering Shop `meta`; needs a presenter/type contribution (registry) or the wording moves to the Shop layer |
+| `useCustomerNotifications.describe()` | **Safe to move with Core** | Delegates to the presenter registry; the `order_status` presenter and its plugin move with Shop |
+| Admin inbox's stock-type branches (`pages/admin/notifications/index.vue`) | **Moves with the shop admin pages** | Core code rendering Shop `meta`; a presenter would not remove the page's stock-specific icon/link/product name — treat the page as Shop |
 | `MailService` + transports | Safe with Infrastructure | Templates already live with their modules |
 | Cache `invalidate()` owners | Safe with their owning module | Cross-owner calls go through exported services |
 | Frontend `api:unauthenticated` hook, `auth-hooks` plugin, `useApi` | Safe with Core frontend | Contract declared in `useApi.ts` |
@@ -194,8 +195,8 @@ Supported by what exists today; nothing here requires a queue or an outbox.
 1. **Keep one in-process bus, split the contract by owner.** `CoreEventBus` stays in Core (Infrastructure-like mechanism, Core-owned). The typed map becomes an `EventMap` merged from per-module declarations — Core declares `user.authenticated` (+ the blueprint's planned `user.registered`, `user.password_reset` when a consumer exists); Shop declares its own (`order.placed`, `order.status_changed`, `order.paid`, `product.stock_changed`) in `modules/ecommerce/events.ts`. The composition root merges the maps; Core still subscribes to nothing from modules.
 2. **Promote the two notification producers to Shop domain events only when a second consumer appears.** Today `OrderNotificationsService` and `StockAlertsService` are the *only* consumers of their facts and they must run inside the producing transaction; a bus event (post-commit, log-and-continue) would weaken that. Keep them as direct calls; document them as the *sources* of the future `order.status_changed` / `product.stock_changed` events.
 3. **Webhooks stay integration events, never bus events.** Provider → neutral `WebhookEvent` (Infrastructure) → `PaymentsService` (Shop) with the `ProcessedEvent` ledger. If other providers arrive, they implement `PaymentProvider.parseWebhook` and nothing else changes.
-4. **Ledger becomes provider-neutral**: `ProcessedEvent { eventId, source, eventType, subjectId, processedAt }`, owned by Infrastructure, usable by any webhook/ingest consumer.
-5. **Notification presenters as a frontend registry contribution** (like admin sections): each module contributes `{ type, describe(row) → { title, body, to } }`; Core's bell/feed/inbox render through it. Removes B5.
+4. **Ledger becomes provider-neutral**: `ProcessedEvent { eventId, source, eventType, subjectId, processedAt }`, owned by Infrastructure, usable by any webhook/ingest consumer. `subjectId` done; `source` when a second provider arrives.
+5. ~~**Notification presenters as a frontend registry contribution**~~ Done for the customer feed (`registerNotificationPresenter`, plugin-registered, generic fallback). The staff inbox page is the remaining B5 residue.
 6. ~~**Fix R5 as an ordinary bug fix** before any event work~~ Done: `PaymentsService.handleWebhook` calls `analytics.invalidate()` after settlement (R3 is also fixed: per-order conditional claim inside the linking transaction). `PaymentsModule` now imports `AnalyticsModule` — a Shop→Shop dependency, no new layer seam.
 7. **Explicit failure policy per mechanism** (document, then enforce): bus = log-and-continue + naturally re-derivable; transactional side effects = inside the transaction; post-commit side effects = detached but **logged** — done for orders/payments through `afterCommit()` (§1.5, R7). Still to enforce: a boundary check that flags a bare `.catch(() => null)` on a post-commit call; a retry/outbox only once each effect is provably idempotent (stock alerts need a unique open-alert key first).
 

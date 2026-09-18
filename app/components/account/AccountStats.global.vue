@@ -28,9 +28,8 @@
 // Shop dashboard stats (orders, favourites, loyalty). Contributed to the account
 // dashboard through app.config `accountCards` (registered globally).
 const api = useApi()
-const authStore = useAuthStore()
 const favouritesStore = useFavouritesStore()
-const { loyaltyPoints } = storeToRefs(authStore)
+const { points: loyaltyPoints } = useLoyalty()
 const { ids } = storeToRefs(favouritesStore)
 
 const orderCount = ref<number | null>(null)

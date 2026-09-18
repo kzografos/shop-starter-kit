@@ -362,7 +362,7 @@ Ownership is expressed by which schema file declares the model (D11). **Layout (
 | Owner | Models today | Target change |
 |---|---|---|
 | **Core** (`core.prisma`) | `User`, `Setting`, `NewsletterSubscriber`, `Notification` | `User` has no module columns (`loyaltyPoints` removed — **done**, seam 2 / D13); `User.role` is `String` (lowercase values, `UserRole` enum retired — **done**, D4); `Notification` becomes `{ type String, key String?, meta Json, isRead, createdAt }` — `productId`, `stock` and the `NotificationType` enum leave |
-| **Infrastructure** (`infrastructure.prisma`) | `ProcessedEvent` | `orderId` → generic `subjectId String?`; stays the webhook idempotency ledger |
+| **Infrastructure** (`infrastructure.prisma`) | `ProcessedEvent` | `orderId` → generic `subjectId String?` — **done** (`20260919120000_processed_event_subject`); stays the webhook idempotency ledger |
 | **E-commerce module** (`ecommerce.prisma`) | `Product`, `Category`, `Favourite`, `Order`, `OrderItem`, `LoyaltyAccount`, `LoyaltyTransaction`, enums `OrderStatus`, `FulfillmentType`, `PaymentMethod`, `PaymentStatus`, `LoyaltyType` | `LoyaltyAccount { userId @id, points, updatedAt }` owns the balance (**done**, seam 2); written only by `src/loyalty/loyalty.service.ts`, always together with a `LoyaltyTransaction`. Its relation fields on `User` (`orders`, `favourites`, `loyaltyTransactions`, `loyaltyAccount`) are written inside the `User` block in `core.prisma` (one model = one block) and marked there as shop-owned |
 | ~~**Dead**~~ | ~~`RefreshToken`~~ | **Removed** (hardening milestone, migration `20260919110000_drop_refresh_tokens`). Refresh tokens live in Redis (`refresh:{userId}:{jti}`) |
 

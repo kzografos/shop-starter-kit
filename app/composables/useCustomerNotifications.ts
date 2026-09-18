@@ -1,13 +1,7 @@
 import type { Notification, NotificationList } from '~~/types'
+import { describeNotification, type NotificationView } from '~/utils/notification-presenters'
 
-/** What the panel renders for one row: text plus, when it exists, where it leads. */
-export interface NotificationView {
-  title: string
-  body: string
-  to: string | null
-}
-
-const ORDER_STATUSES = ['confirmed', 'processing', 'ready', 'completed', 'cancelled'] as const
+export type { NotificationView }
 
 // Single-flight guards. Client-only state on purpose: the feed is never
 // fetched during SSR (see `load()`), so a promise per browser tab is enough.
@@ -112,24 +106,14 @@ export function useCustomerNotifications() {
   }
 
   /**
-   * Title, body and destination for one row, from its type and meta. An
-   * `order_status` row points at the order it is about; anything the UI does
-   * not know how to phrase falls back to a generic line so a new type never
+   * Title, body and destination for one row. Core knows no row type: the
+   * module that produces a type registers its presenter
+   * (`registerNotificationPresenter`, e.g. plugins/order-notifications.ts);
+   * anything unregistered falls back to the generic line so a new type never
    * renders blank.
    */
   function describe(n: Notification): NotificationView {
-    if (n.type === 'order_status') {
-      const orderId = typeof n.meta?.order_id === 'string' ? n.meta.order_id : null
-      const status = typeof n.meta?.status === 'string' ? n.meta.status.toLowerCase() : ''
-      const known = (ORDER_STATUSES as readonly string[]).includes(status)
-      const ref = orderId ? `#${orderId.slice(0, 8).toUpperCase()}` : ''
-      return {
-        title: known ? t(`notifications.order_${status}_title`) : t('notifications.order_status_title'),
-        body: known ? t(`notifications.order_${status}_body`, { order: ref }) : t('notifications.order_status_body', { order: ref }),
-        to: orderId ? localePath(`/account/orders/${orderId}`) : null,
-      }
-    }
-    return { title: t('notifications.generic_title'), body: '', to: null }
+    return describeNotification(n, { t, localePath })
   }
 
   return { items, unread, loaded, loading, error, load, fetchPage, refreshCount, markRead, markAllRead, describe, reset }

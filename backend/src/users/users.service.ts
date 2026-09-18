@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { Prisma } from '@prisma/client'
-import { MEMBER_ROLE } from '../auth/permissions'
+import { MEMBER_ROLE } from './roles'
 import { UserExtensionsRegistry } from './user-extensions.registry'
 import * as bcrypt from 'bcrypt'
 

@@ -12,6 +12,9 @@
  *   B  No *.service.ts may import a *.controller file.
  *   C  Controllers in Core folders must not require Shop capabilities.
  *   D  Services in Core folders must not access Shop Prisma models.
+ *   E  `users/` must not import from `auth/` except the guard/decorator
+ *      contract every controller uses (auth → users is the allowed direction;
+ *      the role values users writes live in users/roles.ts).
  *
  * Baseline
  *   Violations that existed at Architecture Verification Pass 10 are listed in
@@ -105,6 +108,15 @@ for (const file of walk(SRC)) {
         if (m[1].includes(`'${cap}'`)) {
           findings.push({ rule: 'C', file: r, detail: cap, message: `Core controller requires shop capability '${cap}'` })
         }
+      }
+    }
+  }
+
+  // Rule E: users → auth only through the cross-cutting guard/decorator contract
+  if (folder === 'users') {
+    for (const spec of imports) {
+      if (importFolder(r, spec) === 'auth' && !/\/auth\/(guards|decorators)\//.test(spec)) {
+        findings.push({ rule: 'E', file: r, detail: spec, message: `users/ imports auth at runtime (${spec}); auth depends on users, not the reverse` })
       }
     }
   }

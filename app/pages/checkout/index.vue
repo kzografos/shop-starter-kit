@@ -155,6 +155,7 @@
 const api = useApi()
 const cartStore = useCartStore()
 const authStore = useAuthStore()
+const { points: loyaltyPoints } = useLoyalty()
 const { locale, t } = useI18n()
 const localePath = useLocalePath()
 const loading = ref(false)
@@ -244,7 +245,7 @@ const pointsToRedeem = computed(() => {
   // Never redeem more than the order is worth: points beyond the cart total
   // would be burned for nothing, since the server clamps the total at 0.
   const maxUseful = Math.floor(cartStore.subtotal * loyalty_redeem_rate)
-  const use = Math.min(authStore.loyaltyPoints, maxUseful)
+  const use = Math.min(loyaltyPoints.value, maxUseful)
   // The server rejects any non-zero amount below the minimum, so redeem nothing
   // rather than send a value guaranteed to 400.
   return use >= loyalty_min_redeem ? use : 0
@@ -261,7 +262,7 @@ const canRedeemPoints = computed(() =>
   Boolean(
     authStore.isLoggedIn &&
     pricing.value &&
-    authStore.loyaltyPoints >= pricing.value.loyalty_min_redeem,
+    loyaltyPoints.value >= pricing.value.loyalty_min_redeem,
   ),
 )
 
