@@ -239,7 +239,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const localePath = useLocalePath()
 
 const loading = ref(true)
@@ -294,7 +294,7 @@ const donutArcs = computed(() => {
 
 onMounted(async () => {
   try {
-    const stats = await $fetch<{
+    const stats = await api<{
       total_revenue: number
       month_revenue: number
       month_revenue_change: number
@@ -306,7 +306,7 @@ onMounted(async () => {
       order_status_breakdown: Array<{ status: string; count: number }>
       top_products: Array<{ name: string; units: number }>
       low_stock: Array<{ id: string; name_el: string; stock: number }>
-    }>(`${apiBase}/admin/stats`, { credentials: 'include' })
+    }>(`/admin/stats`)
 
     kpi.totalRevenue  = stats.total_revenue ?? 0
     kpi.monthRevenue  = stats.month_revenue ?? 0

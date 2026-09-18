@@ -92,7 +92,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const { t } = useI18n()
 const toast = useToast()
 
@@ -126,8 +126,7 @@ const page = ref(1)
 // only ever searched the rows already loaded, which was every order before the
 // list was paginated and would otherwise have become just the current page.
 const { data, pending, refresh } = useAsyncData('admin-orders', () =>
-  $fetch<OrdersResponse>(`${apiBase}/admin/orders`, {
-    credentials: 'include',
+  api<OrdersResponse>(`/admin/orders`, {
     query: {
       page: page.value,
       search: search.value.trim() || undefined,
@@ -156,11 +155,10 @@ function optionsFor(order: OrderRow) {
 
 async function updateStatus(orderId: string, status: string) {
   try {
-    await $fetch(`${apiBase}/admin/orders/${orderId}/status`, {
+    await api(`/admin/orders/${orderId}/status`, {
       method: 'PATCH',
       body: { status },
-      credentials: 'include',
-    })
+      })
   } catch (e: unknown) {
     const msg = (e as { data?: { message?: string | string[] } })?.data?.message
     toast.add({ title: (Array.isArray(msg) ? msg[0] : msg) ?? t('orders.status_update_failed'), color: 'error', icon: 'i-heroicons-exclamation-circle' })

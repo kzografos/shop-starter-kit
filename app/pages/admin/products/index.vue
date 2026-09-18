@@ -156,7 +156,7 @@ const SortIcon = defineComponent({
   },
 })
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const search = ref('')
 const page   = ref(1)
 const sortCol = ref<string>('')
@@ -181,8 +181,7 @@ type ProductRow = { id: string; name_el: string; brand: string; price: number; s
 type ProductsResponse = { products: ProductRow[]; total: number; page: number; totalPages: number }
 
 const { data, pending, refresh } = useAsyncData('admin-products', () =>
-  $fetch<ProductsResponse>(`${apiBase}/admin/products`, {
-    credentials: 'include',
+  api<ProductsResponse>(`/admin/products`, {
     query: {
       page: page.value,
       search: search.value || undefined,
@@ -235,10 +234,9 @@ async function importCsv() {
 
 async function confirmDelete(product: ProductRow) {
   if (!confirm(`Απενεργοποίηση "${product.name_el}";`)) return
-  await $fetch(`${apiBase}/admin/products/${product.id}/deactivate`, {
+  await api(`/admin/products/${product.id}/deactivate`, {
     method: 'PATCH',
-    credentials: 'include',
-  })
+    })
   refresh()
 }
 </script>

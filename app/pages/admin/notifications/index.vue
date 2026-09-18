@@ -85,7 +85,7 @@ import type { Notification, NotificationList } from '~~/types'
 
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const { unread, refreshCount } = useAdminNotifications()
@@ -102,8 +102,7 @@ const unreadOnly = ref(false)
 const marking = ref(false)
 
 const { data, pending, refresh } = useAsyncData('admin-notifications', () =>
-  $fetch<NotifResponse>(`${apiBase}/admin/notifications`, {
-    credentials: 'include',
+  api<NotifResponse>(`/admin/notifications`, {
     query: { page: page.value, unread: unreadOnly.value ? 'true' : undefined },
   }),
   { server: false, watch: [page, unreadOnly] },
@@ -141,7 +140,7 @@ function timeAgo(iso: string) {
 
 async function markOne(n: Notif) {
   n.is_read = true
-  await $fetch(`${apiBase}/admin/notifications/${n.id}/read`, { method: 'PATCH', credentials: 'include' }).catch(() => null)
+  await api(`/admin/notifications/${n.id}/read`, { method: 'PATCH' }).catch(() => null)
   await refreshCount()
   if (unreadOnly.value) refresh()
 }
@@ -150,7 +149,7 @@ async function markAll() {
   if (marking.value) return
   marking.value = true
   try {
-    await $fetch(`${apiBase}/admin/notifications/read-all`, { method: 'PATCH', credentials: 'include' })
+    await api(`/admin/notifications/read-all`, { method: 'PATCH' })
     await refresh()
     await refreshCount()
   } finally {

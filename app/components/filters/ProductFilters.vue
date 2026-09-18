@@ -263,9 +263,7 @@ const emit = defineEmits<{ applied: [] }>()
 
 const filtersStore = useFiltersStore()
 const { locale } = useI18n()
-const {
-  public: { apiBase },
-} = useRuntimeConfig()
+const api = useApi()
 
 const PRICE_ABS_MIN = 0
 const PRICE_ABS_MAX = 500
@@ -372,8 +370,8 @@ onMounted(async () => {
   type CatTree = { slug: string; name_el: string; name_en: string; children: CatChild[] }
 
   const [brandData, catTree] = await Promise.all([
-    $fetch<BrandRow[]>(`${apiBase}/products/brands`, { credentials: 'include' }).catch(() => []),
-    $fetch<CatTree[]>(`${apiBase}/categories`, { credentials: 'include' }).catch(() => []),
+    api<BrandRow[]>(`/products/brands`).catch(() => []),
+    api<CatTree[]>(`/categories`).catch(() => []),
   ])
 
   brands.value = brandData.map((r) => ({ name: r.brand, count: r.count }))

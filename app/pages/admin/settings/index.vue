@@ -70,7 +70,7 @@ import { initialFormValues, patchBody, settingsCards, type SettingFormValue } fr
 
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const { t, te } = useI18n()
 const toast = useToast()
 
@@ -78,7 +78,7 @@ const saving = ref(false)
 const form = reactive<Record<string, SettingFormValue>>({})
 
 const { data, pending, error, refresh } = await useAsyncData('admin-settings', () =>
-  $fetch<AdminSettingsPayload>(`${apiBase}/admin/settings`, { credentials: 'include' }),
+  api<AdminSettingsPayload>(`/admin/settings`),
   { server: false, lazy: true },
 )
 
@@ -95,7 +95,7 @@ async function save() {
   if (saving.value || !data.value) return
   saving.value = true
   try {
-    data.value = await $fetch<AdminSettingsPayload>(`${apiBase}/admin/settings`, { method: 'PATCH', credentials: 'include', body: patchBody(data.value.definitions, form) })
+    data.value = await api<AdminSettingsPayload>(`/admin/settings`, { method: 'PATCH', body: patchBody(data.value.definitions, form) })
     toast.add({ title: t('admin.saved'), color: 'success', icon: 'i-heroicons-check-circle' })
   } catch (e: unknown) {
     const msg = (e as { data?: { message?: string | string[] } })?.data?.message

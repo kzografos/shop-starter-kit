@@ -31,7 +31,7 @@ definePageMeta({})
 
 const { t } = useI18n()
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const route = useRoute()
 const localePath = useLocalePath()
 const retrying = ref(false)
@@ -43,9 +43,8 @@ async function retryPayment() {
   retrying.value = true
   try {
     const origin = window.location.origin
-    const { url } = await $fetch<{ url: string }>(`${apiBase}/payments/create-checkout`, {
+    const { url } = await api<{ url: string }>(`/payments/create-checkout`, {
       method: 'POST',
-      credentials: 'include',
       body: {
         orderId: orderId.value,
         successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,

@@ -204,6 +204,6 @@ Listed so that nobody treats them as precedent. Locations are current paths.
 | `app/components/filters/HeaderSearch.global.vue` (shop) reads the Core i18n key `header.search_placeholder` | §5.8 | seam 9 residue — key moves to a shop namespace with the per-layer i18n split (Phase 2) |
 | ~~`app/composables/usePermissions.ts` `SECTION_CAPS` / `LANDING_ORDER`; `app/layouts/admin.vue` nav buttons~~ | §5.2 | **Removed (Admin Registry).** `layouts/admin.vue` renders `useAdminRegistry().groups`; `usePermissions.requiredCapFor` / `firstAllowedPath` read the registry (`docs/ADMIN-REGISTRY.md`) |
 | ~~`app/composables/useApi.ts` writes `useAuthStore().profile`~~ | §5.4 | **Removed.** `useApi` calls `nuxtApp.callHook('api:unauthenticated')`; `plugins/auth-hooks.ts` subscribes and calls `authStore.clearSession()` |
-| 27 files read `apiBase`; every admin page uses raw `$fetch` | §5.3 | Phase 1 |
+| ~~27 files read `apiBase`; every admin page uses raw `$fetch`~~ | §5.3 | **Removed (useApi migration).** 43 of 44 raw calls migrated; the one retained (`plugins/auth.server.ts`) is annotated `// raw-fetch:` — `docs/USEAPI-MIGRATION.md` |
 | `app/composables/useBusinessSchema.ts` hardcodes `Store`, `priceRange`, `currenciesAccepted`; `useCurrency` hardcodes EUR / `el-GR` | §8.2 | Phase 3 |
 | `nuxt.config.ts` `components.pathPrefix: false` | §5.5 | Phase 2 |

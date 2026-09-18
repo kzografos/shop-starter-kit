@@ -43,13 +43,13 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const { locale } = useI18n()
 
 interface Subscriber { id: string; email: string; created_at: string }
 
 const { data, pending } = useAsyncData('admin-newsletter', () =>
-  $fetch<Subscriber[]>(`${apiBase}/admin/newsletter`, { credentials: 'include' }),
+  api<Subscriber[]>(`/admin/newsletter`),
   { server: false },
 )
 

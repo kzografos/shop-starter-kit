@@ -11,7 +11,7 @@ interface ProductsResponse {
 
 export function useProducts(page: Ref<number>) {
   const filtersStore = useFiltersStore()
-  const { public: { apiBase } } = useRuntimeConfig()
+  const api = useApi()
 
   const key = computed(() =>
     `products-${JSON.stringify(filtersStore.$state)}-${page.value}`,
@@ -40,10 +40,7 @@ export function useProducts(page: Ref<number>) {
       if (filtersStore.onSale)
         params.set('onSale', 'true')
 
-      const res = await $fetch<ProductsResponse>(
-        `${apiBase}/products?${params.toString()}`,
-        { credentials: 'include' },
-      )
+      const res = await api<ProductsResponse>(`/products?${params.toString()}`)
       return { products: res.products, total: res.total }
     },
   )

@@ -178,7 +178,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 
@@ -200,8 +200,7 @@ function onRange(r: RangePayload) { range.value = r }
 
 const { data, pending } = useAsyncData<Overview | null>('admin-analytics', () => {
   if (!range.value) return Promise.resolve(null)
-  return $fetch<Overview>(`${apiBase}/admin/analytics`, {
-    credentials: 'include',
+  return api<Overview>(`/admin/analytics`, {
     query: { from: range.value.from, to: range.value.to, granularity: range.value.granularity, compare: range.value.compare },
   })
 }, { server: false, watch: [range] })

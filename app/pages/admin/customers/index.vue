@@ -67,7 +67,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const { locale } = useI18n()
 const search = ref('')
 const page = ref(1)
@@ -83,8 +83,7 @@ interface CustomerRow {
 interface Resp { customers: CustomerRow[]; total: number; page: number; totalPages: number }
 
 const { data, pending, refresh } = useAsyncData('admin-customers', () =>
-  $fetch<Resp>(`${apiBase}/admin/customers`, {
-    credentials: 'include',
+  api<Resp>(`/admin/customers`, {
     query: { page: page.value, search: search.value || undefined },
   }),
   { server: false, watch: [page] },

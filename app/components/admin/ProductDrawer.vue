@@ -143,7 +143,8 @@ const open = defineModel<boolean>('open', { default: false })
 const props = defineProps<{ productId: string | null }>()
 const emit = defineEmits<{ saved: [] }>()
 
-const { public: { apiBase } } = useRuntimeConfig()
+
+const api = useApi()
 const { t, locale } = useI18n()
 const toast = useToast()
 
@@ -177,7 +178,7 @@ const form = reactive({
 // Category options — flatten the tree (parents + indented children).
 type CatNode = { id: string; name_el: string; name_en: string; children?: CatNode[] }
 const { data: tree } = useAsyncData('product-drawer-categories', () =>
-  $fetch<CatNode[]>(`${apiBase}/categories`, { credentials: 'include' }),
+  api<CatNode[]>(`/categories`),
   { server: false },
 )
 const categoryOptions = computed(() => {
@@ -213,7 +214,7 @@ watch(open, async (isOpen) => {
   if (!isOpen) return
   resetForm()
   if (editing.value) {
-    const data = await $fetch<Record<string, unknown>>(`${apiBase}/admin/products/${props.productId}`, { credentials: 'include' }).catch(() => null)
+    const data = await api<Record<string, unknown>>(`/admin/products/${props.productId}`).catch(() => null)
     if (data) {
       // Copy only the fields the form owns. Spreading the whole response used to
       // add id, created_at and updated_at onto the reactive form, which then went
@@ -249,7 +250,7 @@ watch(open, async (isOpen) => {
 // shown. A new product has no id yet, so its images stay local (uploaded via
 // /uploads/image) until the product is created with them.
 type ImagesPayload = { images: string[]; image_urls: string[] }
-const imagesBase = () => `${apiBase}/admin/products/${props.productId}/images`
+const imagesBase = () => `/admin/products/${props.productId}/images`
 
 function applyImages(payload: ImagesPayload) {
   form.images = [...payload.images]
@@ -266,10 +267,10 @@ async function uploadList(files: FileList | File[]) {
       const fd = new FormData()
       fd.append('file', file)
       if (editing.value) {
-        applyImages(await $fetch<ImagesPayload>(imagesBase(), { method: 'POST', credentials: 'include', body: fd }))
+        applyImages(await api<ImagesPayload>(imagesBase(), { method: 'POST', body: fd }))
       } else {
-        const { key, url } = await $fetch<{ key: string; url: string }>(`${apiBase}/uploads/image`, {
-          method: 'POST', credentials: 'include', body: fd,
+        const { key, url } = await api<{ key: string; url: string }>(`/uploads/image`, {
+          method: 'POST', body: fd,
         })
         form.images.push(key)
         previewUrls.value.push(url)
@@ -301,7 +302,7 @@ async function moveImage(from: number, to: number) {
   imagesBusy.value = true
   uploadError.value = ''
   try {
-    applyImages(await $fetch<ImagesPayload>(`${imagesBase()}/order`, { method: 'PATCH', credentials: 'include', body: { images } }))
+    applyImages(await api<ImagesPayload>(`${imagesBase()}/order`, { method: 'PATCH', body: { images } }))
   } catch {
     uploadError.value = t('admin.image_update_failed')
   } finally {
@@ -338,7 +339,7 @@ async function removeImage(idx: number) {
     // always one encodeURIComponent, decoded once by the API router.
     const ref = form.images[idx]
     if (ref === undefined) return
-    applyImages(await $fetch<ImagesPayload>(`${imagesBase()}/${encodeURIComponent(ref)}`, { method: 'DELETE', credentials: 'include' }))
+    applyImages(await api<ImagesPayload>(`${imagesBase()}/${encodeURIComponent(ref)}`, { method: 'DELETE' }))
   } catch {
     uploadError.value = t('admin.image_update_failed')
   } finally {
@@ -356,9 +357,9 @@ async function save() {
   saving.value = true
   try {
     if (editing.value) {
-      await $fetch(`${apiBase}/admin/products/${props.productId}`, { method: 'PATCH', credentials: 'include', body: { ...form } })
+      await api(`/admin/products/${props.productId}`, { method: 'PATCH', body: { ...form } })
     } else {
-      await $fetch(`${apiBase}/admin/products`, { method: 'POST', credentials: 'include', body: { ...form } })
+      await api(`/admin/products`, { method: 'POST', body: { ...form } })
     }
     toast.add({ title: t('admin.saved'), color: 'success', icon: 'i-heroicons-check-circle' })
     open.value = false

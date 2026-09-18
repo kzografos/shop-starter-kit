@@ -121,7 +121,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const { t } = useI18n()
 const toast = useToast()
 const authStore = useAuthStore()
@@ -136,7 +136,7 @@ onMounted(() => {
 interface StaffMember { id: string; email: string; full_name: string | null; role: string; created_at: string }
 
 const { data, pending, refresh } = useAsyncData('admin-staff', () =>
-  $fetch<StaffMember[]>(`${apiBase}/admin/staff`, { credentials: 'include' }),
+  api<StaffMember[]>(`/admin/staff`),
   { server: false },
 )
 const staff = computed(() => data.value ?? [])
@@ -190,12 +190,12 @@ async function save() {
   saving.value = true
   try {
     if (editing.value) {
-      await $fetch(`${apiBase}/admin/staff/${form.id}/role`, { method: 'PATCH', credentials: 'include', body: { role: form.role } })
+      await api(`/admin/staff/${form.id}/role`, { method: 'PATCH', body: { role: form.role } })
       if (form.password) {
-        await $fetch(`${apiBase}/admin/staff/${form.id}/password`, { method: 'PATCH', credentials: 'include', body: { password: form.password } })
+        await api(`/admin/staff/${form.id}/password`, { method: 'PATCH', body: { password: form.password } })
       }
     } else {
-      await $fetch(`${apiBase}/admin/staff`, { method: 'POST', credentials: 'include', body: { email: form.email.trim(), fullName: form.fullName.trim() || undefined, role: form.role, password: form.password } })
+      await api(`/admin/staff`, { method: 'POST', body: { email: form.email.trim(), fullName: form.fullName.trim() || undefined, role: form.role, password: form.password } })
     }
     toast.add({ title: t('admin.saved'), color: 'success', icon: 'i-heroicons-check-circle' })
     drawerOpen.value = false
@@ -211,7 +211,7 @@ async function save() {
 async function remove(s: StaffMember) {
   if (!confirm(`${t('admin.remove_staff_confirm')} "${s.full_name || s.email}"?`)) return
   try {
-    await $fetch(`${apiBase}/admin/staff/${s.id}`, { method: 'DELETE', credentials: 'include' })
+    await api(`/admin/staff/${s.id}`, { method: 'DELETE' })
     toast.add({ title: t('admin.deleted'), color: 'success', icon: 'i-heroicons-check-circle' })
     await refresh()
   } catch (e: unknown) {

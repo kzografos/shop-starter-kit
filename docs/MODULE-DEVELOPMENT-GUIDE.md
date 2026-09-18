@@ -250,7 +250,7 @@ Never `prisma.<A's model>` from B. Never write A's rows.
 
 ## 5. Frontend rules inside a module
 
-- All HTTP goes through `useApi()`. No `$fetch` with `apiBase`.
+- All HTTP goes through `useApi()` — `const api = useApi()` in setup, then `api<T>('/path', opts)`; no `$fetch` with `apiBase`. Conventions, error handling and the single allowed exception: `docs/USEAPI-MIGRATION.md`.
 - Stores are setup-style Pinia stores; expose actions; use `storeToRefs()` in components.
 - Shared state keys (`useState('<id>-…')`) are prefixed with the module id and wrapped in a composable.
 - Pages that need auth use `definePageMeta({ middleware: 'auth' })`; admin pages `{ layout: 'admin', middleware: 'admin' }`. Do not add global middleware.

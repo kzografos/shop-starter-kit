@@ -94,7 +94,7 @@
 <script setup lang="ts">
 import { BUSINESS } from '~/utils/business'
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const localePath = useLocalePath()
 const { t } = useI18n()
 
@@ -107,7 +107,7 @@ async function subscribe() {
   loading.value = true
   error.value = ''
   try {
-    await $fetch(`${apiBase}/newsletter/subscribe`, {
+    await api(`/newsletter/subscribe`, {
       method: 'POST',
       body: { email: email.value },
     })

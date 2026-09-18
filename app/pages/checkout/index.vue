@@ -152,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const cartStore = useCartStore()
 const authStore = useAuthStore()
 const { locale, t } = useI18n()
@@ -212,14 +212,11 @@ type PricingSettings = {
   loyalty_min_redeem: number
 }
 
-const { data: pricing, refresh: refreshPricing } = await useFetch<PricingSettings>('/settings', {
-  baseURL: apiBase,
-  key: 'pricing-settings',
-})
+const { data: pricing, refresh: refreshPricing } = await useAsyncData('pricing-settings', () => api<PricingSettings>('/settings'))
 
 // The key is static, so a server-side fetch that fails leaves pricing null for
 // the life of the page -- Nuxt reuses the (empty) payload on hydration instead
-// of asking again. Retry once on the client, which reaches apiBase over the
+// of asking again. Retry once on the client, which reaches the API over the
 // public origin even where the server rendering the page cannot.
 onMounted(() => {
   if (!pricing.value) refreshPricing()
@@ -295,9 +292,8 @@ async function placeOrder() {
   loading.value = true
   orderError.value = ''
   try {
-    const order = await $fetch<{ id: string }>(`${apiBase}/orders`, {
+    const order = await api<{ id: string }>(`/orders`, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Idempotency-Key': idempotencyKey.value },
       body: {
         items: cartStore.items.map(i => ({
@@ -321,9 +317,8 @@ async function placeOrder() {
 
     if (form.payment_method === 'stripe') {
       const origin = window.location.origin
-      const { url } = await $fetch<{ url: string }>(`${apiBase}/payments/create-checkout`, {
+      const { url } = await api<{ url: string }>(`/payments/create-checkout`, {
         method: 'POST',
-        credentials: 'include',
         body: {
           orderId: order.id,
           successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,

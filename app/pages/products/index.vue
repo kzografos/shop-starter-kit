@@ -191,6 +191,7 @@ watch(searchQuery, (value) => {
 
 const route = useRoute()
 const router = useRouter()
+const api = useApi()
 
 // Page state — synced to URL ?page=
 const currentPage = ref(Number(route.query.page) || 1)
@@ -260,12 +261,8 @@ if (route.query.onSale === 'true') filtersStore.onSale = true
 onMounted(async () => {
   if (!route.query.category) return
   const slug = route.query.category as string
-  const { public: { apiBase } } = useRuntimeConfig()
   type CatEntry = { id: string; slug: string; parent_id: string | null }
-  const allCats = await $fetch<Array<{ id: string; slug: string; children: CatEntry[] }>>(
-    `${apiBase}/categories`,
-    { credentials: 'include' },
-  ).catch(() => [])
+  const allCats = await api<Array<{ id: string; slug: string; children: CatEntry[] }>>(`/categories`).catch(() => [])
 
   // Flatten to find slug in all cats (parents + children)
   const flat: CatEntry[] = []

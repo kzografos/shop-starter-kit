@@ -135,7 +135,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 const { t, locale } = useI18n()
 const toast = useToast()
 
@@ -157,7 +157,7 @@ interface AdminCategory {
 }
 
 const { data, pending, refresh } = useAsyncData('admin-categories', () =>
-  $fetch<AdminCategory[]>(`${apiBase}/admin/categories`, { credentials: 'include' }),
+  api<AdminCategory[]>(`/admin/categories`),
   { server: false },
 )
 
@@ -252,9 +252,9 @@ async function save() {
     if (editing.value) {
       // Slug is locked after creation — the API has always ignored it on update
       // and now rejects it outright, so it is not sent.
-      await $fetch(`${apiBase}/admin/categories/${form.id}`, { method: 'PATCH', credentials: 'include', body })
+      await api(`/admin/categories/${form.id}`, { method: 'PATCH', body })
     } else {
-      await $fetch(`${apiBase}/admin/categories`, { method: 'POST', credentials: 'include', body: { ...body, slug: form.slug.trim() } })
+      await api(`/admin/categories`, { method: 'POST', body: { ...body, slug: form.slug.trim() } })
     }
     modalOpen.value = false
     toast.add({ title: t('admin.saved'), color: 'success', icon: 'i-heroicons-check-circle' })
@@ -270,7 +270,7 @@ async function save() {
 async function remove(cat: AdminCategory) {
   if (!confirm(`${t('admin.delete_category_confirm')} "${name(cat)}"?`)) return
   try {
-    await $fetch(`${apiBase}/admin/categories/${cat.id}`, { method: 'DELETE', credentials: 'include' })
+    await api(`/admin/categories/${cat.id}`, { method: 'DELETE' })
     toast.add({ title: t('admin.deleted'), color: 'success', icon: 'i-heroicons-check-circle' })
     await refresh()
   } catch (e: unknown) {

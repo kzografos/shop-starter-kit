@@ -212,11 +212,11 @@ import { BUSINESS } from '~/utils/business'
 
 const localePath = useLocalePath()
 const { locale } = useI18n()
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 
 // On-sale products for the Deals rail (client-only fetch — non-blocking).
 const { data: dealsData } = useAsyncData('home-deals', () =>
-  $fetch<{ products: Product[] }>(`${apiBase}/products?onSale=true`, { credentials: 'include' })
+  api<{ products: Product[] }>(`/products?onSale=true`)
     .then((r) => r.products)
     .catch(() => [] as Product[]),
   { server: false, lazy: true },
@@ -231,7 +231,7 @@ const stats = [
 ]
 
 const { data: categories, pending } = useAsyncData('root-categories', async () => {
-  const tree = await $fetch<Category[]>(`${apiBase}/categories`, { credentials: 'include' }).catch(() => [])
+  const tree = await api<Category[]>(`/categories`).catch(() => [])
   return tree.filter((c) => !c.parent_id)
 }, { server: false, lazy: true })
 

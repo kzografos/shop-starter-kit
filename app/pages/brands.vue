@@ -93,13 +93,10 @@ const localePath = useLocalePath()
 const filtersStore = useFiltersStore()
 const router = useRouter()
 const { t } = useI18n()
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 
 const { data: brands, pending } = useAsyncData('brands-page', async () => {
-  const data = await $fetch<Array<{ brand: string; count: number }>>(
-    `${apiBase}/products/brands`,
-    { credentials: 'include' },
-  ).catch(() => [])
+  const data = await api<Array<{ brand: string; count: number }>>(`/products/brands`).catch(() => [])
   return data.map((r) => ({ name: r.brand, count: r.count }))
 }, { server: false })
 

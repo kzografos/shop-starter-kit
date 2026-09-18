@@ -186,13 +186,13 @@ const { isOpen: cartOpen } = useCartDrawer()
 const favouritesStore = useFavouritesStore()
 const authStore = useAuthStore()
 const toast = useToast()
-const { public: { apiBase } } = useRuntimeConfig()
+const api = useApi()
 
 const selectedImage = ref(0)
 const qty = ref(1)
 
 const { data: product, status } = useAsyncData(`product-${route.params.slug}`, () =>
-  $fetch<Product>(`${apiBase}/products/${route.params.slug}`, { credentials: 'include' }).catch(() => null),
+  api<Product>(`/products/${route.params.slug}`).catch(() => null),
   { server: false, lazy: true },
 )
 
@@ -205,7 +205,7 @@ watch([status, product], ([s, p]) => {
 
 const { data: relatedProducts } = useAsyncData(`related-${route.params.slug}`, async () => {
   if (!product.value) return []
-  return $fetch<Product[]>(`${apiBase}/products/${route.params.slug}/related`, { credentials: 'include' })
+  return api<Product[]>(`/products/${route.params.slug}/related`)
     .catch(() => [] as Product[])
 }, { server: false, lazy: true, watch: [product] })
 
