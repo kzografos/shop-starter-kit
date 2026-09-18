@@ -14,102 +14,20 @@
         </NuxtLink>
       </div>
 
-      <!-- Nav -->
-      <div class="admin-nav-section">
+      <!-- Nav: groups and sections from the Admin Registry (app.config.adminSections) -->
+      <div v-for="group in groups" :key="group.id" class="admin-nav-section" :data-admin-group="group.id">
+        <span v-if="group.labelKey" class="admin-nav-section-label">{{ $t(group.labelKey) }}</span>
         <button
-          v-if="can('view:finance')"
+          v-for="section in group.sections"
+          :key="section.id"
           class="admin-nav-item"
-          :class="{ active: isDashboard }"
-          @click="navigateTo(localePath('/admin'))"
+          :class="{ active: isActive(section) }"
+          :data-admin-section="section.id"
+          @click="navigateTo(localePath(section.path))"
         >
-          <svg viewBox="0 0 24 24"><rect x="3.25" y="3.25" width="7.5" height="7.5" rx="1.5"/><rect x="13.25" y="3.25" width="7.5" height="4.5" rx="1.5"/><rect x="13.25" y="10.25" width="7.5" height="10.5" rx="1.5"/><rect x="3.25" y="13.25" width="7.5" height="7.5" rx="1.5"/></svg>
-          <span>{{ $t('admin.dashboard') }}</span>
-        </button>
-        <button
-          v-if="can('view:finance')"
-          class="admin-nav-item"
-          :class="{ active: isAnalytics }"
-          @click="navigateTo(localePath('/admin/analytics'))"
-        >
-          <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 4-6"/></svg>
-          <span>{{ $t('admin.analytics') }}</span>
-        </button>
-        <button
-          v-if="can('view:catalog')"
-          class="admin-nav-item"
-          :class="{ active: isProducts }"
-          @click="navigateTo(localePath('/admin/products'))"
-        >
-          <svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>
-          <span>{{ $t('admin.products') }}</span>
-        </button>
-        <button
-          v-if="can('view:catalog')"
-          class="admin-nav-item"
-          :class="{ active: isCategories }"
-          @click="navigateTo(localePath('/admin/categories'))"
-        >
-          <svg viewBox="0 0 24 24"><path d="M20.59 13.41 11 3.99H4v7l9.59 9.41a2 2 0 0 0 2.82 0l4.18-4.17a2 2 0 0 0 0-2.82Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
-          <span>{{ $t('admin.categories') }}</span>
-        </button>
-        <button
-          v-if="can('view:orders')"
-          class="admin-nav-item"
-          :class="{ active: isOrders }"
-          @click="navigateTo(localePath('/admin/orders'))"
-        >
-          <svg viewBox="0 0 24 24"><path d="M3 4h2l2 12h12l2-8H7"/><circle cx="9" cy="20" r="1.25"/><circle cx="18" cy="20" r="1.25"/></svg>
-          <span>{{ $t('admin.orders') }}</span>
-        </button>
-        <button
-          v-if="can('view:notifications')"
-          class="admin-nav-item"
-          :class="{ active: isNotifications }"
-          @click="navigateTo(localePath('/admin/notifications'))"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <span>{{ $t('admin.notifications') }}</span>
-          <span v-if="unread > 0" class="admin-nav-badge">{{ unread > 99 ? '99+' : unread }}</span>
-        </button>
-      </div>
-
-      <div v-if="hasWorkspace" class="admin-nav-section">
-        <span class="admin-nav-section-label">Workspace</span>
-        <button
-          v-if="can('view:customers')"
-          class="admin-nav-item"
-          :class="{ active: isCustomers }"
-          @click="navigateTo(localePath('/admin/customers'))"
-        >
-          <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.75 19c.5-3 3.5-4.75 6.25-4.75S15 16 15.5 19"/><circle cx="17" cy="9" r="2.5"/><path d="M19 14.75c1.5.5 2.5 1.5 2.5 3"/></svg>
-          <span>{{ $t('admin.customers') }}</span>
-        </button>
-        <button
-          v-if="can('manage:marketing')"
-          class="admin-nav-item"
-          :class="{ active: isNewsletter }"
-          @click="navigateTo(localePath('/admin/newsletter'))"
-        >
-          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-          <span>{{ $t('admin.newsletter') }}</span>
-        </button>
-        <button
-          v-if="can('manage:staff')"
-          class="admin-nav-item"
-          :class="{ active: isStaffPage }"
-          @click="navigateTo(localePath('/admin/staff'))"
-        >
-          <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.25"/><path d="M3 19c.4-3 3-4.75 6-4.75S14.6 16 15 19"/><path d="M16 3.5a3.25 3.25 0 0 1 0 6.5M18.5 19c-.2-2-1-3.4-2.5-4.3"/></svg>
-          <span>{{ $t('admin.staff') }}</span>
-        </button>
-        <button
-          v-if="can('manage:settings')"
-          class="admin-nav-item"
-          :class="{ active: isSettings }"
-          @click="navigateTo(localePath('/admin/settings'))"
-        >
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          <span>{{ $t('admin.settings') }}</span>
+          <AdminIcon :name="section.icon" />
+          <span>{{ $t(section.labelKey) }}</span>
+          <span v-if="badge(section) > 0" class="admin-nav-badge">{{ badge(section) > 99 ? '99+' : badge(section) }}</span>
         </button>
       </div>
 
@@ -171,32 +89,29 @@
 </template>
 
 <script setup lang="ts">
+import type { AdminSectionContribution } from '~/types/contributions'
+import { validAdminSections } from '~/utils/admin-registry'
+
+// The shell knows no section by name: the sidebar, the active state, the page
+// title and the landing page all come from the Admin Registry
+// (app.config.adminSections / adminGroups, see docs/ADMIN-REGISTRY.md).
 const authStore = useAuthStore()
 const route = useRoute()
 const localePath = useLocalePath()
-
-// ── Active nav state ────────────────────────────────────────
-const isDashboard = computed(() => {
-  const p = route.path
-  return p === '/admin' || p === '/el/admin' || p === '/en/admin'
-})
-
 const { can } = usePermissions()
-const isStaffPage  = computed(() => route.path.includes('/admin/staff'))
-const hasWorkspace = computed(() =>
-  can('view:customers') || can('manage:marketing') || can('manage:staff') || can('manage:settings'),
+const { groups, current, isActive } = useAdminRegistry()
+
+// Counter badges: a section names a `useState<number>` key; whoever owns the
+// number writes it (the notifications composable, for the inbox). The refs
+// are created once here, in setup, for every registered key.
+const badgeStates = new Map(
+  validAdminSections(useAppConfig().adminSections)
+    .filter((s) => s.badgeStateKey)
+    .map((s) => [s.badgeStateKey!, useState<number>(s.badgeStateKey!, () => 0)] as const),
 )
+const badge = (section: AdminSectionContribution) => (section.badgeStateKey ? badgeStates.get(section.badgeStateKey)?.value ?? 0 : 0)
 
-const isAnalytics  = computed(() => route.path.includes('/admin/analytics'))
-const isProducts   = computed(() => route.path.includes('/admin/products'))
-const isCategories = computed(() => route.path.includes('/admin/categories'))
-const isOrders     = computed(() => route.path.includes('/admin/orders'))
-const isSettings   = computed(() => route.path.includes('/admin/settings'))
-const isCustomers  = computed(() => route.path.includes('/admin/customers'))
-const isNewsletter = computed(() => route.path.includes('/admin/newsletter'))
-const isNotifications = computed(() => route.path.includes('/admin/notifications'))
-
-// ── Notifications (low-stock bell) ──────────────────────────
+// ── Notifications (Core inbox bell in the topbar) ───────────
 const { unread, refreshCount } = useAdminNotifications()
 let notifTimer: ReturnType<typeof setInterval> | undefined
 onMounted(() => {
@@ -208,34 +123,13 @@ onBeforeUnmount(() => { if (notifTimer) clearInterval(notifTimer) })
 // Refresh as soon as the admin opens the notifications page (count may drop).
 watch(() => route.path, (p) => { if (can('view:notifications') && p.includes('/admin/notifications')) refreshCount() })
 
-// ── Page title / subtitle ───────────────────────────────────
-const pageInfo = computed(() => {
-  if (isProducts.value) {
-    if (route.path.includes('/new'))
-      return { title: 'Products', sub: 'Add a new product to your catalog.' }
-    if (!route.path.endsWith('/products'))
-      return { title: 'Products', sub: 'Edit product details.' }
-    return { title: 'Products', sub: 'Manage inventory, pricing and availability.' }
-  }
-  if (isCategories.value)
-    return { title: 'Categories', sub: 'Organize your catalog into categories and subcategories.' }
-  if (isOrders.value)
-    return { title: 'Orders', sub: 'Track and update customer orders.' }
-  if (isSettings.value)
-    return { title: 'Settings', sub: 'Shipping and loyalty configuration.' }
-  if (isCustomers.value)
-    return { title: 'Customers', sub: 'Everyone who has registered at the shop.' }
-  if (isNewsletter.value)
-    return { title: 'Newsletter', sub: 'Subscribers to your mailing list.' }
-  if (isAnalytics.value)
-    return { title: 'Analytics', sub: 'Sales, products and margins over any period.' }
-  if (isNotifications.value)
-    return { title: 'Notifications', sub: 'Low-stock and out-of-stock alerts.' }
-  return { title: 'Dashboard', sub: "Welcome back — here's what's happening at the shop today." }
+// ── Page title / subtitle: from the section the route belongs to ──
+const { t, te } = useI18n()
+const pageTitle = computed(() => (current.value ? t(current.value.labelKey) : t('admin.title')))
+const pageSub = computed(() => {
+  const key = current.value?.subtitleKey
+  return key && te(key) ? t(key) : ''
 })
-
-const pageTitle = computed(() => pageInfo.value.title)
-const pageSub   = computed(() => pageInfo.value.sub)
 
 // ── Theme toggle ────────────────────────────────────────────
 const adminTheme = ref<'light' | 'dark'>('light')

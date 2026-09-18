@@ -300,8 +300,8 @@ Both halves have a gate; run them before pushing.
 # backend — typecheck → build → architecture boundaries → route inventory → provider matrix
 cd backend && npm run verify
 
-# frontend — lint → typecheck → build (no secrets needed)
-pnpm lint && pnpm typecheck && pnpm build
+# frontend — lint → typecheck → unit tests → build (no secrets needed)
+pnpm lint && pnpm typecheck && pnpm test && pnpm build
 ```
 
 `GET /health` reports PostgreSQL and Redis (`503` when either is down) and backs the backend container's healthcheck.

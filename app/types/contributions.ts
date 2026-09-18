@@ -48,6 +48,51 @@ export interface AccountCardContribution {
   order: number
 }
 
+/**
+ * An admin section (Admin Registry). The admin shell renders the sidebar,
+ * decides which sections a staff member sees, resolves the page title and the
+ * landing page after login from this list alone — it never names a section.
+ *
+ * `capability` is a *visibility* rule: the backend guards stay the authority
+ * on what a request may do. `path` is unlocalised; the shell applies
+ * `localePath()`. `icon` names an entry of the shell's icon set
+ * (`components/admin/AdminIcon.vue`); an unknown name renders the fallback
+ * glyph. `badgeStateKey` names a `useState<number>` key the shell reads for a
+ * counter badge (the owning composable writes it).
+ */
+export interface AdminSectionContribution {
+  /** Stable, unique id (`products`, `staff`, …). */
+  id: string
+  /** Unlocalised admin path (`/admin/products`). */
+  path: string
+  /** i18n key of the sidebar label and page title. */
+  labelKey: string
+  /** i18n key of the topbar subtitle. */
+  subtitleKey?: string
+  /** Icon name from the shell's icon set. */
+  icon: string
+  /** Capability required to see the section (the backend enforces the real one). */
+  capability: string
+  /** Sort key within the group; also the landing-page preference order. */
+  order: number
+  /** Group id from `adminGroups`; sections without one join the first group. */
+  group?: string
+  /** `exact`: active only on this path (the dashboard). Default `prefix`. */
+  activeMatch?: 'exact' | 'prefix'
+  /** `useState<number>` key rendered as a counter badge when > 0. */
+  badgeStateKey?: string
+  /** Static switch; `false` removes the section without deleting the entry. Default `true`. */
+  enabled?: boolean
+}
+
+/** A sidebar group; the first group renders without a label. */
+export interface AdminGroupContribution {
+  id: string
+  order: number
+  /** i18n key of the group heading; omitted = no heading. */
+  labelKey?: string
+}
+
 declare module 'nuxt/schema' {
   interface CustomAppConfig {
     navItems?: NavItemContribution[]
@@ -55,5 +100,7 @@ declare module 'nuxt/schema' {
     globalWidgets?: GlobalWidgetContribution[]
     accountItems?: AccountItemContribution[]
     accountCards?: AccountCardContribution[]
+    adminGroups?: AdminGroupContribution[]
+    adminSections?: AdminSectionContribution[]
   }
 }

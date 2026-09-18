@@ -343,6 +343,18 @@
     "chat": "Chat on WhatsApp"
   },
   "admin": {
+    "title": "Admin",
+    "group_workspace": "Workspace",
+    "subtitle_dashboard": "Welcome back — here's what's happening at the shop today.",
+    "subtitle_analytics": "Sales, products and margins over any period.",
+    "subtitle_products": "Manage inventory, pricing and availability.",
+    "subtitle_categories": "Organize your catalog into categories and subcategories.",
+    "subtitle_orders": "Track and update customer orders.",
+    "subtitle_notifications": "Low-stock and out-of-stock alerts.",
+    "subtitle_customers": "Everyone who has registered at the shop.",
+    "subtitle_newsletter": "Subscribers to your mailing list.",
+    "subtitle_staff": "Who can sign in to the admin and what they may do.",
+    "subtitle_settings": "Shipping and loyalty configuration.",
     "dashboard": "Dashboard",
     "products": "Products",
     "orders": "Orders",

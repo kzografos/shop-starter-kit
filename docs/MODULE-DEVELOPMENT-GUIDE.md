@@ -94,15 +94,18 @@ Frontend side: the layer path (`app/modules/<id>`) is added to `extends` by the 
 - Read through the Core `SettingsService` typed accessor; never `prisma.setting` directly.
 - Provide defaults; the Core seed materialises them.
 
-### 3.4 Admin Registry contributions
+### 3.4 Admin Registry contributions (`app.config.ts`, implemented — see `docs/ADMIN-REGISTRY.md`)
 
 ```ts
-{ id: 'ecommerce.products', path: '/admin/products', capability: 'view:catalog', titleKey: 'admin.products', subtitleKey: 'admin.products_sub', icon: 'box', order: 20, group: 'main' }
+adminSections: [
+  { id: 'products', path: '/admin/products', labelKey: 'admin.products', subtitleKey: 'admin.subtitle_products', icon: 'box', capability: 'view:catalog', order: 20, group: 'main' },
+] satisfies AdminSectionContribution[]
 ```
 
-- The page itself lives in the layer at `pages/admin/<section>/index.vue` with `definePageMeta({ layout: 'admin', middleware: 'admin' })`.
+- The page itself lives in the layer at `pages/admin/<section>/index.vue` with `definePageMeta({ layout: 'admin', middleware: 'admin' })`; its API routes carry the same capability in `RequirePermissions` (the registry only controls visibility).
+- `icon` names an entry of `components/admin/AdminIcon.vue` (`dashboard`, `chart`, `box`, `tag`, `cart`, `bell`, `users`, `mail`, `staff`, `settings`); an unknown name renders a fallback glyph — add the glyph to the Core set if you need a new one.
 - Do not touch `layouts/admin.vue`, `middleware/admin.ts` or `usePermissions`. They read the registry.
-- Dashboard contributions (v1): `dashboardCards[]` entries rendered by the Core dashboard page; no custom render functions.
+- Dashboard tiles are still deferred (blueprint §7.2).
 
 ### 3.5 Navigation slot contributions (`app.config.ts` of the layer)
 

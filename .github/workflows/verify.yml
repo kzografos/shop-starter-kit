@@ -63,5 +63,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      # Plain node:test over the pure TypeScript helpers (no runner dependency).
+      - name: Unit tests
+        run: pnpm test
+
       - name: Build
         run: pnpm build

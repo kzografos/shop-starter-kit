@@ -1,52 +1,38 @@
+import { firstAllowedAdminPath, requiredAdminCapability, validAdminSections } from '~/utils/admin-registry'
+
 /**
- * Client-side mirror of the backend capability model (backend is the real
- * enforcer). Drives admin nav visibility, route guards and per-role landing.
+ * Client-side mirror of the backend capability model (the backend is the real
+ * enforcer; this only decides what to show). Which admin section needs which
+ * capability comes from the Admin Registry (`app.config.adminSections`), so
+ * nothing here names a module.
  */
 type Cap = string
 
-// Path → capability needed to view that admin section.
-const SECTION_CAPS: { match: (p: string) => boolean; cap: Cap }[] = [
-  { match: (p) => p.includes('/admin/analytics'), cap: 'view:finance' },
-  { match: (p) => p.includes('/admin/products'), cap: 'view:catalog' },
-  { match: (p) => p.includes('/admin/categories'), cap: 'view:catalog' },
-  { match: (p) => p.includes('/admin/orders'), cap: 'view:orders' },
-  { match: (p) => p.includes('/admin/customers'), cap: 'view:customers' },
-  { match: (p) => p.includes('/admin/newsletter'), cap: 'manage:marketing' },
-  { match: (p) => p.includes('/admin/notifications'), cap: 'view:notifications' },
-  { match: (p) => p.includes('/admin/settings'), cap: 'manage:settings' },
-  { match: (p) => p.includes('/admin/staff'), cap: 'manage:staff' },
-]
-
-// Where each role lands after login — first section it's allowed to see.
-const LANDING_ORDER: { cap: Cap; path: string }[] = [
-  { cap: 'view:finance', path: '/admin' }, // dashboard
-  { cap: 'view:catalog', path: '/admin/products' },
-  { cap: 'view:orders', path: '/admin/orders' },
-  { cap: 'view:customers', path: '/admin/customers' },
-  { cap: 'manage:marketing', path: '/admin/newsletter' },
-  { cap: 'view:notifications', path: '/admin/notifications' },
-  { cap: 'manage:settings', path: '/admin/settings' },
-  { cap: 'manage:staff', path: '/admin/staff' },
-]
-
-export const STAFF_ROLES = ['admin', 'accountant', 'stock_manager']
-
 export function usePermissions() {
   const auth = useAuthStore()
+  const appConfig = useAppConfig()
   const permissions = computed<string[]>(() => auth.profile?.permissions ?? [])
   const role = computed<string>(() => auth.profile?.role ?? '')
-  const isStaff = computed(() => STAFF_ROLES.includes(role.value))
+  // Staff = someone the backend resolved capabilities for (the owner holds
+  // them all). The role vocabulary itself is module-fed and not repeated here.
+  const isStaff = computed(() => role.value === 'admin' || permissions.value.length > 0)
   const can = (cap: Cap) => permissions.value.includes(cap)
 
+  const sections = computed(() => validAdminSections(appConfig.adminSections))
+
+  /** Capability a (localised) admin path needs for visibility, or null when no section claims it. */
   function requiredCapFor(path: string): Cap | null {
-    const s = SECTION_CAPS.find((x) => x.match(path))
-    if (s) return s.cap
-    if (/\/admin\/?$/.test(path)) return 'view:finance' // dashboard root
-    return null
+    return requiredAdminCapability(sections.value, stripLocale(path))
   }
+  /** Unlocalised landing path after login: the first registered section this user may see. */
   function firstAllowedPath(): string {
-    return LANDING_ORDER.find((l) => permissions.value.includes(l.cap))?.path ?? '/'
+    return firstAllowedAdminPath(sections.value, can, '/')
   }
 
   return { permissions, role, isStaff, can, requiredCapFor, firstAllowedPath }
+}
+
+/** `/en/admin/orders` → `/admin/orders` (registry paths are unlocalised). */
+function stripLocale(path: string): string {
+  return path.replace(/^\/[a-z]{2}(?=\/|$)/, '') || '/'
 }
