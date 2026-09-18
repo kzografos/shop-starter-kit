@@ -8,6 +8,7 @@ import { OrdersService } from '../orders/orders.service'
 import { OrderNotificationsService } from '../orders/order-notifications.service'
 import { LoyaltyService } from '../loyalty/loyalty.service'
 import { AnalyticsService } from '../analytics/analytics.service'
+import { afterCommit } from '../common/utils/after-commit'
 import { CheckoutExpired, CheckoutLine, PaymentProvider } from '../payments-provider/payment-provider'
 
 /**
@@ -177,20 +178,20 @@ export class PaymentsService {
     }
     await this.orderNotifications.invalidate(order)
     // The order just became PAID, which is what every report counts. Same
-    // owner and same post-commit, fire-and-forget call as order creation and
+    // owner and same detached post-commit call as order creation and
     // cancellation in OrdersService; only this path reaches it — duplicates,
     // already-paid orders, mismatches and failed transactions returned above.
-    this.analytics.invalidate().catch(() => null)
+    afterCommit(this.logger, `Order ${orderId} analytics invalidation`, () => this.analytics.invalidate())
 
     // Payment has cleared and the writes are committed, so this is the first
     // point at which "your order is confirmed" is true for a Stripe order.
-    // Fire-and-forget, matching how OrdersService sends the pickup-order mail:
-    // a mail outage must not fail the webhook and trigger a provider retry.
+    // Detached, matching how OrdersService sends the pickup-order mail: a
+    // mail outage must not fail the webhook and trigger a provider retry.
     const recipient = order.user?.email ?? order.guestEmail
     if (recipient) {
-      this.mail
-        .sendMail(orderConfirmationMail(this.mail, recipient, orderId), 'Order confirmation email')
-        .catch(() => null)
+      afterCommit(this.logger, `Order ${orderId} confirmation email`, () =>
+        this.mail.sendMail(orderConfirmationMail(this.mail, recipient, orderId), 'Order confirmation email'),
+      )
     } else {
       this.logger.warn(`Order ${orderId} has no email address — no confirmation sent`)
     }

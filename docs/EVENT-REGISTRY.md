@@ -51,9 +51,9 @@ The codebase has exactly **one** event bus (`CoreEventBus`) carrying **one** eve
 | Triggers | `OrdersService.create` (non-Stripe settle), `updateStatus`, `cancel`; `PaymentsService.handleWebhook` (CONFIRMED) | `ProductsService` admin update/deactivate (awaited); `OrdersService.create` and `cancel` (fire-and-forget after commit) |
 | Contract | Core `NotificationsService.createWrite` / `create` with `{ type, userId?, key?, meta }`; key `order:<id>:status:<status>` | `{ type, productId, stock, meta }` on the staff inbox (`userId null`) |
 | Consumers | Customer feed (`/notifications*`), bell, history page | Staff inbox (`/admin/notifications*`), admin badge |
-| Sync/async | **Inside the status transaction** (`createWrite` = `ON CONFLICT DO NOTHING`); unread-cache invalidation after commit | Awaited on catalogue writes; detached (`.catch(() => null)`) after order commit |
+| Sync/async | **Inside the status transaction** (`createWrite` = `ON CONFLICT DO NOTHING`); unread-cache invalidation after commit | Awaited on catalogue writes; detached after order commit via `afterCommit()` (`common/utils/after-commit.ts`) |
 | Idempotent | **Yes** — unique `key` per order + status; duplicate/concurrent transitions leave one row | Yes — de-duplicated per product + type via `findOpen` |
-| Failure | A write failure rolls the whole status transaction back (no half state); FK errors propagate | Catalogue path: propagates; order path: swallowed (a missed alert, logged nowhere) |
+| Failure | A write failure rolls the whole status transaction back (no half state); FK errors propagate | Catalogue path: propagates; order path: logged as `Order <id> stock alert for product <id> failed after commit` by `OrdersService`, request unaffected (R7) |
 | Tests | `nt2` (33 checks), `nt1` (32) session harnesses; browser `nt3`/`nt5` | `nt1`/`nt2` (stock alert stays in staff inbox) |
 
 ### 1.4 Transactional mail (side effects, not events)
@@ -61,9 +61,9 @@ The codebase has exactly **one** event bus (`CoreEventBus`) carrying **one** eve
 | Trigger | Sender | Policy |
 |---|---|---|
 | Password reset requested | `auth.service.forgotPassword` → `mail.sendPasswordReset` | awaited, send failure logged inside `MailService` (never throws) |
-| First newsletter subscription | `newsletter.service.subscribe` → `mail.sendWelcomeEmail(email, unsubscribeUrl)` | fire-and-forget |
-| Non-Stripe order placed | `orders.service.create` → `sendMail(orderConfirmationMail…)` | fire-and-forget after commit |
-| Online payment settled | `payments.service.handleWebhook` → same template | fire-and-forget after commit |
+| First newsletter subscription | `newsletter.service.subscribe` → `mail.sendWelcomeEmail(email, unsubscribeUrl)` | fire-and-forget (`MailService` logs the send failure itself) |
+| Non-Stripe order placed | `orders.service.create` → `sendMail(orderConfirmationMail…)` | detached after commit via `afterCommit()` |
+| Online payment settled | `payments.service.handleWebhook` → same template | detached after commit via `afterCommit()` |
 
 Category: infrastructure side effect. `MailService` is disabled-safe (503-style warning, no throw); no queue, no retry, no delivery record.
 
@@ -71,15 +71,17 @@ Category: infrastructure side effect. `MailService` is disabled-safe (503-style 
 
 | Producer | Calls | Reason |
 |---|---|---|
-| `OrdersService.create` | `analytics.invalidate()` (detached) | a new order changes reports |
-| `OrdersService.cancel` | `products.invalidate()` (awaited), `analytics.invalidate()` (detached) | restock changes catalogue and reports |
+| `OrdersService.create` | `analytics.invalidate()` (detached via `afterCommit()`) | a new order changes reports |
+| `OrdersService.cancel` | `products.invalidate()` (awaited), `analytics.invalidate()` (detached via `afterCommit()`) | restock changes catalogue and reports |
 | `CategoriesService` writes | `products.invalidate()` + own `categories:tree` | category tree is embedded in product reads |
 | `ProductsService` writes | own `products:*` | — |
 | `SettingsService.updateAdminSettings` | own `settings:all` | pricing must apply immediately |
 | `NotificationsService`, `OrderNotificationsService` | `notifications:unread:*` per user / staff | after commit |
-| `PaymentsService.handleWebhook` | `analytics.invalidate()` (detached, after the settlement transaction commits) | the order became `PAID`, which is what every report counts (R5, fixed) |
+| `PaymentsService.handleWebhook` | `analytics.invalidate()` (detached via `afterCommit()`, after the settlement transaction commits) | the order became `PAID`, which is what every report counts (R5, fixed) |
 
 Category: infrastructure event (Redis key deletion). Synchronous, idempotent, failure swallowed by `RedisService` (WARN).
+
+**Detached post-commit policy (R7).** Every side effect that runs after a committed order/payment transaction and is not awaited goes through `afterCommit(logger, label, work)` in `backend/src/common/utils/after-commit.ts`: `work` starts synchronously, the promise is never awaited, and any rejection or synchronous throw is logged by the *calling* service's logger at `error` level as `<label> failed after commit: <message>` with the stack. Labels carry the order id (and product id for stock alerts). The committed transaction is never affected and the request never fails because of the side effect. No retry — see R7 for the per-effect reasoning. Sites today: `OrdersService.create` (confirmation mail, analytics, one stock alert per line), `OrdersService.cancel` (analytics; the re-read of restocked rows *and* each stock alert, so a database error after the commit can no longer fail an already-cancelled order), `PaymentsService.handleWebhook` (analytics, confirmation mail). Unit-tested in `backend/test/after-commit.test.mjs` (`npm test`, part of `npm run verify`).
 
 ### 1.6 Boot-time registry contributions (not runtime events)
 
@@ -153,13 +155,13 @@ No confirmed rule violation on the bus itself. B5 and B8 are boundary findings; 
 | R4 | Publication timing vs. commit | `user.authenticated` is emitted after the user row exists and before tokens are issued; no outbox. A crash between commit and emit loses nothing durable: the link runs again on the next login | **Acceptable** for this event; would not be for an event whose consumer cannot re-derive the fact |
 | R5 | Cache invalidation after online payment | ~~`PaymentsService.handleWebhook` does not call `AnalyticsService.invalidate()`; analytics count `PAID` orders~~ **Fixed:** the webhook calls `analytics.invalidate()` (owner method, `.catch(() => null)`) once, right after the settlement batch commits — the same post-commit, fire-and-forget pattern `OrdersService.create`/`cancel` use. Only the PENDING→PAID/CONFIRMED path reaches it: no-op events, unknown/cancelled orders, already-paid orders, amount mismatches, ledger duplicates (P2002) and failed transactions all return or throw before it | **Closed.** Verified on a scratch DB: settlement invalidates exactly once with the order already `PAID` at call time; redelivery, a new event id for a paid order, three concurrent deliveries (one `ProcessedEvent`), mismatches and a forced transaction failure invalidate zero times; a rejecting `invalidate()` leaves the webhook 200 and the order `PAID` (Redis is fail-soft, same policy as the other owners; failure is not logged — R7) |
 | R6 | Transaction boundaries | Order create/cancel/status, webhook settlement, guest linking, notification writes: each a single transaction; side effects (mail, analytics invalidation, stock alerts, unread-cache) after commit | **Sound**; documented in [MODULE-DEVELOPMENT-GUIDE §3.10](MODULE-DEVELOPMENT-GUIDE.md) and HARDENING-IMPLEMENTATION |
-| R7 | Fire-and-forget after commit | Mail (4 sites), `analytics.invalidate()` (2), `stockAlerts.checkStock` in `orders` (2): `.catch(() => null)` | **Failures are silent** except mail (logged in `MailService`). A missed stock alert or stale analytics is not observable. No retry, no dead-letter |
+| R7 | Fire-and-forget after commit | ~~Mail (4 sites), `analytics.invalidate()` (2), `stockAlerts.checkStock` in `orders` (2): `.catch(() => null)`~~ **Fixed:** the seven detached sites in `orders`/`payments` go through `afterCommit()` (§1.5), which logs every failure with label, reason and stack through the calling service's logger; `cancel()`'s post-commit re-read of restocked rows is detached too (it was awaited and could fail a committed cancellation). Newsletter welcome mail keeps its bare `.catch` — `MailService` already logs, and it is not an order/payment side effect. **Retry analysis:** `analytics.invalidate()` — idempotent and safe to retry, but Redis is fail-soft and the cache self-heals within the 5-min TTL, so a retry buys nothing; `stockAlerts.checkStock()` — safe under *sequential* re-execution (`findOpen` → `update`, `resolveOpen` is an `updateMany`) and re-derived on the next stock change, but a retry would replay a stale stock figure over a newer alert and two *concurrent* runs for one product can still open two rows (no unique key on `(productId, type)` — pre-existing); confirmation mail — not idempotent, a retry means a duplicate email. Crash after the effect succeeded but before it was observed loses nothing durable (cache/alert re-derive). Therefore: log, no retry | **Closed** (logging). Retry/outbox remains a documented future improvement; a unique open-alert key would be its prerequisite for stock alerts |
 | R8 | Ordering assumptions | Bus subscribers run in registration order (one today). Webhooks: Stripe may deliver `expired` after `completed` for the same session — handled (`completed` first: PAID guard; `expired` first: cancel then `completed` sees CANCELLED → refund manually, logged) | **Handled**, including the out-of-order case |
 | R9 | Retry semantics | Webhooks: provider retries on non-2xx (unexpected errors propagate; business rejections answer 200). Bus: none. Mail: none | **By design**; no queue/outbox anywhere (blueprint §14.2 deferral) |
 | R10 | Duplicate side effects | Notifications: key-unique. Loyalty on settlement: inside the ledger-guarded batch. Stock restock: status-conditional. Order creation: `Idempotency-Key`. Guest linking: conditional claim per order (R3) | **Sound** |
 | R11 | `ProcessedEvent` growth | No purge; indexed on `processedAt` | Grows one row per webhook forever; harmless at this scale, needs the same retention job notifications will |
 
-Confirmed findings: **R7** (silent detached failures). **R3** (double loyalty award on concurrent authentication) and **R5** (analytics cache not invalidated by the webhook) are fixed. Everything else is sound as implemented.
+Confirmed findings: none open. **R3** (double loyalty award on concurrent authentication), **R5** (analytics cache not invalidated by the webhook) and **R7** (silent detached failures) are fixed. Everything else is sound as implemented.
 
 ---
 
@@ -195,7 +197,7 @@ Supported by what exists today; nothing here requires a queue or an outbox.
 4. **Ledger becomes provider-neutral**: `ProcessedEvent { eventId, source, eventType, subjectId, processedAt }`, owned by Infrastructure, usable by any webhook/ingest consumer.
 5. **Notification presenters as a frontend registry contribution** (like admin sections): each module contributes `{ type, describe(row) → { title, body, to } }`; Core's bell/feed/inbox render through it. Removes B5.
 6. ~~**Fix R5 as an ordinary bug fix** before any event work~~ Done: `PaymentsService.handleWebhook` calls `analytics.invalidate()` after settlement (R3 is also fixed: per-order conditional claim inside the linking transaction). `PaymentsModule` now imports `AnalyticsModule` — a Shop→Shop dependency, no new layer seam.
-7. **Explicit failure policy per mechanism** (document, then enforce): bus = log-and-continue + naturally re-derivable; transactional side effects = inside the transaction; post-commit side effects = detached but **logged** (the three `.catch(() => null)` on stock alerts and analytics — orders create/cancel and now the payment webhook — should at least log).
+7. **Explicit failure policy per mechanism** (document, then enforce): bus = log-and-continue + naturally re-derivable; transactional side effects = inside the transaction; post-commit side effects = detached but **logged** — done for orders/payments through `afterCommit()` (§1.5, R7). Still to enforce: a boundary check that flags a bare `.catch(() => null)` on a post-commit call; a retry/outbox only once each effect is provably idempotent (stock alerts need a unique open-alert key first).
 
 ---
 

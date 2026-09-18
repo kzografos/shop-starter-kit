@@ -9,6 +9,7 @@ import { LoyaltyService } from '../loyalty/loyalty.service'
 import { AnalyticsService } from '../analytics/analytics.service'
 import { StorageAdapter } from '../storage/storage-adapter'
 import { OrderNotificationsService } from './order-notifications.service'
+import { afterCommit } from '../common/utils/after-commit'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { allowedTransitions, canTransition } from './order-status'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -227,21 +228,23 @@ export class OrdersService {
     // unpaid at this point, so its confirmation is sent from the webhook once
     // payment actually clears -- otherwise abandoning checkout still produced a
     // "your order has been confirmed" email.
+    // Everything below is detached post-commit work: the order is placed
+    // whatever happens here, and a failure is logged, never raised.
     if (dto.paymentMethod !== 'STRIPE') {
-      this.mail
-        .sendMail(orderConfirmationMail(this.mail, confirmationEmail, order.id), 'Order confirmation email')
-        .catch(() => null)
+      afterCommit(this.logger, `Order ${order.id} confirmation email`, () =>
+        this.mail.sendMail(orderConfirmationMail(this.mail, confirmationEmail, order.id), 'Order confirmation email'),
+      )
     }
-    // A new order changes every report; fire-and-forget through the owner.
-    this.analytics.invalidate().catch(() => null)
+    // A new order changes every report; through the owner.
+    afterCommit(this.logger, `Order ${order.id} analytics invalidation`, () => this.analytics.invalidate())
 
-    // Fire-and-forget low-stock alerts for the products we just decremented.
+    // Low-stock alerts for the products we just decremented.
     for (const item of dto.items) {
       const p = products.find((x) => x.id === item.productId)
       if (p)
-        this.stockAlerts
-          .checkStock({ id: p.id, stock: p.stock - item.quantity, nameEl: p.nameEl, nameEn: p.nameEn })
-          .catch(() => null)
+        afterCommit(this.logger, `Order ${order.id} stock alert for product ${p.id}`, () =>
+          this.stockAlerts.checkStock({ id: p.id, stock: p.stock - item.quantity, nameEl: p.nameEl, nameEn: p.nameEn }),
+        )
     }
 
     return { id: order.id }
@@ -567,15 +570,20 @@ export class OrdersService {
 
     await this.orderNotifications.invalidate(order)
 
-    // Stock and reports changed; same owners, same fire-and-forget as order creation.
+    // Stock and reports changed; same owners, same detached post-commit work
+    // as order creation. The cancellation is committed: nothing below may
+    // fail this request, so even the re-read of the restocked rows is detached.
     await this.products.invalidate()
-    this.analytics.invalidate().catch(() => null)
+    afterCommit(this.logger, `Order ${id} analytics invalidation`, () => this.analytics.invalidate())
     if (restocked.length) {
-      const products = await this.prisma.product.findMany({
-        where: { id: { in: restocked } },
-        select: { id: true, stock: true, nameEl: true, nameEn: true },
+      afterCommit(this.logger, `Order ${id} stock alerts after restock`, async () => {
+        const products = await this.prisma.product.findMany({
+          where: { id: { in: restocked } },
+          select: { id: true, stock: true, nameEl: true, nameEn: true },
+        })
+        for (const p of products)
+          afterCommit(this.logger, `Order ${id} stock alert for product ${p.id}`, () => this.stockAlerts.checkStock(p))
       })
-      for (const p of products) this.stockAlerts.checkStock(p).catch(() => null)
     }
 
     return order

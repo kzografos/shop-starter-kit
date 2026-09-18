@@ -1,5 +1,5 @@
 # Architecture verification (ARCHITECTURE-BLUEPRINT §12.1, DEPENDENCY-RULES §10).
-# Runs the same chain as `npm run verify` in backend/: typecheck → build →
+# Runs the same chain as `npm run verify` in backend/: typecheck → build → unit tests →
 # boundaries → routes → providers. No database, Redis or provider is needed;
 # the scripts stub their own environment.
 name: verify
