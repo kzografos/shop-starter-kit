@@ -7,6 +7,7 @@ import { PricingSettingsService } from '../orders/pricing-settings.service'
 import { OrdersService } from '../orders/orders.service'
 import { OrderNotificationsService } from '../orders/order-notifications.service'
 import { LoyaltyService } from '../loyalty/loyalty.service'
+import { AnalyticsService } from '../analytics/analytics.service'
 import { CheckoutExpired, CheckoutLine, PaymentProvider } from '../payments-provider/payment-provider'
 
 /**
@@ -27,6 +28,7 @@ export class PaymentsService {
     private loyalty: LoyaltyService,
     private orders: OrdersService,
     private orderNotifications: OrderNotificationsService,
+    private analytics: AnalyticsService,
   ) {}
 
   get isEnabled(): boolean {
@@ -174,6 +176,11 @@ export class PaymentsService {
       throw err
     }
     await this.orderNotifications.invalidate(order)
+    // The order just became PAID, which is what every report counts. Same
+    // owner and same post-commit, fire-and-forget call as order creation and
+    // cancellation in OrdersService; only this path reaches it — duplicates,
+    // already-paid orders, mismatches and failed transactions returned above.
+    this.analytics.invalidate().catch(() => null)
 
     // Payment has cleared and the writes are committed, so this is the first
     // point at which "your order is confirmed" is true for a Stripe order.
