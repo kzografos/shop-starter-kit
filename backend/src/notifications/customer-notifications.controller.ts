@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Param, ParseUUIDPipe, Patch, Query, UseGuards } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { NotificationsService } from './notifications.service'
@@ -26,7 +26,7 @@ export class CustomerNotificationsController {
   }
 
   @Patch(':id/read')
-  markRead(@Param('id') id: string, @CurrentUser() user: { id: string }) {
+  markRead(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: { id: string }) {
     return this.notifications.markReadForUser(id, user.id)
   }
 }

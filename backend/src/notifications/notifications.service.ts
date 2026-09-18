@@ -150,13 +150,15 @@ export class NotificationsService {
 
   // ── Shared ──────────────────────────────────────────────────
 
-  private async page(scope: { userId: string | null }, page: number, unreadOnly: boolean) {
+  private async page(scope: { userId: string | null }, requested: number, unreadOnly: boolean) {
+    // Anything that is not a finite page number ≥ 1 (NaN, Infinity, 0, -3, 2.5) is page 1.
+    const page = Number.isFinite(requested) && requested >= 1 ? Math.floor(requested) : 1
     const where = unreadOnly ? { ...scope, isRead: false } : scope
     const [items, total, unread] = await this.prisma.$transaction([
       this.prisma.notification.findMany({
         where,
         orderBy: { createdAt: 'desc' },
-        skip: (Math.max(1, page) - 1) * PAGE_SIZE,
+        skip: (page - 1) * PAGE_SIZE,
         take: PAGE_SIZE,
       }),
       this.prisma.notification.count({ where }),

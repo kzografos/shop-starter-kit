@@ -34,8 +34,13 @@ export function useCustomerNotifications() {
   const loaded = useState<boolean>('customer-notif-loaded', () => false)
   const loading = useState<boolean>('customer-notif-loading', () => false)
   const error = useState<boolean>('customer-notif-error', () => false)
+  // Bumped by reset(): a response started under an earlier session (user A
+  // signs out while a request is in flight, user B signs in) is discarded
+  // instead of landing in B's state.
+  const epoch = useState<number>('customer-notif-epoch', () => 0)
 
   function reset() {
+    epoch.value++
     items.value = []
     unread.value = 0
     loaded.value = false
@@ -47,8 +52,9 @@ export function useCustomerNotifications() {
   function refreshCount(): Promise<void> {
     if (!import.meta.client || !isLoggedIn.value) return Promise.resolve()
     if (countInFlight) return countInFlight
+    const started = epoch.value
     countInFlight = api<{ count: number }>('/notifications/unread-count')
-      .then(({ count }) => { unread.value = count })
+      .then(({ count }) => { if (epoch.value === started) unread.value = count })
       .catch(() => { /* a missing badge must never break the header */ })
       .finally(() => { countInFlight = null })
     return countInFlight
@@ -60,15 +66,17 @@ export function useCustomerNotifications() {
     if (listInFlight) return listInFlight
     loading.value = true
     error.value = false
+    const started = epoch.value
     listInFlight = api<NotificationList>('/notifications')
       .then((page) => {
+        if (epoch.value !== started) return
         items.value = page.items
         unread.value = page.unread
         loaded.value = true
       })
-      .catch(() => { error.value = true })
+      .catch(() => { if (epoch.value === started) error.value = true })
       .finally(() => {
-        loading.value = false
+        if (epoch.value === started) loading.value = false
         listInFlight = null
       })
     return listInFlight
