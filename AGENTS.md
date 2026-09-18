@@ -114,6 +114,7 @@ See `docs/MODULE-DEVELOPMENT-GUIDE.md` for the full contract and checklist.
 | Question | Answer |
 |---|---|
 | Where is the target architecture? | `docs/ARCHITECTURE-BLUEPRINT.md` |
+| Which modules exist, who depends on whom, what is ready to extract? | `docs/MODULE-REGISTRY.md` |
 | Why was X decided? | `docs/ARCHITECTURE-DECISIONS.md` (D1–D13, E-series) |
 | May file A import file B? | `docs/DEPENDENCY-RULES.md` |
 | How do I add a module or a module feature? | `docs/MODULE-DEVELOPMENT-GUIDE.md` |
