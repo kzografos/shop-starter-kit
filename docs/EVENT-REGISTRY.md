@@ -23,7 +23,7 @@ The codebase has exactly **one** event bus (`CoreEventBus`) carrying **one** eve
 | Consumers | `orders/guest-order-linker.service.ts` (`GuestOrderLinkerService.onUserAuthenticated`), registered in `onModuleInit` via `events.on('user.authenticated', …)` |
 | Side effects | Guest orders with `guestEmail = email` and `userId = null` are attached to the user; loyalty points are earned for the ones already PAID (`LoyaltyService.earn` inside the same transaction) |
 | Sync/async | **Synchronous and awaited**: `CoreEventBus.emit` runs subscribers sequentially and `AuthService` awaits it so the linked orders/points are visible in the login response |
-| Idempotent | Mostly — see R3: the link is (`userId: null` filter), the award is not under concurrency |
+| Idempotent | **Yes** — each order is claimed with a conditional update inside the transaction and awarded only by the claimer (R3, fixed) |
 | Failure | Subscriber errors are **logged and swallowed** by the bus (failure policy E14): login succeeds; a failed link is retried naturally on the next authentication. No retry queue |
 | Tests | Not in the repo. Covered by the seam-1/seam-2 session harnesses at the time (link + award, idempotent re-login); `tests/` has no bus test |
 
@@ -149,17 +149,17 @@ No confirmed rule violation on the bus itself. B5 and B8 are boundary findings; 
 |---|---|---|---|
 | R1 | Webhook dedupe (`checkout.session.completed`) | `ProcessedEvent` insert is the **first** statement of the settlement batch; PK on `eventId`; concurrent deliveries of the same id → one wins, the other's batch rolls back; a second Stripe event id for an already-paid order is stopped by the `paymentStatus === 'PAID'` guard | **Sound.** Verified with concurrent and redelivered events |
 | R2 | Webhook dedupe (`checkout.session.expired`) | Read ledger → status-conditional `cancel()` (409 on race) → write ledger (`P2002` swallowed). Crash between cancel and ledger write → the retry finds the order CANCELLED and answers 200 | **Sound**; ledger is a delivery record, the status transition is the real guard |
-| R3 | `user.authenticated` → guest-order linking | `findMany` of guest orders **outside** the transaction, then `updateMany({ userId: null })` + `awardForLinkedOrders(tx, userId, orders)` over the **pre-read list** | **Race:** two concurrent authentications for the same email (two tabs, double-submit) both read the same guest orders; the second `updateMany` matches 0 rows but the award loop still runs over its stale list → **loyalty points can be earned twice** for the same order. `LoyaltyTransaction` has no unique `(orderId, type)` constraint to stop it. Low likelihood (requires pending guest orders + concurrent logins), no data loss, but a real duplicate-effect path |
+| R3 | `user.authenticated` → guest-order linking | ~~`findMany` of guest orders outside the transaction, then `updateMany` + award over the pre-read list~~ **Fixed:** candidates are read inside the transaction and each order is claimed with a conditional `updateMany({ id, userId: null })`; a concurrent claimer blocks on the row lock, re-evaluates the condition after commit, matches 0 rows and awards nothing; points are earned only for rows the transaction itself claimed | **Closed.** Verified with 5 concurrent `link()` calls and 4 parallel HTTP logins over paid guest orders: one EARN per order, balance = sum once (the pre-fix code produced 3–5 EARN rows per order in the same harness). No schema change: a unique `(orderId, type)` was not usable because cancellation legitimately writes a second, negative EARN row per order |
 | R4 | Publication timing vs. commit | `user.authenticated` is emitted after the user row exists and before tokens are issued; no outbox. A crash between commit and emit loses nothing durable: the link runs again on the next login | **Acceptable** for this event; would not be for an event whose consumer cannot re-derive the fact |
 | R5 | Cache invalidation after online payment | `PaymentsService.handleWebhook` does not call `AnalyticsService.invalidate()`; analytics count `PAID` orders | **Stale reports up to 5 min** (cache TTL) after an online payment. Cosmetic; `OrdersService.create` invalidates at creation (when the order is still unpaid) |
 | R6 | Transaction boundaries | Order create/cancel/status, webhook settlement, guest linking, notification writes: each a single transaction; side effects (mail, analytics invalidation, stock alerts, unread-cache) after commit | **Sound**; documented in [MODULE-DEVELOPMENT-GUIDE §3.10](MODULE-DEVELOPMENT-GUIDE.md) and HARDENING-IMPLEMENTATION |
 | R7 | Fire-and-forget after commit | Mail (4 sites), `analytics.invalidate()` (2), `stockAlerts.checkStock` in `orders` (2): `.catch(() => null)` | **Failures are silent** except mail (logged in `MailService`). A missed stock alert or stale analytics is not observable. No retry, no dead-letter |
 | R8 | Ordering assumptions | Bus subscribers run in registration order (one today). Webhooks: Stripe may deliver `expired` after `completed` for the same session — handled (`completed` first: PAID guard; `expired` first: cancel then `completed` sees CANCELLED → refund manually, logged) | **Handled**, including the out-of-order case |
 | R9 | Retry semantics | Webhooks: provider retries on non-2xx (unexpected errors propagate; business rejections answer 200). Bus: none. Mail: none | **By design**; no queue/outbox anywhere (blueprint §14.2 deferral) |
-| R10 | Duplicate side effects | Notifications: key-unique. Loyalty on settlement: inside the ledger-guarded batch. Stock restock: status-conditional. Order creation: `Idempotency-Key`. Guest linking: see R3 | R3 is the one gap |
+| R10 | Duplicate side effects | Notifications: key-unique. Loyalty on settlement: inside the ledger-guarded batch. Stock restock: status-conditional. Order creation: `Idempotency-Key`. Guest linking: conditional claim per order (R3) | **Sound** |
 | R11 | `ProcessedEvent` growth | No purge; indexed on `processedAt` | Grows one row per webhook forever; harmless at this scale, needs the same retention job notifications will |
 
-Confirmed findings: **R3** (double loyalty award on concurrent authentication), **R5** (analytics cache not invalidated by the webhook), **R7** (silent detached failures). Everything else is sound as implemented.
+Confirmed findings: **R5** (analytics cache not invalidated by the webhook), **R7** (silent detached failures). **R3** (double loyalty award on concurrent authentication) is fixed. Everything else is sound as implemented.
 
 ---
 
@@ -172,7 +172,7 @@ Confirmed findings: **R3** (double loyalty award on concurrent authentication), 
 | `payments-provider` (`WebhookEvent`, `StripePaymentProvider`) | **Safe to move with Infrastructure** | Neutral contract, one implementation, no Shop import (`core/config` import is the F1 item from the Module Registry) |
 | `ProcessedEvent` model + migrations | **Requires contract extraction first** | Lives in `infrastructure.prisma` but is written by Shop with a Shop column; rename to `subjectId` (or move the model to the e-commerce schema file) before either layer is packaged |
 | `payments/payments.service.ts` webhook handling | **Safe to move with Shop** | Depends on `PaymentProvider` (Infra contract), `OrdersService`, `LoyaltyService`, `MailService`, `OrderNotificationsService` — all reachable from the Shop layer |
-| `orders/guest-order-linker.service.ts` | **Safe to move with Shop** | Subscribes through the exported bus; would need the R3 fix independently of the move |
+| `orders/guest-order-linker.service.ts` | **Safe to move with Shop** | Subscribes through the exported bus; R3 fixed |
 | `orders/order-notifications.service.ts`, `products/stock-alerts.service.ts` | **Safe to move with Shop** | Depend only on Core's exported `NotificationsService` |
 | `notifications/` (rows, inboxes, `createWrite`) | **Safe to move with Core** | No producer knowledge |
 | `useCustomerNotifications.describe()` order-status wording; admin inbox's stock-type branches | **Requires contract extraction first** | Core code rendering Shop `meta`; needs a presenter/type contribution (registry) or the wording moves to the Shop layer |
@@ -181,7 +181,7 @@ Confirmed findings: **R3** (double loyalty award on concurrent authentication), 
 | Frontend `api:unauthenticated` hook, `auth-hooks` plugin, `useApi` | Safe with Core frontend | Contract declared in `useApi.ts` |
 | Registry contributions (`OnModuleInit` registrars) | Safe with their module | Nest init order is the only coupling; unchanged by folder moves |
 | `app.module.ts` module order (who registers before whom), Stripe `rawBody` in `main.ts` | **Must remain in the composition root** | Boot composition, not a module concern |
-| Anything needing **redesign before extraction** | none | No component requires a redesign; R3 and R5 are local fixes |
+| Anything needing **redesign before extraction** | none | No component requires a redesign; R5 is a local fix (R3 done) |
 
 ---
 
@@ -194,7 +194,7 @@ Supported by what exists today; nothing here requires a queue or an outbox.
 3. **Webhooks stay integration events, never bus events.** Provider → neutral `WebhookEvent` (Infrastructure) → `PaymentsService` (Shop) with the `ProcessedEvent` ledger. If other providers arrive, they implement `PaymentProvider.parseWebhook` and nothing else changes.
 4. **Ledger becomes provider-neutral**: `ProcessedEvent { eventId, source, eventType, subjectId, processedAt }`, owned by Infrastructure, usable by any webhook/ingest consumer.
 5. **Notification presenters as a frontend registry contribution** (like admin sections): each module contributes `{ type, describe(row) → { title, body, to } }`; Core's bell/feed/inbox render through it. Removes B5.
-6. **Fix R3 and R5 as ordinary bug fixes** before any event work: award only the rows `updateMany` actually linked (select-for-update or re-read inside the transaction) and add a unique `(orderId, type)` or an idempotency key on `LoyaltyTransaction` for linked-order awards; call `analytics.invalidate()` after settlement.
+6. **Fix R5 as an ordinary bug fix** before any event work: call `analytics.invalidate()` after settlement. (R3 is fixed: per-order conditional claim inside the linking transaction.)
 7. **Explicit failure policy per mechanism** (document, then enforce): bus = log-and-continue + naturally re-derivable; transactional side effects = inside the transaction; post-commit side effects = detached but **logged** (the two `.catch(() => null)` on stock alerts and analytics should at least log).
 
 ---

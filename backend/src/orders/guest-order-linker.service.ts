@@ -16,6 +16,13 @@ type LinkedOrder = { id: string; total: Prisma.Decimal | number; paymentStatus: 
  * Subscribes to Core's `user.authenticated` event. This used to be a private
  * method of AuthService, which made Core depend on orders, loyalty and pricing
  * settings; the behaviour is unchanged, only the owner moved.
+ *
+ * Concurrency: two authentications for the same address can run at once (two
+ * tabs, a double-submitted form). Each order is claimed with a conditional
+ * `UPDATE … WHERE user_id IS NULL`; the second transaction blocks on the row
+ * lock, re-evaluates the condition after the first commits, matches nothing,
+ * and therefore awards nothing. Points are earned only for rows *this*
+ * transaction claimed, so an order can never be awarded twice.
  */
 @Injectable()
 export class GuestOrderLinkerService implements OnModuleInit {
@@ -36,28 +43,37 @@ export class GuestOrderLinkerService implements OnModuleInit {
     await this.link(userId, email)
   }
 
-  async link(userId: string, email: string) {
-    const orders = await this.prisma.order.findMany({
-      where: { guestEmail: email, userId: null },
-      select: { id: true, total: true, paymentStatus: true },
-    })
-    if (orders.length === 0) return
-
-    await this.prisma.$transaction(async (tx) => {
-      await tx.order.updateMany({
+  /** Returns the orders this call linked (empty when there was nothing to claim). */
+  async link(userId: string, email: string): Promise<LinkedOrder[]> {
+    const linked = await this.prisma.$transaction(async (tx) => {
+      // Candidates are read inside the transaction; the claim below is what decides.
+      // Deterministic order so two concurrent claimers lock rows in the same sequence.
+      const candidates = await tx.order.findMany({
         where: { guestEmail: email, userId: null },
-        data: { userId },
+        select: { id: true, total: true, paymentStatus: true },
+        orderBy: { createdAt: 'asc' },
       })
-      await this.awardForLinkedOrders(tx, userId, orders)
+      if (candidates.length === 0) return []
+
+      const claimed: LinkedOrder[] = []
+      for (const order of candidates) {
+        const res = await tx.order.updateMany({ where: { id: order.id, userId: null }, data: { userId } })
+        if (res.count === 0) continue // claimed by a concurrent authentication — theirs to award
+        claimed.push(order)
+      }
+      if (claimed.length) await this.awardForLinkedOrders(tx, userId, claimed)
+      return claimed
     })
 
-    this.logger.log(`Linked ${orders.length} guest order(s) to user ${userId}`)
+    if (linked.length) this.logger.log(`Linked ${linked.length} guest order(s) to user ${userId}`)
+    return linked
   }
 
   /**
-   * Awards points for the already-paid orders among those just attached to the
-   * user, at the same earn rate order creation uses. Runs inside the caller's
-   * transaction so the order link and the points are committed together.
+   * Awards points for the already-paid orders among those this transaction
+   * just attached to the user, at the same earn rate order creation uses.
+   * Runs inside the caller's transaction so the order link and the points are
+   * committed together — and rolled back together.
    */
   private async awardForLinkedOrders(
     tx: Prisma.TransactionClient,
