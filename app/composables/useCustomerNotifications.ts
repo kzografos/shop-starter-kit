@@ -82,11 +82,23 @@ export function useCustomerNotifications() {
     return listInFlight
   }
 
+  /**
+   * One page of the feed for the history page, straight from the API. Does
+   * not touch the shared list (that is the bell's page 1); the unread figure
+   * it carries is shared, since it is the same counter.
+   */
+  async function fetchPage(page: number): Promise<NotificationList> {
+    const result = await api<NotificationList>('/notifications', { query: { page } })
+    if (import.meta.client) unread.value = result.unread
+    return result
+  }
+
+  /** Marks one row read. The row may belong to a page the bell has not loaded. */
   async function markRead(id: string) {
     const row = items.value.find((n) => n.id === id)
-    if (!row || row.is_read) return
+    if (row?.is_read) return
     await api(`/notifications/${id}/read`, { method: 'PATCH' })
-    row.is_read = true
+    if (row) row.is_read = true
     unread.value = Math.max(0, unread.value - 1)
     await refreshCount()
   }
@@ -120,5 +132,5 @@ export function useCustomerNotifications() {
     return { title: t('notifications.generic_title'), body: '', to: null }
   }
 
-  return { items, unread, loaded, loading, error, load, refreshCount, markRead, markAllRead, describe, reset }
+  return { items, unread, loaded, loading, error, load, fetchPage, refreshCount, markRead, markAllRead, describe, reset }
 }

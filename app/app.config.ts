@@ -37,6 +37,7 @@ export default defineAppConfig({
   ] satisfies GlobalWidgetContribution[],
   accountItems: [
     { to: '/account/orders', icon: '📦', labelKey: 'account.orders', order: 10 },
+    { to: '/account/notifications', icon: '🔔', labelKey: 'notifications.title', order: 15 },
     { to: '/account/favourites', icon: '❤️', labelKey: 'account.favourites', order: 20 },
     { to: '/account/loyalty', icon: '⭐', labelKey: 'account.loyalty', order: 30 },
   ] satisfies AccountItemContribution[],

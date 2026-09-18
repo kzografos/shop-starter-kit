@@ -222,7 +222,16 @@
     "order_completed_title": "Order completed",
     "order_completed_body": "Order {order} has been completed. Thank you!",
     "order_cancelled_title": "Order cancelled",
-    "order_cancelled_body": "Order {order} has been cancelled."
+    "order_cancelled_body": "Order {order} has been cancelled.",
+    "history_subtitle": "Every update about your orders, newest first",
+    "total_count": "{count} notification | {count} notifications",
+    "page_of": "Page {page} of {total}",
+    "pagination": "Notification pages",
+    "previous": "Previous",
+    "next": "Next",
+    "read": "read",
+    "mark_read_failed": "Could not mark the notification as read. Please try again.",
+    "mark_all_read_failed": "Could not mark all notifications as read. Please try again."
   },
   "auth": {
     "login_title": "Sign In",
