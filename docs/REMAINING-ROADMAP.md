@@ -39,6 +39,26 @@ A1–A4 are small and should land **before any new module**, because each new mo
 
 ---
 
+## B2. Extraction sequence (from [EXTRACTION-READINESS.md](EXTRACTION-READINESS.md), 2026-09-18)
+
+Order chosen so every step is a pure move (revertible, no behaviour, no migration) and the gates stay green.
+
+| Step | Slice | Pre-requisite / blocker | Gate |
+|---|---|---|---|
+| E1 | **F1** — move `core/config/env.validation.ts` to Infrastructure; add INFRA→CORE to `verify-boundaries` rule A | — | boundaries 0, providers scenarios unchanged |
+| E2 | **Backend Infrastructure package** `backend/src/infrastructure/…` (recommended first slice) | E1 | `npm run verify`, audit baseline updated |
+| E3 | **Backend folder layers** `core/`, `modules/ecommerce/` (+ `ecommerce.module.ts` shop root, role presets move — F10) | E2 | `verify-routes` snapshot byte-identical |
+| E4 | **F2** `UsersService.exists()/countCustomers()` (optional) | — | harnesses |
+| E5 | **Frontend Shop layer** `app/modules/ecommerce` (+ `Shop*` prefixes, Shop half of `types`/`i18n`, its `app.config` entries) | — | `pnpm lint/typecheck/test/build`, UI harnesses EL/EN |
+| E6 | **P1 + F5** brand/footer contributions (`app.config.brand`, `footerLinks[]`, HeaderSearch key) | decision Q1 in the audit §15 | audit frontend forbidden → 0 |
+| E7 | **Frontend Core layer** `app/core` + project layer (`app.config.ts`, brand, `business.ts`, home/about/contact) | E5, E6 | `--strict` audit passes |
+| E8 | **Module Registry** (C2): `app.module.ts`/`nuxt.config.ts` and both scripts read one registry (F11) | E3, E7 | — |
+| later | **S1** `NotificationType` enum → string; **S2** schema generation per enabled module; Event Registry code | a second module | — |
+
+**Blockers today**: F1 (backend, small), P1 (frontend Core brand residue, medium), F5 (footer/search, small), F7 (mechanical split), S1/S2 (schema, only for a second module or optional-module builds). Intentional exceptions kept: guard contract (`users→auth/guards`), `payments` writing `order` inside the ledger transaction (F3), `app.config` referencing components by name, Prisma back-relations on `User`.
+
+---
+
 ## C. Optional / future enhancements
 
 | # | Item | Notes |

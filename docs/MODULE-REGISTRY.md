@@ -192,6 +192,20 @@ Read from the code before any edit. "Kind" says what the dependency is made of; 
 
 ## 4. Extraction readiness
 
+> **Full audit (2026-09-18): [EXTRACTION-READINESS.md](EXTRACTION-READINESS.md)** — per-file ownership tables (backend and frontend), dependency graphs from `backend/scripts/audit-extraction-readiness.js` (`npm run audit:extraction`), blockers, extraction order and the recommended first slice. Summary of its verdicts:
+>
+> | Package | Verdict | Blocker |
+> |---|---|---|
+> | Backend Infrastructure (`prisma redis storage payments-provider mail health common`) | Ready after **F1** (`env.validation.ts` placement; 3 INFRA→CORE edges, the only backend violation) | F1 |
+> | Backend Core (as one package) | Ready — 0 Core→Shop code or Prisma edges, 0 file cycles; `auth↔users` folder cycle is the guard contract (rule E) | — |
+> | Backend Shop (`modules/ecommerce`) | Ready — inbound 0 from Core/Infra; F2 (`prisma.user` reads ×2) and F10 (role presets) are optional cleanups | — |
+> | Frontend Shop layer (40 files) | Ready — 0 Core→Shop code edges; 38 Shop→Core edges all on the Core surface; the 5 Core→Shop *registry* references are `app.config.ts` contributions | — |
+> | Frontend Core layer | **Blocked by P1** — 12 Core→Project edges (`BrandLockup`, `WhatsAppButton`, `utils/business.ts`, `useBusinessSchema`) + F5 footer links | P1, F5 |
+> | `types/index.ts`, `i18n/*.json` | Mechanical split at layer time (F7) | — |
+>
+> Recommended first slice: F1 + backend Infrastructure package (EXTRACTION-READINESS §12).
+
+
 Target (blueprint §13 Phase 2): backend `core/`, `modules/ecommerce/`, `infrastructure/`; Nuxt layers `app/core`, `app/modules/ecommerce`, later `app/project`.
 
 ### Ready for extraction (move as-is, contracts unchanged)

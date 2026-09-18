@@ -116,6 +116,7 @@ See `docs/MODULE-DEVELOPMENT-GUIDE.md` for the full contract and checklist.
 | Where is the target architecture? | `docs/ARCHITECTURE-BLUEPRINT.md` |
 | Which modules exist, who depends on whom, what is ready to extract? | `docs/MODULE-REGISTRY.md` |
 | Which events exist, who owns and consumes them? | `docs/EVENT-REGISTRY.md` |
+| What can be extracted now, in what order, and what blocks it? | `docs/EXTRACTION-READINESS.md`; regenerate the graph with `cd backend && npm run audit:extraction` |
 | Why was X decided? | `docs/ARCHITECTURE-DECISIONS.md` (D1–D13, E-series) |
 | May file A import file B? | `docs/DEPENDENCY-RULES.md` |
 | How do I add a module or a module feature? | `docs/MODULE-DEVELOPMENT-GUIDE.md` |

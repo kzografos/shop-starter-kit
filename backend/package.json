@@ -21,6 +21,7 @@
     "verify:routes": "node scripts/verify-routes.js",
     "verify:routes:update": "node scripts/verify-routes.js --update",
     "verify:providers": "node scripts/verify-providers.js",
+    "audit:extraction": "node scripts/audit-extraction-readiness.js",
     "verify": "npm run typecheck && npm run build && npm test && npm run verify:boundaries && npm run verify:routes && npm run verify:providers"
   },
   "dependencies": {
