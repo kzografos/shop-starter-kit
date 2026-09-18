@@ -77,7 +77,7 @@ Category: infrastructure side effect. `MailService` is disabled-safe (503-style 
 | `ProductsService` writes | own `products:*` | — |
 | `SettingsService.updateAdminSettings` | own `settings:all` | pricing must apply immediately |
 | `NotificationsService`, `OrderNotificationsService` | `notifications:unread:*` per user / staff | after commit |
-| `PaymentsService.handleWebhook` | **nothing** — see R5 | |
+| `PaymentsService.handleWebhook` | `analytics.invalidate()` (detached, after the settlement transaction commits) | the order became `PAID`, which is what every report counts (R5, fixed) |
 
 Category: infrastructure event (Redis key deletion). Synchronous, idempotent, failure swallowed by `RedisService` (WARN).
 
@@ -151,7 +151,7 @@ No confirmed rule violation on the bus itself. B5 and B8 are boundary findings; 
 | R2 | Webhook dedupe (`checkout.session.expired`) | Read ledger → status-conditional `cancel()` (409 on race) → write ledger (`P2002` swallowed). Crash between cancel and ledger write → the retry finds the order CANCELLED and answers 200 | **Sound**; ledger is a delivery record, the status transition is the real guard |
 | R3 | `user.authenticated` → guest-order linking | ~~`findMany` of guest orders outside the transaction, then `updateMany` + award over the pre-read list~~ **Fixed:** candidates are read inside the transaction and each order is claimed with a conditional `updateMany({ id, userId: null })`; a concurrent claimer blocks on the row lock, re-evaluates the condition after commit, matches 0 rows and awards nothing; points are earned only for rows the transaction itself claimed | **Closed.** Verified with 5 concurrent `link()` calls and 4 parallel HTTP logins over paid guest orders: one EARN per order, balance = sum once (the pre-fix code produced 3–5 EARN rows per order in the same harness). No schema change: a unique `(orderId, type)` was not usable because cancellation legitimately writes a second, negative EARN row per order |
 | R4 | Publication timing vs. commit | `user.authenticated` is emitted after the user row exists and before tokens are issued; no outbox. A crash between commit and emit loses nothing durable: the link runs again on the next login | **Acceptable** for this event; would not be for an event whose consumer cannot re-derive the fact |
-| R5 | Cache invalidation after online payment | `PaymentsService.handleWebhook` does not call `AnalyticsService.invalidate()`; analytics count `PAID` orders | **Stale reports up to 5 min** (cache TTL) after an online payment. Cosmetic; `OrdersService.create` invalidates at creation (when the order is still unpaid) |
+| R5 | Cache invalidation after online payment | ~~`PaymentsService.handleWebhook` does not call `AnalyticsService.invalidate()`; analytics count `PAID` orders~~ **Fixed:** the webhook calls `analytics.invalidate()` (owner method, `.catch(() => null)`) once, right after the settlement batch commits — the same post-commit, fire-and-forget pattern `OrdersService.create`/`cancel` use. Only the PENDING→PAID/CONFIRMED path reaches it: no-op events, unknown/cancelled orders, already-paid orders, amount mismatches, ledger duplicates (P2002) and failed transactions all return or throw before it | **Closed.** Verified on a scratch DB: settlement invalidates exactly once with the order already `PAID` at call time; redelivery, a new event id for a paid order, three concurrent deliveries (one `ProcessedEvent`), mismatches and a forced transaction failure invalidate zero times; a rejecting `invalidate()` leaves the webhook 200 and the order `PAID` (Redis is fail-soft, same policy as the other owners; failure is not logged — R7) |
 | R6 | Transaction boundaries | Order create/cancel/status, webhook settlement, guest linking, notification writes: each a single transaction; side effects (mail, analytics invalidation, stock alerts, unread-cache) after commit | **Sound**; documented in [MODULE-DEVELOPMENT-GUIDE §3.10](MODULE-DEVELOPMENT-GUIDE.md) and HARDENING-IMPLEMENTATION |
 | R7 | Fire-and-forget after commit | Mail (4 sites), `analytics.invalidate()` (2), `stockAlerts.checkStock` in `orders` (2): `.catch(() => null)` | **Failures are silent** except mail (logged in `MailService`). A missed stock alert or stale analytics is not observable. No retry, no dead-letter |
 | R8 | Ordering assumptions | Bus subscribers run in registration order (one today). Webhooks: Stripe may deliver `expired` after `completed` for the same session — handled (`completed` first: PAID guard; `expired` first: cancel then `completed` sees CANCELLED → refund manually, logged) | **Handled**, including the out-of-order case |
@@ -159,7 +159,7 @@ No confirmed rule violation on the bus itself. B5 and B8 are boundary findings; 
 | R10 | Duplicate side effects | Notifications: key-unique. Loyalty on settlement: inside the ledger-guarded batch. Stock restock: status-conditional. Order creation: `Idempotency-Key`. Guest linking: conditional claim per order (R3) | **Sound** |
 | R11 | `ProcessedEvent` growth | No purge; indexed on `processedAt` | Grows one row per webhook forever; harmless at this scale, needs the same retention job notifications will |
 
-Confirmed findings: **R5** (analytics cache not invalidated by the webhook), **R7** (silent detached failures). **R3** (double loyalty award on concurrent authentication) is fixed. Everything else is sound as implemented.
+Confirmed findings: **R7** (silent detached failures). **R3** (double loyalty award on concurrent authentication) and **R5** (analytics cache not invalidated by the webhook) are fixed. Everything else is sound as implemented.
 
 ---
 
@@ -181,7 +181,7 @@ Confirmed findings: **R5** (analytics cache not invalidated by the webhook), **R
 | Frontend `api:unauthenticated` hook, `auth-hooks` plugin, `useApi` | Safe with Core frontend | Contract declared in `useApi.ts` |
 | Registry contributions (`OnModuleInit` registrars) | Safe with their module | Nest init order is the only coupling; unchanged by folder moves |
 | `app.module.ts` module order (who registers before whom), Stripe `rawBody` in `main.ts` | **Must remain in the composition root** | Boot composition, not a module concern |
-| Anything needing **redesign before extraction** | none | No component requires a redesign; R5 is a local fix (R3 done) |
+| Anything needing **redesign before extraction** | none | No component requires a redesign (R3 and R5 done) |
 
 ---
 
@@ -194,8 +194,8 @@ Supported by what exists today; nothing here requires a queue or an outbox.
 3. **Webhooks stay integration events, never bus events.** Provider → neutral `WebhookEvent` (Infrastructure) → `PaymentsService` (Shop) with the `ProcessedEvent` ledger. If other providers arrive, they implement `PaymentProvider.parseWebhook` and nothing else changes.
 4. **Ledger becomes provider-neutral**: `ProcessedEvent { eventId, source, eventType, subjectId, processedAt }`, owned by Infrastructure, usable by any webhook/ingest consumer.
 5. **Notification presenters as a frontend registry contribution** (like admin sections): each module contributes `{ type, describe(row) → { title, body, to } }`; Core's bell/feed/inbox render through it. Removes B5.
-6. **Fix R5 as an ordinary bug fix** before any event work: call `analytics.invalidate()` after settlement. (R3 is fixed: per-order conditional claim inside the linking transaction.)
-7. **Explicit failure policy per mechanism** (document, then enforce): bus = log-and-continue + naturally re-derivable; transactional side effects = inside the transaction; post-commit side effects = detached but **logged** (the two `.catch(() => null)` on stock alerts and analytics should at least log).
+6. ~~**Fix R5 as an ordinary bug fix** before any event work~~ Done: `PaymentsService.handleWebhook` calls `analytics.invalidate()` after settlement (R3 is also fixed: per-order conditional claim inside the linking transaction). `PaymentsModule` now imports `AnalyticsModule` — a Shop→Shop dependency, no new layer seam.
+7. **Explicit failure policy per mechanism** (document, then enforce): bus = log-and-continue + naturally re-derivable; transactional side effects = inside the transaction; post-commit side effects = detached but **logged** (the three `.catch(() => null)` on stock alerts and analytics — orders create/cancel and now the payment webhook — should at least log).
 
 ---
 
