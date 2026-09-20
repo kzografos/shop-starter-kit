@@ -8,7 +8,8 @@
  * (blueprint Phase 1) lets a real import-graph tool take over.
  *
  * Rules
- *   A  Core and Infrastructure folders must not import from Shop folders.
+ *   A  Core and Infrastructure folders must not import from Shop folders;
+ *      Infrastructure folders must not import from Core folders either.
  *   B  No *.service.ts may import a *.controller file.
  *   C  Controllers in Core folders must not require Shop capabilities.
  *   D  Services in Core folders must not access Shop Prisma models.
@@ -88,6 +89,9 @@ for (const file of walk(SRC)) {
       const target = importFolder(r, spec)
       if (target && SHOP.includes(target)) {
         findings.push({ rule: 'A', file: r, detail: target, message: `${layer} file imports shop folder '${target}' (${spec})` })
+      }
+      if (layer === 'INFRA' && target && CORE.includes(target)) {
+        findings.push({ rule: 'A', file: r, detail: target, message: `Infrastructure file imports Core folder '${target}' (${spec}); Infrastructure must stay Core-free` })
       }
     }
   }

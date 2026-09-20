@@ -7,8 +7,15 @@ import type { ConfigService } from '@nestjs/config'
  * Core boot needs only the first block. Every provider block is optional: its
  * variables are validated only when the block's "presence" key is set, so a
  * half-configured provider still fails loudly while an absent one is simply
- * disabled. The isXConfigured() helpers are the single source of truth the
- * provider modules use to decide whether to instantiate an SDK client.
+ * disabled.
+ *
+ * This file is the composition root's boot contract (app.module.ts imports the
+ * schema); it is not a dependency of the providers. Each provider owns the
+ * runtime presence rule for its own block, next to the code it switches
+ * (`isStorageConfigured` in storage/storage.module.ts, `isPaymentsConfigured`
+ * in payments-provider/stripe.provider.ts, `isMailConfigured` in
+ * mail/mail.service.ts), and each mirrors the "presence" key of its block
+ * below. Only Core's own check lives here.
  *
  * Empty strings count as "not set" because docker-compose forwards unset
  * variables as `` (e.g. GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}).
@@ -70,11 +77,5 @@ export const envValidationSchema = Joi.object({
   ...mail,
 })
 
-// ── Runtime presence checks (mirror the Joi conditions above) ─
-const has = (config: ConfigService, key: string) => Boolean(config.get<string>(key))
-
-export const isStorageConfigured = (config: ConfigService) => has(config, 'MINIO_ENDPOINT')
-export const isPaymentsConfigured = (config: ConfigService) => has(config, 'STRIPE_SECRET_KEY')
-export const isGoogleAuthConfigured = (config: ConfigService) => has(config, 'GOOGLE_CLIENT_ID')
-export const isMailConfigured = (config: ConfigService) =>
-  config.get<string>('MAIL_TRANSPORT', 'resend') === 'smtp' || has(config, 'RESEND_API_KEY')
+// ── Core's runtime presence check (mirrors the `google` block above) ─
+export const isGoogleAuthConfigured = (config: ConfigService) => Boolean(config.get<string>('GOOGLE_CLIENT_ID'))

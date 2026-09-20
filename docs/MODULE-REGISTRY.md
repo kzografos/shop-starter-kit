@@ -27,7 +27,7 @@ Layers, as the blueprint defines them and the boundary script enforces them: **I
 | Module | Path | Responsibility | Public entry points | Depends on | Consumers |
 |---|---|---|---|---|---|
 | core/events | `core/events/` | `CoreEventBus` (typed, awaited, log-and-continue), `user.authenticated` (global) | `CoreEventBus`, `CoreEventMap` | — | auth (emits), orders (subscribes) |
-| core/config | `core/config/` | Joi env contract; `isStorageConfigured/isPaymentsConfigured/isGoogleAuthConfigured/isMailConfigured` | `envValidationSchema`, helpers | — | app.module, storage, payments-provider, mail, auth (google) |
+| core/config | `core/config/` | Joi env contract (boot schema, Core block required, provider blocks conditional); `isGoogleAuthConfigured` | `envValidationSchema`, `isGoogleAuthConfigured` | — | app.module, auth (google). Provider presence checks live with their providers (F1) |
 | auth | `auth/` | Register/login/logout/refresh (Redis-rotated), Google OAuth, password reset; `JwtAuthGuard`, `OptionalJwtAuthGuard`, `PermissionsGuard`, `RequirePermissions`, `CurrentUser`; **Permission Registry** (`PermissionsRegistryService`, global) with Core capabilities/roles in `permissions.ts` | routes `/auth/*`; guards/decorators; `PermissionsRegistryService`; `OWNER_ROLE/MEMBER_ROLE` | users, redis, mail, core/events, core/config | every guarded controller; profile, staff, users, analytics (constants); all modules that register capabilities |
 | users | `users/` | `User` rows (create/find/link Google/password/profile), customer list; **User-extensions registry** | `UsersService`, `UserExtensionsRegistry`; `GET /admin/customers` | prisma, auth (guards, `MEMBER_ROLE`) | auth, profile, staff, loyalty, orders |
 | profile | `profile/` | `GET/PATCH /profile` with `permissions[]` and extension fields | routes | users, auth | frontend session |
@@ -129,7 +129,7 @@ No rule above contradicts the running architecture; the three not fully satisfie
 
 | # | Finding | Where | Severity | Type |
 |---|---|---|---|---|
-| F1 | **Infrastructure imports Core**: `storage/`, `payments-provider/`, `mail/` import `core/config/env.validation.ts` for the `isXConfigured()` helpers (`auth/` uses the same helper for Google, which is Core → Core and fine). The layer map puts `core/` in CORE; the blueprint forbids INFRA → CORE; the script does not check it. | `storage/storage.module.ts`, `payments-provider/stripe.provider.ts`, `mail/mail.service.ts` → `core/config/env.validation.ts` | Low (config helpers, no behaviour) | violation of R6 |
+| F1 | ~~**Infrastructure imports Core**: `storage/`, `payments-provider/`, `mail/` import `core/config/env.validation.ts` for the `isXConfigured()` helpers~~ **Resolved (2026-09-18, EXTRACTION-READINESS §8):** each provider owns its presence rule (`isStorageConfigured` in `storage/storage.module.ts`, `isPaymentsConfigured` in `payments-provider/stripe.provider.ts`, `isMailConfigured` in `mail/mail.service.ts`), same expressions; `env.validation.ts` keeps the boot schema + `isGoogleAuthConfigured` (Core → Core). `verify-boundaries` rule A now also forbids INFRA → CORE. No migration, no env change | `storage/storage.module.ts`, `payments-provider/stripe.provider.ts`, `mail/mail.service.ts`, `core/config/env.validation.ts`, `scripts/verify-boundaries.js` | — | closed |
 | F2 | **Shop reads Core rows directly**: `analytics.service` counts `user` rows (with `MEMBER_ROLE` from `auth/permissions`); `orders.service.create` does `prisma.user.findUniqueOrThrow` to check the buyer exists. Both bypass `UsersService`. | `analytics/analytics.service.ts:257-299`, `orders/orders.service.ts:106` | Low (reads only) | violation of R7 |
 | F3 | **Cross-sub-domain write inside the shop**: `payments.service` updates `order` rows (session id; CONFIRMED/PAID inside the `ProcessedEvent` transaction). Accepted design: the settlement must be one transaction with the ledger row and `OrdersService` has no such primitive. | `payments/payments.service.ts:74,140` | Info | documented exception to R8 |
 | F4 | ~~**Folder-level cycle `auth ↔ users`**: `auth.service` → `users.service`; `users.service` → `auth/permissions` (`MEMBER_ROLE`)~~ **Resolved at runtime (§3.4 seam 1):** role values live in `users/roles.ts`, `auth/permissions.ts` re-exports them; `users/` imports `auth/` only for the guard/decorator contract every controller uses (boundary rule E keeps it so). `staff`, `profile` → `auth/permissions` / `PermissionsRegistryService` remain Core → Core. | `users/roles.ts`, `auth/permissions.ts`, `users/users.service.ts` | — | closed (intentional exception: guards) |
@@ -145,7 +145,7 @@ Differences from [ARCHITECTURE-AUDIT.md](ARCHITECTURE-AUDIT.md) (2026-09-18): th
 
 ### 3.3 Recommendations (not done here)
 
-- F1: at backend extraction, move `core/config/env.validation.ts` to `infrastructure/config/` (it is the adapters' configuration contract), or split the presence helpers next to each adapter; add an INFRA → CORE check to `verify-boundaries`.
+- F1: **done** — presence helpers split next to each adapter; INFRA → CORE check added to `verify-boundaries` rule A. The boot schema stays in `core/config` as the composition root's contract (moving it would have created a Core → Infrastructure edge from `auth`).
 - F2: add `UsersService.countCustomers()` / `exists()` and use them; extend rule D's spirit with a "Shop services touching Core models" check (`user`, `setting`, `notification`, `newsletterSubscriber`).
 - F4: **done** for the runtime edge (`users/roles.ts`). Moving guards/decorators into a `core/auth-contracts` folder is only needed if `users` must ship without `auth`; not planned.
 - F5: `AppFooter` gets footer contribution lists (`footerLinks[]`) like the header; `HeaderSearch` gets its own key.
@@ -196,14 +196,14 @@ Read from the code before any edit. "Kind" says what the dependency is made of; 
 >
 > | Package | Verdict | Blocker |
 > |---|---|---|
-> | Backend Infrastructure (`prisma redis storage payments-provider mail health common`) | Ready after **F1** (`env.validation.ts` placement; 3 INFRA→CORE edges, the only backend violation) | F1 |
+> | Backend Infrastructure (`prisma redis storage payments-provider mail health common`) | Ready — F1 closed, 0 INFRA→CORE edges (rule A enforces) | — |
 > | Backend Core (as one package) | Ready — 0 Core→Shop code or Prisma edges, 0 file cycles; `auth↔users` folder cycle is the guard contract (rule E) | — |
 > | Backend Shop (`modules/ecommerce`) | Ready — inbound 0 from Core/Infra; F2 (`prisma.user` reads ×2) and F10 (role presets) are optional cleanups | — |
 > | Frontend Shop layer (40 files) | Ready — 0 Core→Shop code edges; 38 Shop→Core edges all on the Core surface; the 5 Core→Shop *registry* references are `app.config.ts` contributions | — |
 > | Frontend Core layer | **Blocked by P1** — 12 Core→Project edges (`BrandLockup`, `WhatsAppButton`, `utils/business.ts`, `useBusinessSchema`) + F5 footer links | P1, F5 |
 > | `types/index.ts`, `i18n/*.json` | Mechanical split at layer time (F7) | — |
 >
-> Recommended first slice: F1 + backend Infrastructure package (EXTRACTION-READINESS §12).
+> Recommended first slice: backend Infrastructure package (EXTRACTION-READINESS §12; F1 done).
 
 
 Target (blueprint §13 Phase 2): backend `core/`, `modules/ecommerce/`, `infrastructure/`; Nuxt layers `app/core`, `app/modules/ecommerce`, later `app/project`.

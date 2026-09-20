@@ -1,9 +1,14 @@
 import { Global, Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as Minio from 'minio'
-import { isStorageConfigured } from '../core/config/env.validation'
 import { StorageAdapter } from './storage-adapter'
 import { MinioStorageAdapter, MINIO_CLIENT } from './minio-storage.adapter'
+
+// Storage is present when its "presence" key is set; the other MINIO_* keys
+// are then required by the boot schema (core/config/env.validation.ts, storage
+// block), so getOrThrow() below cannot fail once this is true. '' counts as
+// unset (docker-compose forwards unset variables as empty strings).
+export const isStorageConfigured = (config: ConfigService) => Boolean(config.get<string>('MINIO_ENDPOINT'))
 
 // Infrastructure: object storage. Global so any layer can inject
 // StorageAdapter; the only implementation today is MinIO (S3-compatible).

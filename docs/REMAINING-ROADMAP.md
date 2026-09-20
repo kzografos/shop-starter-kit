@@ -45,8 +45,8 @@ Order chosen so every step is a pure move (revertible, no behaviour, no migratio
 
 | Step | Slice | Pre-requisite / blocker | Gate |
 |---|---|---|---|
-| E1 | **F1** — move `core/config/env.validation.ts` to Infrastructure; add INFRA→CORE to `verify-boundaries` rule A | — | boundaries 0, providers scenarios unchanged |
-| E2 | **Backend Infrastructure package** `backend/src/infrastructure/…` (recommended first slice) | E1 | `npm run verify`, audit baseline updated |
+| ~~E1~~ | ~~**F1**~~ **done 2026-09-18** — provider-local presence rules (`isStorageConfigured`/`isPaymentsConfigured`/`isMailConfigured` next to their providers; no file move); INFRA→CORE added to rule A | — | boundaries 0, providers scenarios unchanged, audit forbidden 0 |
+| E2 | **Backend Infrastructure package** `backend/src/infrastructure/…` (recommended first slice) | — | `npm run verify`, audit baseline updated |
 | E3 | **Backend folder layers** `core/`, `modules/ecommerce/` (+ `ecommerce.module.ts` shop root, role presets move — F10) | E2 | `verify-routes` snapshot byte-identical |
 | E4 | **F2** `UsersService.exists()/countCustomers()` (optional) | — | harnesses |
 | E5 | **Frontend Shop layer** `app/modules/ecommerce` (+ `Shop*` prefixes, Shop half of `types`/`i18n`, its `app.config` entries) | — | `pnpm lint/typecheck/test/build`, UI harnesses EL/EN |
@@ -55,7 +55,7 @@ Order chosen so every step is a pure move (revertible, no behaviour, no migratio
 | E8 | **Module Registry** (C2): `app.module.ts`/`nuxt.config.ts` and both scripts read one registry (F11) | E3, E7 | — |
 | later | **S1** `NotificationType` enum → string; **S2** schema generation per enabled module; Event Registry code | a second module | — |
 
-**Blockers today**: F1 (backend, small), P1 (frontend Core brand residue, medium), F5 (footer/search, small), F7 (mechanical split), S1/S2 (schema, only for a second module or optional-module builds). Intentional exceptions kept: guard contract (`users→auth/guards`), `payments` writing `order` inside the ledger transaction (F3), `app.config` referencing components by name, Prisma back-relations on `User`.
+**Blockers today**: ~~F1~~ (closed), P1 (frontend Core brand residue, medium), F5 (footer/search, small), F7 (mechanical split), S1/S2 (schema, only for a second module or optional-module builds). Intentional exceptions kept: guard contract (`users→auth/guards`), `payments` writing `order` inside the ledger transaction (F3), `app.config` referencing components by name, Prisma back-relations on `User`.
 
 ---
 

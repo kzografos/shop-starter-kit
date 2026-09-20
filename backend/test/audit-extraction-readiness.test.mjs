@@ -21,10 +21,9 @@ test('positive: real tree — baseline boundaries hold and output is determinist
   assert.ok(r.backend.files >= 100 && r.frontend.files >= 60, 'scans both trees')
   assert.ok(r.backend.edgesByKind.di > 50 && r.backend.edgesByKind.import > 200, 'resolves imports and constructor DI')
   assert.ok(r.frontend.edgesByKind['auto-component'] > 20 && r.frontend.edgesByKind['auto-import'] > 50, 'resolves Nuxt auto-imports')
-  // Backend: no Core→Shop or Infra→Shop edge of any runtime kind; the only
-  // forbidden edges are the three known INFRA→CORE config-helper imports (MODULE-REGISTRY F1).
-  assert.equal(r.backend.forbidden.filter((e) => e.toLayer === 'SHOP').length, 0)
-  assert.deepEqual([...new Set(r.backend.forbidden.map((e) => e.to))], ['core/config/env.validation.ts'])
+  // Backend: no forbidden edge of any runtime kind — Core→Shop, Infra→Shop and,
+  // since F1 was closed, Infra→Core (the providers own their presence checks).
+  assert.deepEqual(r.backend.forbidden, [], JSON.stringify(r.backend.forbidden))
   assert.equal(r.backend.shopPrismaFromCore.length, 0, 'no Core service touches a shop model')
   assert.deepEqual(r.backend.fileCycles, [], 'no file-level runtime cycle')
   assert.deepEqual(r.backend.folderCycles, [['auth', 'users']], 'the one known folder cycle (guards contract)')

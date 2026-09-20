@@ -3,13 +3,19 @@ import { ConfigService } from '@nestjs/config'
 import { Resend } from 'resend'
 import * as nodemailer from 'nodemailer'
 import type { Transporter } from 'nodemailer'
-import { isMailConfigured } from '../core/config/env.validation'
 
 export interface MailMessage {
   to: string
   subject: string
   html: string
 }
+
+// Mail is usable with the smtp transport (no credentials: a dev catcher) or
+// with resend plus an API key. Neither is required to boot; the boot schema
+// (core/config/env.validation.ts, mail block) only validates the shape.
+// '' counts as unset (docker-compose forwards unset variables as empty strings).
+export const isMailConfigured = (config: ConfigService) =>
+  config.get<string>('MAIL_TRANSPORT', 'resend') === 'smtp' || Boolean(config.get<string>('RESEND_API_KEY'))
 
 @Injectable()
 export class MailService {

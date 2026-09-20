@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import Stripe from 'stripe'
-import { isPaymentsConfigured } from '../core/config/env.validation'
 import {
   CheckoutSession,
   CheckoutStatus,
@@ -9,6 +8,11 @@ import {
   PaymentProvider,
   WebhookEvent,
 } from './payment-provider'
+
+// Payments are present when the secret key is set; the webhook secret is then
+// required by the boot schema (core/config/env.validation.ts, payments block).
+// '' counts as unset (docker-compose forwards unset variables as empty strings).
+export const isPaymentsConfigured = (config: ConfigService) => Boolean(config.get<string>('STRIPE_SECRET_KEY'))
 
 @Injectable()
 export class StripePaymentProvider extends PaymentProvider {
