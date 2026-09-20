@@ -1,8 +1,8 @@
 import { ForbiddenException, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { createHmac, timingSafeEqual } from 'crypto'
-import { PrismaService } from '../prisma/prisma.service'
-import { MailService } from '../mail/mail.service'
+import { PrismaService } from '../infrastructure/prisma/prisma.service'
+import { MailService } from '../infrastructure/mail/mail.service'
 
 @Injectable()
 export class NewsletterService {

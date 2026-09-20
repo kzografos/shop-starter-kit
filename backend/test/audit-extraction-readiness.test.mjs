@@ -46,7 +46,7 @@ test('negative: synthetic tree — forbidden edges, DI, auto-component and a cyc
     w('src/users/users.service.ts', "import { ProductsService } from '../products/products.service'\nexport class UsersService { constructor(private products: ProductsService) {} }\n")
     w('src/products/products.service.ts', "import { UsersService } from '../users/users.service'\nimport type { Thing } from '../users/thing'\nexport class ProductsService { constructor(private users: UsersService) {} }\n")
     w('src/users/thing.ts', 'export type Thing = string\n')
-    w('src/mail/mail.service.ts', "export class MailService { async x() { await this.prisma.order.findMany() } }\n")
+    w('src/infrastructure/mail/mail.service.ts', "export class MailService { async x() { await this.prisma.order.findMany() } }\n")
     w('prisma/ecommerce.prisma', 'model Order {\n  id String @id\n}\n')
     // frontend: Core layout uses a Shop component through the template; Core page auto-imports a Shop store
     w('app/layouts/default.vue', '<template><div><CartButton /><UIcon /></div></template>\n')
@@ -67,7 +67,7 @@ test('negative: synthetic tree — forbidden edges, DI, auto-component and a cyc
     assert.ok(r.backend.forbiddenTypeOnly.length === 0, 'shop → core type import is allowed')
     assert.deepEqual(r.backend.fileCycles, [['products/products.service.ts', 'users/users.service.ts']])
     assert.deepEqual(r.backend.folderCycles, [['products', 'users']])
-    assert.ok(r.backend.edgeList.some((e) => e.kind === 'prisma' && e.from === 'mail/mail.service.ts' && e.toLayer === 'SHOP'), 'Infra touching a shop model is a prisma edge')
+    assert.ok(r.backend.edgeList.some((e) => e.kind === 'prisma' && e.from === 'infrastructure/mail/mail.service.ts' && e.toLayer === 'SHOP'), 'Infra touching a shop model is a prisma edge')
     const fe = r.frontend.forbidden.map((e) => `${e.from}>${e.to}:${e.kind}`)
     assert.ok(fe.includes('layouts/default.vue>components/cart/CartButton.global.vue:auto-component'), fe.join(', '))
     assert.ok(fe.includes('pages/login.vue>stores/cart.ts:auto-import'))

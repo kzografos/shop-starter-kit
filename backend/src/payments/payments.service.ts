@@ -1,15 +1,15 @@
 import { Injectable, BadRequestException, ConflictException, Logger } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
-import { PrismaService } from '../prisma/prisma.service'
-import { MailService } from '../mail/mail.service'
+import { PrismaService } from '../infrastructure/prisma/prisma.service'
+import { MailService } from '../infrastructure/mail/mail.service'
 import { orderConfirmationMail } from '../orders/order-confirmation.mail'
 import { PricingSettingsService } from '../orders/pricing-settings.service'
 import { OrdersService } from '../orders/orders.service'
 import { OrderNotificationsService } from '../orders/order-notifications.service'
 import { LoyaltyService } from '../loyalty/loyalty.service'
 import { AnalyticsService } from '../analytics/analytics.service'
-import { afterCommit } from '../common/utils/after-commit'
-import { CheckoutExpired, CheckoutLine, PaymentProvider } from '../payments-provider/payment-provider'
+import { afterCommit } from '../infrastructure/common/utils/after-commit'
+import { CheckoutExpired, CheckoutLine, PaymentProvider } from '../infrastructure/payments-provider/payment-provider'
 
 /**
  * Order-side orchestration of online payments. Which PSP is behind it, how a

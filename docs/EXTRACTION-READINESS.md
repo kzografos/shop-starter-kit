@@ -36,19 +36,19 @@ Related: [MODULE-REGISTRY.md](MODULE-REGISTRY.md) (module inventory, findings F1
 
 ## 3. Backend ownership inventory
 
-Layer map (blueprint §2, encoded in `verify-boundaries.js` and the audit script): INFRASTRUCTURE = `prisma redis storage payments-provider mail health common`; CORE = `core auth users profile staff settings notifications newsletter uploads`; SHOP = `products categories favourites orders payments loyalty analytics`; ROOT = `app.module.ts`, `main.ts`. 116 files: CORE 52, SHOP 42, INFRASTRUCTURE 20, ROOT 2, unmapped 0.
+Layer map (blueprint §2, encoded in `verify-boundaries.js` and the audit script): INFRASTRUCTURE = `infrastructure/` (since E2, 2026-09-20: `prisma redis storage payments-provider mail health common` under it; before E2 they were seven top-level folders); CORE = `core auth users profile staff settings notifications newsletter uploads`; SHOP = `products categories favourites orders payments loyalty analytics`; ROOT = `app.module.ts`, `main.ts`. 116 files: CORE 52, SHOP 42, INFRASTRUCTURE 20, ROOT 2, unmapped 0.
 
 ### 3.1 Infrastructure
 
 | Path | Category | Owner | Important dependencies | Status | Blocker | Notes |
 |---|---|---|---|---|---|---|
-| `prisma/` (`PrismaService`, `@Global` module) | INFRASTRUCTURE | infra | `@prisma/client` | Ready | — | Single client for all three schema files; referenced by 17 files (15 constructor injections) |
-| `redis/` (`RedisService`, `@Global`) | INFRASTRUCTURE | infra | `ioredis`, `REDIS_URL` | Ready | — | Fail-soft (WARN) get/set/del/exists/delPattern/ping; factory provider `Redis` (unresolved DI token by design) |
-| `storage/` (`StorageAdapter` abstract, `MinioStorageAdapter`, `LocalDisabledStorage`) | INFRASTRUCTURE | infra | `minio` | Ready | — | Owns `isStorageConfigured` (`storage.module.ts`, mirrors the storage block of the boot schema) — F1 closed |
-| `payments-provider/` (`PaymentProvider` abstract, `StripePaymentProvider`, `WebhookEvent`) | INFRASTRUCTURE (contract) / SHARED-CONTRACT (`payment-provider.ts` types) | infra | `stripe` | Ready | — | Owns `isPaymentsConfigured` (`stripe.provider.ts`) — F1 closed. Provider-neutral `WebhookEvent { checkoutCompleted \| checkoutExpired }`; only consumer is Shop `payments` |
-| `mail/` (`MailService`, transports smtp/resend) | INFRASTRUCTURE | infra | `nodemailer`, `resend` | Ready | — | Owns `isMailConfigured` (`mail.service.ts`) — F1 closed. Never throws; templates live with their modules (`orders/order-confirmation.mail.ts`) |
-| `health/` | INFRASTRUCTURE | infra | `@nestjs/terminus`, `PrismaService`, `RedisService` | Ready | — | `/health` 503 if Postgres or Redis down |
-| `common/` (`GlobalExceptionFilter`, `SnakeCaseInterceptor`, `serialize.ts`, `after-commit.ts`) | INFRASTRUCTURE / SHARED-CONTRACT | infra | `@nestjs/common`, Prisma error codes | Ready | — | `afterCommit()` is the detached post-commit policy (R7); `toCache()` Decimal-safe JSON |
+| `infrastructure/prisma/` (`PrismaService`, `@Global` module) | INFRASTRUCTURE | infra | `@prisma/client` | Ready | — | Single client for all three schema files; referenced by 17 files (15 constructor injections) |
+| `infrastructure/redis/` (`RedisService`, `@Global`) | INFRASTRUCTURE | infra | `ioredis`, `REDIS_URL` | Ready | — | Fail-soft (WARN) get/set/del/exists/delPattern/ping; factory provider `Redis` (unresolved DI token by design) |
+| `infrastructure/storage/` (`StorageAdapter` abstract, `MinioStorageAdapter`, `LocalDisabledStorage`) | INFRASTRUCTURE | infra | `minio` | Ready | — | Owns `isStorageConfigured` (`storage.module.ts`, mirrors the storage block of the boot schema) — F1 closed |
+| `infrastructure/payments-provider/` (`PaymentProvider` abstract, `StripePaymentProvider`, `WebhookEvent`) | INFRASTRUCTURE (contract) / SHARED-CONTRACT (`payment-provider.ts` types) | infra | `stripe` | Ready | — | Owns `isPaymentsConfigured` (`stripe.provider.ts`) — F1 closed. Provider-neutral `WebhookEvent { checkoutCompleted \| checkoutExpired }`; only consumer is Shop `payments` |
+| `infrastructure/mail/` (`MailService`, transports smtp/resend) | INFRASTRUCTURE | infra | `nodemailer`, `resend` | Ready | — | Owns `isMailConfigured` (`mail.service.ts`) — F1 closed. Never throws; templates live with their modules (`orders/order-confirmation.mail.ts`) |
+| `infrastructure/health/` | INFRASTRUCTURE | infra | `@nestjs/terminus`, `PrismaService`, `RedisService` | Ready | — | `/health` 503 if Postgres or Redis down |
+| `infrastructure/common/` (`GlobalExceptionFilter`, `SnakeCaseInterceptor`, `serialize.ts`, `after-commit.ts`) | INFRASTRUCTURE / SHARED-CONTRACT | infra | `@nestjs/common`, Prisma error codes | Ready | — | `afterCommit()` is the detached post-commit policy (R7); `toCache()` Decimal-safe JSON |
 | `core/config/env.validation.ts` | CORE (composition-root boot contract) | core / root | `joi`, `ConfigService` | Stays | — | Joi schema for every env var (Core block required, provider blocks conditional) + Core's own `isGoogleAuthConfigured()`. Imported by `app.module.ts` (ROOT) and `auth/` (Core) only. The provider presence helpers moved next to their providers (F1). The provider Joi blocks stay here deliberately: they are the *application's* boot contract, composed at the root, and splitting them would only move env knowledge around (§8 F1 decision) |
 | `prisma/infrastructure.prisma` (`ProcessedEvent { eventId, eventType, subjectId, processedAt }`) | INFRASTRUCTURE | infra | — | Ready | — | Neutral ledger since `20260919120000_processed_event_subject`; written only by Shop `payments` (expected) |
 
@@ -234,7 +234,7 @@ No frontend file cycles.
 |---|---|---|
 | Backend Shop package `modules/ecommerce/` = `products categories favourites orders payments loyalty analytics` + `ecommerce.prisma` | 42 + 1 schema | 0 inbound from Core/Infra; outbound only to Core's exported services and Infra adapters; registries carry permissions/settings/user-extensions/presenters; `verify-routes` snapshot pins every route |
 | Backend Core (as one package) `auth users profile staff settings notifications newsletter uploads core/events` | 52 | 0 Core→Shop; internal folder cycle is the guard contract; `env.validation` placement is F1 (Infra side) |
-| Backend Infrastructure `prisma redis storage payments-provider mail health common` | 20 | Ready (F1 closed: 0 inbound-from-Core imports, 0 outbound-to-Core) |
+| ~~Backend Infrastructure~~ `backend/src/infrastructure/{prisma,redis,storage,payments-provider,mail,health,common}` | 20 | **Moved (E2, 2026-09-20)**: 20 × `git mv` (R100), 46 relative-import rewrites in 24 files, 4 tooling/test path updates; edge set identical to pre-move after path normalisation (408 edges), routes 65/65 byte-identical, providers unchanged |
 | Frontend Shop layer (`app/modules/ecommerce`): 40 files in §4.2 + their `app.config` entries + `types` Shop declarations + `i18n` Shop namespaces | 40 | 0 Core→Shop code edges; 38 Shop→Core edges all on the Core surface; presenter + registry contributions in place; needs `Shop*` component prefixes (blueprint §10) |
 | Frontend Core utilities (`useApi`, `usePermissions`, registries, presenters, stores/auth, middleware, plugins) | 20 | Pure Core; unit tests exist for the pure helpers |
 
@@ -258,7 +258,7 @@ No frontend file cycles.
 Each step leaves the app green (`npm run verify`, `pnpm lint/typecheck/test/build`, harness suites) and is independently revertible (a move + import rewrite, no behaviour).
 
 1. ~~**F1**~~ **Done** — provider-local presence rules (no file move needed); INFRA→CORE added to `verify-boundaries` rule A. *Backend has zero forbidden edges.*
-2. **Backend folder layers** — `backend/src/{infrastructure,core,modules/ecommerce}/…` (blueprint Phase 1): pure moves; update the layer map in `verify-boundaries.js` and the audit script to the new paths; `verify-routes` snapshot must not change (paths are routes, not folders). Create `modules/ecommerce/ecommerce.module.ts` as the shop root and move the role presets there (F10).
+2. **Backend folder layers** — `backend/src/{infrastructure,core,modules/ecommerce}/…` (blueprint Phase 1). *`infrastructure/` done (E2).* Remaining: `core/`, `modules/ecommerce/` — pure moves; update the layer map in `verify-boundaries.js` and the audit script to the new paths; `verify-routes` snapshot must not change (paths are routes, not folders). Create `modules/ecommerce/ecommerce.module.ts` as the shop root and move the role presets there (F10).
 3. **F2** (optional, same PR as 2 or after) — `UsersService.exists()/countCustomers()`.
 4. **Frontend Shop layer** — `app/modules/ecommerce/{pages,components,composables,stores,utils,plugins,app.config.ts,i18n}`; `Shop*` prefixes; Shop `types` and `i18n` split out (F7, shop half). Root `nuxt.config.ts` `extends` the layer. Core→Shop still 0 by construction.
 5. **P1 + F5** — brand/footer contributions; then **frontend Core layer** `app/core/…` with the Core half of `types`/`i18n`; project layer keeps `app.config.ts`, brand components, `business.ts`, home/about/contact.
@@ -269,7 +269,7 @@ Each step leaves the app green (`npm run verify`, `pnpm lint/typecheck/test/buil
 
 ## 12. Recommended first extraction slice
 
-**Slice: backend Infrastructure package** (step 2 for the Infrastructure folder only; F1 already done).
+**Slice: backend Infrastructure package** — **done 2026-09-20 (E2)** exactly as scoped below; kept as the record of what was executed.
 
 - Scope: create `backend/src/infrastructure/{prisma,redis,storage,payments-provider,mail,health,common}/`, move the 20 files, rewrite imports (all relative today — `sed`-able), update `verify-boundaries.js` layer map and the audit script's `BE_INFRA` prefix, keep `app.module.ts` imports. `env.validation.ts` stays in `core/config` (boot contract).
 - Why first: smallest blast radius (adapters have no business logic; Infrastructure imports nothing from Core or Shop), proves the move mechanics (paths, scripts, CI) before touching Core/Shop.
@@ -307,7 +307,7 @@ Alternative if backend is frozen: **frontend Shop layer** (step 4) — equally r
 
 **What it does not resolve (reported as `unresolved`, never guessed)**: dynamic `import()` (none in the tree), `<component :is>` targets (5 sites, all registry-driven), page-local components (`LineChart`, `SortIcon`), factory/token DI (`Redis`, `Minio`, `HealthIndicatorService`), Prisma relations traversed via `include/select`, i18n key usage, `useState` key sharing (checked by hand), barrel re-exports (the only re-export in either tree is `auth/permissions.ts` → `users/roles.ts`, which the tool follows as an ordinary import edge; `types/index.ts` is a single declaration file, not a barrel — verified), auto-imported utils (none: utils are imported explicitly). Layers are declared path maps, not inferred; a new folder is `UNMAPPED` in the backend map and `CORE` by default in the frontend — review both maps whenever a folder is added.
 
-**Baseline at this commit** (from the script, after F1): backend 116 files / 411 edges / forbidden **0** (was 3 before F1) / cycles 0 / folder cycle 1; frontend 91 files / 193 edges / forbidden 12 (all CORE→PROJECT) / Core→Shop via registry 5 / cycles 0 / unresolved 8.
+**Baseline at this commit** (from the script, after F1 and E2): backend 116 files / 408 edges (411 before F1 removed its 3) / forbidden **0** / cycles 0 / folder cycle 1 (`auth↔users`; the seven Infrastructure folders are one node `infrastructure` since E2); frontend 91 files / 193 edges / forbidden 12 (all CORE→PROJECT) / Core→Shop via registry 5 / cycles 0 / unresolved 8.
 
 ---
 

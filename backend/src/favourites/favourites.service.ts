@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../prisma/prisma.service'
-import { StorageAdapter } from '../storage/storage-adapter'
+import { PrismaService } from '../infrastructure/prisma/prisma.service'
+import { StorageAdapter } from '../infrastructure/storage/storage-adapter'
 
 @Injectable()
 export class FavouritesService {

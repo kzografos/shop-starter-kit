@@ -1,4 +1,4 @@
-import type { MailMessage, MailService } from '../mail/mail.service'
+import type { MailMessage, MailService } from '../infrastructure/mail/mail.service'
 
 /**
  * Order-confirmation email. Owned by the orders module; Core's MailService

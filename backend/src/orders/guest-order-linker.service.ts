@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
-import { PrismaService } from '../prisma/prisma.service'
+import { PrismaService } from '../infrastructure/prisma/prisma.service'
 import { CoreEventBus } from '../core/events/core-event-bus.service'
 import type { UserAuthenticatedEvent } from '../core/events/core-event.types'
 import { LoyaltyService } from '../loyalty/loyalty.service'

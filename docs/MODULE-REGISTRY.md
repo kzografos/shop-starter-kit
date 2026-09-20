@@ -10,17 +10,17 @@ Layers, as the blueprint defines them and the boundary script enforces them: **I
 
 ## 1. Module inventory
 
-### 1.1 Backend — Infrastructure (`backend/src/…`)
+### 1.1 Backend — Infrastructure (`backend/src/infrastructure/…` since E2, 2026-09-20)
 
 | Module | Path | Responsibility | Public entry points | Depends on | Consumers |
 |---|---|---|---|---|---|
-| prisma | `prisma/` | Prisma client as a Nest provider (global) | `PrismaService` | — | every module with a table |
-| redis | `redis/` | ioredis client; `get/set(ttl)/del/exists/delPattern/ping`, fail-soft (global) | `RedisService` | — | auth (tokens), settings, products, categories, analytics, notifications, health |
-| storage | `storage/` | `StorageAdapter` contract (`isEnabled/put/resolve/presign/remove`) + `MinioStorageAdapter` (global; disabled when unconfigured) | `StorageAdapter` | core/config (`isStorageConfigured`) | uploads, products, favourites, orders |
-| payments-provider | `payments-provider/` | `PaymentProvider` contract (`createCheckout/getCheckoutStatus/parseWebhook`) + `StripePaymentProvider` (global; 503 when unconfigured) | `PaymentProvider` | core/config | payments |
-| mail | `mail/` | SMTP/Resend transport, branded layout, generic `sendMail`, reset/welcome templates (global; disabled-safe) | `MailService` | core/config | auth, newsletter, orders, payments |
-| health | `health/` | `GET /health` (Postgres + Redis), `RedisHealthIndicator` | route | prisma, redis | Docker healthcheck, Nginx |
-| common | `common/` | `GlobalExceptionFilter` (Prisma error mapping), `SnakeCaseInterceptor`, `serialize` util | classes | — | main.ts, products |
+| prisma | `infrastructure/prisma/` | Prisma client as a Nest provider (global) | `PrismaService` | — | every module with a table |
+| redis | `infrastructure/redis/` | ioredis client; `get/set(ttl)/del/exists/delPattern/ping`, fail-soft (global) | `RedisService` | — | auth (tokens), settings, products, categories, analytics, notifications, health |
+| storage | `infrastructure/storage/` | `StorageAdapter` contract (`isEnabled/put/resolve/presign/remove`) + `MinioStorageAdapter` (global; disabled when unconfigured) | `StorageAdapter` | core/config (`isStorageConfigured`) | uploads, products, favourites, orders |
+| payments-provider | `infrastructure/payments-provider/` | `PaymentProvider` contract (`createCheckout/getCheckoutStatus/parseWebhook`) + `StripePaymentProvider` (global; 503 when unconfigured) | `PaymentProvider` | core/config | payments |
+| mail | `infrastructure/mail/` | SMTP/Resend transport, branded layout, generic `sendMail`, reset/welcome templates (global; disabled-safe) | `MailService` | core/config | auth, newsletter, orders, payments |
+| health | `infrastructure/health/` | `GET /health` (Postgres + Redis), `RedisHealthIndicator` | route | prisma, redis | Docker healthcheck, Nginx |
+| common | `infrastructure/common/` | `GlobalExceptionFilter` (Prisma error mapping), `SnakeCaseInterceptor`, `serialize` util, `afterCommit` | classes | — | main.ts, products, orders, payments |
 
 ### 1.2 Backend — Core
 
@@ -86,7 +86,7 @@ Root: `app.module.ts`, `main.ts` — composition root, may import everything. `p
 
 ### 1.7 Shared
 
-`backend/src/common/` (filter, interceptor, serialize) and `types/index.ts` are the only cross-cutting shared code. See finding F7 on the latter.
+`backend/src/infrastructure/common/` (filter, interceptor, serialize, after-commit) and `types/index.ts` are the only cross-cutting shared code. See finding F7 on the latter.
 
 ---
 
@@ -196,14 +196,14 @@ Read from the code before any edit. "Kind" says what the dependency is made of; 
 >
 > | Package | Verdict | Blocker |
 > |---|---|---|
-> | Backend Infrastructure (`prisma redis storage payments-provider mail health common`) | Ready — F1 closed, 0 INFRA→CORE edges (rule A enforces) | — |
+> | Backend Infrastructure (`prisma redis storage payments-provider mail health common`) | **Moved (E2, 2026-09-20)** to `backend/src/infrastructure/…` — 20 files, 46 import rewrites, 0 behaviour change; 0 INFRA→CORE/SHOP edges (rule A enforces) | — |
 > | Backend Core (as one package) | Ready — 0 Core→Shop code or Prisma edges, 0 file cycles; `auth↔users` folder cycle is the guard contract (rule E) | — |
 > | Backend Shop (`modules/ecommerce`) | Ready — inbound 0 from Core/Infra; F2 (`prisma.user` reads ×2) and F10 (role presets) are optional cleanups | — |
 > | Frontend Shop layer (40 files) | Ready — 0 Core→Shop code edges; 38 Shop→Core edges all on the Core surface; the 5 Core→Shop *registry* references are `app.config.ts` contributions | — |
 > | Frontend Core layer | **Blocked by P1** — 12 Core→Project edges (`BrandLockup`, `WhatsAppButton`, `utils/business.ts`, `useBusinessSchema`) + F5 footer links | P1, F5 |
 > | `types/index.ts`, `i18n/*.json` | Mechanical split at layer time (F7) | — |
 >
-> Recommended first slice: backend Infrastructure package (EXTRACTION-READINESS §12; F1 done).
+> First slice done: backend Infrastructure package (E2). Next per roadmap §B2: E3 (`core/`, `modules/ecommerce/`).
 
 
 Target (blueprint §13 Phase 2): backend `core/`, `modules/ecommerce/`, `infrastructure/`; Nuxt layers `app/core`, `app/modules/ecommerce`, later `app/project`.

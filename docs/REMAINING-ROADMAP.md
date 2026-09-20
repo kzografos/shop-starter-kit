@@ -46,8 +46,8 @@ Order chosen so every step is a pure move (revertible, no behaviour, no migratio
 | Step | Slice | Pre-requisite / blocker | Gate |
 |---|---|---|---|
 | ~~E1~~ | ~~**F1**~~ **done 2026-09-18** — provider-local presence rules (`isStorageConfigured`/`isPaymentsConfigured`/`isMailConfigured` next to their providers; no file move); INFRA→CORE added to rule A | — | boundaries 0, providers scenarios unchanged, audit forbidden 0 |
-| E2 | **Backend Infrastructure package** `backend/src/infrastructure/…` (recommended first slice) | — | `npm run verify`, audit baseline updated |
-| E3 | **Backend folder layers** `core/`, `modules/ecommerce/` (+ `ecommerce.module.ts` shop root, role presets move — F10) | E2 | `verify-routes` snapshot byte-identical |
+| ~~E2~~ | ~~**Backend Infrastructure package**~~ **done 2026-09-20** — `backend/src/infrastructure/{prisma,redis,storage,payments-provider,mail,health,common}`; 20 renames (R100), 46 import rewrites, scripts/tests re-pointed; `common/` under `infrastructure/`, `env.validation.ts` stays in `core/config`, `payments-provider` kept singular | — | verify green, routes 65/65 byte-identical, audit edge set identical |
+| E3 | **Backend folder layers** `core/`, `modules/ecommerce/` (+ `ecommerce.module.ts` shop root, role presets move — F10) | ~~E2~~ (done) | `verify-routes` snapshot byte-identical |
 | E4 | **F2** `UsersService.exists()/countCustomers()` (optional) | — | harnesses |
 | E5 | **Frontend Shop layer** `app/modules/ecommerce` (+ `Shop*` prefixes, Shop half of `types`/`i18n`, its `app.config` entries) | — | `pnpm lint/typecheck/test/build`, UI harnesses EL/EN |
 | E6 | **P1 + F5** brand/footer contributions (`app.config.brand`, `footerLinks[]`, HeaderSearch key) | decision Q1 in the audit §15 | audit frontend forbidden → 0 |

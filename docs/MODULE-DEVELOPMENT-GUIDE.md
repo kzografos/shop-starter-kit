@@ -167,12 +167,12 @@ this.registry.define({
 
 ### 3.9 Mail
 
-- Templates are functions in `mail/` returning `{ subject, html }`, using the Core layout helper for the branded shell.
+- Templates are functions in your module (e.g. `orders/order-confirmation.mail.ts`) returning `{ subject, html }`, sent through `MailService.sendMail()` (`backend/src/infrastructure/mail/`), using its layout helper for the branded shell.
 - Send through the Core/Infrastructure `MailTransport.send({ to, subject, html })`. Do not instantiate Resend/nodemailer.
 
 ### 3.10 Storage
 
-- Use `StorageAdapter.put()` / `resolve(refs[], expiry?)` / `presign(key, expiry)` / `remove(key)` (`backend/src/storage/storage-adapter.ts`, injected by the abstract class). Store what `put()` returns; resolve on read. Never inspect whether a stored reference is a key or a URL — that logic is the adapter's. Uploads themselves go through Core's `POST /uploads/image` (`manage:media`); add that capability to your preset if your staff role uploads images. `remove(key)` takes an object key only: the caller decides whether a reference is its own to delete (see §3.10a).
+- Use `StorageAdapter.put()` / `resolve(refs[], expiry?)` / `presign(key, expiry)` / `remove(key)` (`backend/src/infrastructure/storage/storage-adapter.ts`, injected by the abstract class). Store what `put()` returns; resolve on read. Never inspect whether a stored reference is a key or a URL — that logic is the adapter's. Uploads themselves go through Core's `POST /uploads/image` (`manage:media`); add that capability to your preset if your staff role uploads images. `remove(key)` takes an object key only: the caller decides whether a reference is its own to delete (see §3.10a).
 
 ### 3.10a Product images (reference implementation)
 
@@ -188,7 +188,7 @@ The e-commerce module's product images are the worked example of a module owning
 
 ### 3.10b Order lifecycle (reference implementation)
 
-The e-commerce orders sub-domain is the worked example of a module owning a state machine with side effects across the storage of stock, a ledger (loyalty) and a provider webhook (`backend/src/orders/order-status.ts`, `orders.service.ts`, `backend/src/payments/payments.service.ts`, `backend/src/payments-provider/`).
+The e-commerce orders sub-domain is the worked example of a module owning a state machine with side effects across the storage of stock, a ledger (loyalty) and a provider webhook (`backend/src/orders/order-status.ts`, `orders.service.ts`, `backend/src/payments/payments.service.ts`, `backend/src/infrastructure/payments-provider/`).
 
 **Transitions.** `Order.status` only moves forward:
 
@@ -203,7 +203,7 @@ The e-commerce orders sub-domain is the worked example of a module owning a stat
 
 `OrdersService.updateStatus()` (`PATCH /admin/orders/:id/status`, `manage:orders`) rejects anything else — going back, repeating the current status, leaving a final status — with 400 `Cannot change status from <current> to <requested>`; an unknown order is 404. The admin list returns `allowed_statuses` per row so the admin UI offers exactly those transitions and disables final orders. The table is the single source: nothing else decides what a status may become.
 
-**Cancellation** is one method, `OrdersService.cancel(id, reason?)`, reached from `updateStatus('cancelled')` and from the payment webhook. Inside a single transaction it re-checks the table, moves the order to `CANCELLED` with an update **conditional on the status it just read**, puts every line's quantity back into `Product.stock`, and for a customer order calls `LoyaltyService.reverseForOrder()`. Afterwards it invalidates the product and analytics caches and runs `StockAlertsService.checkStock()` on the restocked products (an open low-stock alert resolves once the shelf is full again). Those post-commit effects run through `afterCommit()` (`backend/src/common/utils/after-commit.ts`): never awaited, never able to fail the committed cancellation, and every failure logged as `<label> failed after commit` by the service — the policy for any detached work a module runs after its own transaction (EVENT-REGISTRY §1.5). The `reason` is logged, not stored.
+**Cancellation** is one method, `OrdersService.cancel(id, reason?)`, reached from `updateStatus('cancelled')` and from the payment webhook. Inside a single transaction it re-checks the table, moves the order to `CANCELLED` with an update **conditional on the status it just read**, puts every line's quantity back into `Product.stock`, and for a customer order calls `LoyaltyService.reverseForOrder()`. Afterwards it invalidates the product and analytics caches and runs `StockAlertsService.checkStock()` on the restocked products (an open low-stock alert resolves once the shelf is full again). Those post-commit effects run through `afterCommit()` (`backend/src/infrastructure/common/utils/after-commit.ts`): never awaited, never able to fail the committed cancellation, and every failure logged as `<label> failed after commit` by the service — the policy for any detached work a module runs after its own transaction (EVENT-REGISTRY §1.5). The `reason` is logged, not stored.
 
 - *Restock* applies to every order, guest or customer; a line whose product was deleted is skipped.
 - *Loyalty reversal* uses only the existing ledger types: the order's net `EARN` is taken back as a negative `EARN` row and its net `REDEEM` returned as a positive `REDEEM` row, each with the matching balance change. It works from the ledger's own net, so an order that never earned or redeemed, or one already reversed, writes nothing. The balance may go negative if the customer already spent points the order earned — consistent with the ledger, deliberately not blocked.

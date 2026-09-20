@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { PrismaService } from '../prisma/prisma.service'
-import { RedisService } from '../redis/redis.service'
+import { PrismaService } from '../infrastructure/prisma/prisma.service'
+import { RedisService } from '../infrastructure/redis/redis.service'
 import { NotificationType, Prisma } from '@prisma/client'
 
 type Client = Prisma.TransactionClient | PrismaService

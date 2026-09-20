@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
-import { PrismaService } from '../prisma/prisma.service'
+import { PrismaService } from '../infrastructure/prisma/prisma.service'
 import { UserExtensionsRegistry } from '../users/user-extensions.registry'
 
 /**

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../prisma/prisma.service'
-import { RedisService } from '../redis/redis.service'
+import { PrismaService } from '../infrastructure/prisma/prisma.service'
+import { RedisService } from '../infrastructure/redis/redis.service'
 import { PaymentStatus } from '@prisma/client'
 import { MEMBER_ROLE } from '../auth/permissions'
 

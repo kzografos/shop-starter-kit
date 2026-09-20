@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { OrderStatus, Prisma } from '@prisma/client'
-import { PrismaService } from '../prisma/prisma.service'
+import { PrismaService } from '../infrastructure/prisma/prisma.service'
 import { NotificationsService } from '../notifications/notifications.service'
 
 type Client = Prisma.TransactionClient | PrismaService

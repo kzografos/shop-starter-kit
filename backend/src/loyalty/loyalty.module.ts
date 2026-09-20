@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { PrismaModule } from '../prisma/prisma.module'
+import { PrismaModule } from '../infrastructure/prisma/prisma.module'
 import { UsersModule } from '../users/users.module'
 import { LoyaltyService } from './loyalty.service'
 import { LoyaltyController } from './loyalty.controller'

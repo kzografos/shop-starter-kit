@@ -51,7 +51,7 @@ const PRISMA = path.resolve(opt('--prisma') ?? path.join(REPO, 'backend', 'prism
 
 // ── Layer maps ───────────────────────────────────────────────────
 // Backend: same folder map as verify-boundaries.js (blueprint §2).
-const BE_INFRA = ['prisma', 'redis', 'storage', 'payments-provider', 'mail', 'health', 'common']
+const BE_INFRA = ['infrastructure'] // prisma, redis, storage, payments-provider, mail, health, common (E2)
 const BE_CORE = ['core', 'auth', 'users', 'profile', 'staff', 'settings', 'notifications', 'newsletter', 'uploads']
 const BE_SHOP = ['products', 'categories', 'favourites', 'orders', 'payments', 'loyalty', 'analytics']
 const beLayer = (rel) => {

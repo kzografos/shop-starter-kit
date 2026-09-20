@@ -99,9 +99,9 @@ async function runScenario(name) {
   if (expectPartialRejection) throw new Error('partial provider configuration was accepted')
 
   const get = (rel, cls) => app.get(require(path.join(DIST, rel))[cls])
-  const minio = get('storage/minio-storage.adapter.js', 'MinioStorageAdapter')
+  const minio = get('infrastructure/storage/minio-storage.adapter.js', 'MinioStorageAdapter')
   const payments = get('payments/payments.service.js', 'PaymentsService')
-  const mail = get('mail/mail.service.js', 'MailService')
+  const mail = get('infrastructure/mail/mail.service.js', 'MailService')
   const { GoogleStrategy } = require(path.join(DIST, 'auth/strategies/google.strategy.js'))
   const google = app.get(GoogleStrategy)
   const guard = get('auth/guards/google-auth.guard.js', 'GoogleAuthGuard')

@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
-import { PrismaService } from '../prisma/prisma.service'
+import { PrismaService } from '../infrastructure/prisma/prisma.service'
 import { MEMBER_ROLE, OWNER_ROLE } from '../auth/permissions'
 import { PermissionsRegistryService } from '../auth/permissions.registry.service'
 import type { CreateStaffDto, UpdateStaffRoleDto } from './dto/staff.dto'

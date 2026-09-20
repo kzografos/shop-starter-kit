@@ -33,7 +33,7 @@ const path = require('node:path')
 const SRC = path.resolve(__dirname, '..', 'src')
 
 // ── Layer map (blueprint §2, current paths) ──────────────────────
-const INFRA = ['prisma', 'redis', 'storage', 'payments-provider', 'mail', 'health', 'common']
+const INFRA = ['infrastructure'] // prisma, redis, storage, payments-provider, mail, health, common live under it (E2)
 const CORE = ['core', 'auth', 'users', 'profile', 'staff', 'settings', 'notifications', 'newsletter', 'uploads']
 const SHOP = ['products', 'categories', 'favourites', 'orders', 'payments', 'loyalty', 'analytics']
 // app.module.ts / main.ts at the root are the composition root and may import everything.

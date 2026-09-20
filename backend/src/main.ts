@@ -4,8 +4,8 @@ import { Logger } from 'nestjs-pino'
 import * as cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import { AppModule } from './app.module'
-import { SnakeCaseInterceptor } from './common/interceptors/snake-case.interceptor'
-import { GlobalExceptionFilter } from './common/filters/http-exception.filter'
+import { SnakeCaseInterceptor } from './infrastructure/common/interceptors/snake-case.interceptor'
+import { GlobalExceptionFilter } from './infrastructure/common/filters/http-exception.filter'
 
 async function bootstrap() {
   // rawBody: required by the payments module (Stripe webhook signature check).

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
-import { PrismaService } from '../prisma/prisma.service'
-import { RedisService } from '../redis/redis.service'
+import { PrismaService } from '../infrastructure/prisma/prisma.service'
+import { RedisService } from '../infrastructure/redis/redis.service'
 import type { SettingDefinition, SettingGroupDefinition } from './setting-definition'
 
 const CACHE_KEY = 'settings:all'

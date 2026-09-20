@@ -6,7 +6,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
-const { afterCommit } = require('../dist/common/utils/after-commit.js')
+const { afterCommit } = require('../dist/infrastructure/common/utils/after-commit.js')
 
 const fakeLogger = () => {
   const errors = []

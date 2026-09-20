@@ -65,7 +65,7 @@ Generic functionality that almost every project uses. Core is what boots when no
 | Generic events | In-process event bus — `backend/src/core/events/` (`CoreEventBus`, typed `CoreEventMap`); first event `user.authenticated` |
 | API foundation | CORS, helmet, cookie-parser, throttler, snake_case response interceptor; frontend `useApi` |
 | Admin shell | `app/layouts/admin.vue`, `admin.css`, generic admin pages (staff, customers/users, newsletter, notifications, settings) |
-| Health | `backend/src/health/` |
+| Health | `backend/src/infrastructure/health/` (E2) |
 
 **Core MUST NOT depend on:** e-commerce, products, orders, cart, wishlist/favourites, loyalty, shipping, inventory, Stripe-specific business logic, MinIO-specific business logic, client-specific branding values.
 
@@ -109,9 +109,9 @@ Technical adapters to external providers. Infrastructure has **no domain knowled
 |---|---|---|
 | PostgreSQL / Prisma | `PrismaService` | unchanged |
 | Redis | `RedisService` (`set` with mandatory TTL, `get`, `del`, `exists`, `delPattern`); owners expose `invalidate()` — **done** (seam 8) | unchanged |
-| Object storage | `StorageAdapter` (`put`, `resolve`, `presign`) with `MinioStorageAdapter` in `backend/src/storage/` — **done** (seam 7) | unchanged; folder moves under `infrastructure/` in Phase 2 |
+| Object storage | `StorageAdapter` (`put`, `resolve`, `presign`) with `MinioStorageAdapter` in `backend/src/infrastructure/storage/` — **done** (seam 7; folder moved in E2) | unchanged |
 | Email provider | `MailService` (Resend or SMTP transport + branded layout) | `MailTransport` interface; layout stays; templates leave |
-| Payment providers | `PaymentProvider` (`createCheckout`, `getCheckoutStatus`, `parseWebhook`) with `StripePaymentProvider` in `backend/src/payments-provider/` — **done** (seam 6) | unchanged; folder moves under `infrastructure/` in Phase 2 |
+| Payment providers | `PaymentProvider` (`createCheckout`, `getCheckoutStatus`, `parseWebhook`) with `StripePaymentProvider` in `backend/src/infrastructure/payments-provider/` — **done** (seam 6; folder moved in E2, name kept singular) | unchanged |
 | HTTP adapters | Nest bootstrap (`main.ts`), interceptor, filter | unchanged |
 | Queues | none | none in v1 (deferred) |
 | Docker / Nginx / deployment | `docker-compose*.yml`, `Dockerfile*`, `docker/nginx/nginx.conf`, `backend/start.sh` | unchanged in shape; optional services and Nginx blocks become conditional on enabled modules |
@@ -495,7 +495,7 @@ Each phase ends with a bootable, deployable system. Phases are sequential; steps
 - Event Registry (typed names) on top of the Phase 1 bus.
 - Module-driven frontend navigation: the lists exist (seam 9); Phase 2 moves the shop entries from the root `app.config.ts` into the e-commerce layer's `app.config.ts` and gives `AppFooter` the same treatment.
 - Nuxt layers: `app/core`, `app/modules/ecommerce`; component prefixing; per-layer i18n.
-- Loyalty extraction (seam 2), storage adapter (seam 7), payments provider surface (seam 6) and cache namespace hygiene (seam 8) — **all DONE** ahead of the layer split on the flat layout: `backend/src/loyalty/` owns `LoyaltyAccount` + ledger with Core's `UserExtensionsRegistry` (D13); `backend/src/storage/` and `backend/src/payments-provider/` are the D7 adapters (Infrastructure in the boundary map); cache owners expose `invalidate()`. The seam table (§11) has no open rows; the boundary baseline is empty. What the layer split still does: move these folders under `infrastructure/` and `modules/ecommerce/` (incl. `uploads/` → `media/`), without changing the contracts.
+- Loyalty extraction (seam 2), storage adapter (seam 7), payments provider surface (seam 6) and cache namespace hygiene (seam 8) — **all DONE** ahead of the layer split on the flat layout: `backend/src/loyalty/` owns `LoyaltyAccount` + ledger with Core's `UserExtensionsRegistry` (D13); `backend/src/infrastructure/storage/` and `backend/src/infrastructure/payments-provider/` are the D7 adapters (moved under `infrastructure/` in E2, 2026-09-20); cache owners expose `invalidate()`. The seam table (§11) has no open rows; the boundary baseline is empty. What the layer split still does: move the Core and Shop folders under `core/` and `modules/ecommerce/` (incl. `uploads/` → `media/`), without changing the contracts.
 
 ### Phase 3 — Project Configuration
 

@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
-import { StorageAdapter } from '../storage/storage-adapter'
+import { StorageAdapter } from '../infrastructure/storage/storage-adapter'
 // Namespace import, not a default import. tsconfig sets
 // allowSyntheticDefaultImports but not esModuleInterop: the first only relaxes
 // the type checker, it does not emit the interop helper. `import FileType from`
