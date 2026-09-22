@@ -30,12 +30,12 @@ export default defineAppConfig({
     { to: '/contact', labelKey: 'nav.contact', order: 40 },
   ] satisfies NavItemContribution[],
   headerActions: [
-    { component: 'HeaderSearch', order: 10, area: 'center' },
+    { component: 'ShopHeaderSearch', order: 10, area: 'center' },
     { component: 'NotificationBell', order: 5 },
-    { component: 'CartButton', order: 10 },
+    { component: 'ShopCartButton', order: 10 },
   ] satisfies HeaderActionContribution[],
   globalWidgets: [
-    { component: 'CartDrawer', order: 10 },
+    { component: 'ShopCartDrawer', order: 10 },
   ] satisfies GlobalWidgetContribution[],
   accountItems: [
     { to: '/account/orders', icon: '📦', labelKey: 'account.orders', order: 10 },
@@ -44,8 +44,8 @@ export default defineAppConfig({
     { to: '/account/loyalty', icon: '⭐', labelKey: 'account.loyalty', order: 30 },
   ] satisfies AccountItemContribution[],
   accountCards: [
-    { component: 'LoyaltyCard', order: 10 },
-    { component: 'AccountStats', order: 20 },
+    { component: 'ShopLoyaltyCard', order: 10 },
+    { component: 'ShopAccountStats', order: 20 },
   ] satisfies AccountCardContribution[],
 
   // Admin Registry (docs/ADMIN-REGISTRY.md). The admin shell renders exactly

@@ -169,7 +169,7 @@
         <h2 class="font-display text-2xl font-bold text-[--color-bark] mb-6">
           {{ $t('product.related') }}
         </h2>
-        <ProductGrid :products="relatedProducts" />
+        <ShopProductGrid :products="relatedProducts" />
       </div>
     </div>
   </div>

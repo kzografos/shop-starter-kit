@@ -31,7 +31,7 @@
 
         <!-- Items -->
         <div v-else class="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          <CartItem v-for="item in items" :key="item.product.id" :item="item" />
+          <ShopCartItem v-for="item in items" :key="item.product.id" :item="item" />
         </div>
 
         <!-- Footer -->

@@ -4,7 +4,7 @@
       <div class="flex gap-8">
         <!-- Sidebar filters (desktop) -->
         <aside class="hidden lg:block w-64 shrink-0">
-          <ProductFilters />
+          <ShopProductFilters />
         </aside>
 
         <!-- Main content -->
@@ -67,7 +67,7 @@
           </div>
 
           <!-- Products -->
-          <ProductGrid v-else-if="products && products.length > 0" :products="products" />
+          <ShopProductGrid v-else-if="products && products.length > 0" :products="products" />
 
           <!-- No results -->
           <div v-else class="flex flex-col items-center justify-center py-20 text-center">
@@ -138,7 +138,7 @@
           </div>
           <!-- Scrollable body -->
           <div class="flex-1 overflow-y-auto p-4">
-            <ProductFilters @applied="showMobileFilters = false" />
+            <ShopProductFilters @applied="showMobileFilters = false" />
           </div>
         </div>
       </template>

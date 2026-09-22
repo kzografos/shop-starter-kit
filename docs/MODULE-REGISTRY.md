@@ -77,8 +77,8 @@ Root: `app.module.ts`, `main.ts` — composition root, may import everything. `p
 | cart & checkout | `stores/cart.ts`, `components/cart/*`, `composables/useCartDrawer.ts`, `pages/checkout/*`, `components/checkout/*` | Cart (persisted), drawer, checkout, Stripe redirect, guest CTA | useApi (`/settings`, `/orders`, `/payments/*`), auth store |
 | orders (customer) | `pages/account/orders/*`, `composables/useOrderPresentation.ts` | History, detail with lifecycle, self-cancel, repeat | useApi, cart store |
 | favourites | `stores/favourites.ts`, `pages/account/favourites.vue` | Toggle/list | useApi, auth store |
-| loyalty | `components/loyalty/*`, `pages/account/loyalty.vue`, `components/account/AccountStats.global.vue`, `composables/useLoyalty.ts`, `utils/loyalty.ts` | Balance card/badge, history, dashboard stats; `useLoyalty()` reads the `loyalty_points` user extension off the Core profile | auth store (`profile` only), favourites store, useApi |
-| shop admin pages | `pages/admin/{index,analytics,products,categories,orders}/index.vue`, `components/admin/ProductDrawer.vue` | Dashboard, analytics, catalogue CRUD + images, orders | useApi, admin shell primitives |
+| loyalty | `components/loyalty/*` (`ShopLoyaltyCard`, `ShopLoyaltyBadge`), `pages/account/loyalty.vue`, `components/account/ShopAccountStats.global.vue`, `composables/useLoyalty.ts`, `utils/loyalty.ts` | Balance card/badge, history, dashboard stats; `useLoyalty()` reads the `loyalty_points` user extension off the Core profile | auth store (`profile` only), favourites store, useApi |
+| shop admin pages | `pages/admin/{index,analytics,products,categories,orders}/index.vue`, `components/admin/ShopProductDrawer.vue` | Dashboard, analytics, catalogue CRUD + images, orders | useApi, admin shell primitives |
 | contributions | shop entries in `app/app.config.ts` (`navItems`, `headerActions`, `globalWidgets`, `accountItems`, `accountCards`, `adminSections`) | Declares what the shells render | contracts |
 
 ### 1.6 Project layer
@@ -213,7 +213,7 @@ Target (blueprint §13 Phase 2): backend `core/`, `modules/ecommerce/`, `infrast
 
 - **Backend Infrastructure**: `prisma`, `redis`, `storage`, `payments-provider`, `mail`, `health`, `common` — after F1 (config file placement).
 - **Backend Shop sub-domains**: `products`, `categories`, `favourites`, `orders`, `payments`, `loyalty`, `analytics` — self-contained, registry-driven, grouped under `EcommerceModule` (E3b); F2 is a two-method change.
-- **Frontend Shop**: catalogue, cart/checkout, customer orders, favourites, loyalty components/pages, shop admin pages, `ProductDrawer`, the shop entries of `app.config.ts` — all consume Core only through `useApi`, the auth store, `usePermissions`, registries and shell slots. Component prefixing (`Shop*`) is required at move time (blueprint §10).
+- **Frontend Shop**: catalogue, cart/checkout, customer orders, favourites, loyalty components/pages, shop admin pages, `ShopProductDrawer`, the shop entries of `app.config.ts` — all consume Core only through `useApi`, the auth store, `usePermissions`, registries and shell slots. Component prefixing (`Shop*`) is **done** (E5c, 2026-09-22): the 14 layer components carry the prefix in their filenames and the `app.config` contributions name them accordingly.
 - **Frontend Core**: shells, session, permissions, admin shell, notifications, Core admin pages, auth pages.
 
 ### Require refactoring first
@@ -225,7 +225,7 @@ Target (blueprint §13 Phase 2): backend `core/`, `modules/ecommerce/`, `infrast
 
 ### Must remain application-specific for now
 
-- Project layer: `utils/business.ts`, `brand.css`, `pages/{index,about,contact}.vue`, `BrandsMarquee`, `nuxt.config.ts` locales, `prisma/seed.ts` owner bootstrap — Phase 3 (`project.config.ts`) work, not layer work.
+- Project layer: `utils/business.ts`, `brand.css`, `pages/{index,about,contact}.vue`, `nuxt.config.ts` locales, `prisma/seed.ts` owner bootstrap — Phase 3 (`project.config.ts`) work, not layer work.
 - `app.module.ts` / `main.ts` composition roots and the boundary script's layer map (F11) until the Module Registry gains a code representation.
 - `backend/scripts/verify-*.js` — tooling stays at the repo level.
 

@@ -1,7 +1,7 @@
 <template>
   <div class="bg-surface-page min-h-screen">
     <div class="max-w-lg mx-auto px-4 py-12 text-center">
-      <CheckoutSteps :current-step="3" />
+      <ShopCheckoutSteps :current-step="3" />
 
       <div v-if="verifying" class="flex justify-center items-center py-16">
         <UIcon name="i-heroicons-arrow-path" class="w-10 h-10 text-sage animate-spin" />
@@ -44,7 +44,7 @@
         </div>
 
         <!-- Guest → offer account creation (paid order auto-links + earns points on signup) -->
-        <GuestAccountCTA
+        <ShopGuestAccountCTA
           v-if="!isLoggedIn && guestEmail"
           :email="guestEmail"
           @done="clearGuestEmail"

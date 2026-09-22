@@ -123,10 +123,10 @@ Not present in this codebase (checked): cart persistence (cart is a client Pinia
 
 | Path | Category | Notes |
 |---|---|---|
-| `app.config.ts` | PROJECT (configuration) | Composes Core + Shop: `navItems`, `headerActions` (HeaderSearch, NotificationBell, CartButton), `globalWidgets` (CartDrawer), `accountItems/Cards` (LoyaltyCard, AccountStats), `adminGroups/Sections`. The 5 Core→Shop registry edges the tool reports originate here — by design |
+| `app.config.ts` | PROJECT (configuration) | Composes Core + Shop: `navItems`, `headerActions` (ShopHeaderSearch, NotificationBell, ShopCartButton), `globalWidgets` (ShopCartDrawer), `accountItems/Cards` (ShopLoyaltyCard, ShopAccountStats), `adminGroups/Sections`. The 5 Core→Shop registry edges the tool reports originate here — by design |
 | `utils/business.ts`, `composables/useBusinessSchema.ts`, `useOpeningHours.ts` | PROJECT | Business facts (name, address, hours) — the blueprint's `project.config.ts` |
 | `components/BrandLockup.vue`, `BrandWordmark.vue`, `components/layout/WhatsAppButton.vue` | PROJECT / PRESENTATION | Brand; imported by Core shells (**P1**) |
-| `pages/index.vue`, `about.vue`, `contact.vue` | PROJECT / PRESENTATION | Storefront home (uses Shop `ProductGrid`, `BrandsMarquee`), static pages |
+| `pages/index.vue`, `about.vue`, `contact.vue` | PROJECT / PRESENTATION | Storefront home (uses Shop `ShopProductGrid`, `ShopBrandsMarquee`), static pages |
 
 ### 4.4 Shared
 
@@ -177,14 +177,14 @@ Not present in this codebase (checked): cart persistence (cart is a client Pinia
 | CORE → SHARED | 12 | `types/index.ts`, `types/contributions.ts` | Core-owned declarations only (checked: `Profile`, `Notification*`, `Setting*`, contributions) |
 | **CORE → PROJECT** | **12** | `BrandLockup` (7: header, footer, admin layout, login, forgot/reset, unsubscribe), `utils/business.ts` (3: `app.vue`, footer, unsubscribe), `useBusinessSchema` (`app.vue`), `WhatsAppButton` (`layouts/default`) | **Blocker P1** for a reusable Core layer |
 | CORE → SHOP | 0 code | — | Clean |
-| PROJECT → SHOP | 7 | `app.config.ts` contributions (5), `pages/index.vue` → `ProductGrid`, `BrandsMarquee` (2) | By design: the project composes the shop |
+| PROJECT → SHOP | 8 | `app.config.ts` contributions (5), `pages/index.vue` → `ShopProductGrid`, `ShopBrandsMarquee` and `#shop/types` (3) | By design: the project composes the shop |
 | PROJECT → CORE | 2 | `app.config.ts` → `NotificationBell`; `about/contact` → shell only | By design |
 
 **Hidden channels made visible**: (a) `app.config.ts` component strings resolved by `<component :is>` in `AppHeader`, `layouts/default`, `pages/account/index`, `NotificationBell` — the tool lists the contributions as `registry` edges and the render sites as unresolved slots; (b) Nuxt auto-imports — composables/stores resolved by name, utils are imported explicitly by repo convention (verified: every `utils/*` consumer has an explicit `~/utils/...` import); (c) `useState` keys are wrapped in composables (`customer-notif-*`, `admin-notif-unread` Core; `cart-open` Shop) — no cross-file key sharing found; (d) `nuxtApp.hook('api:unauthenticated')` — declared in `useApi.ts`, consumed by `plugins/auth-hooks.ts`, both Core.
 
 **API contract dependencies**: all HTTP through `useApi` (USEAPI-MIGRATION; the only raw `$fetch` is the refresh call inside `useApi.ts` itself). Shop pages call `/products*`, `/categories*`, `/orders*`, `/payments*`, `/profile/loyalty`, `/favourites*`, `/settings`, `/admin/{products,categories,orders,analytics}*`; Core pages call `/auth*`, `/profile`, `/notifications*`, `/admin/{customers,staff,newsletter,notifications,settings}*`. Wire shapes are `types/index.ts` + snake_case interceptor.
 
-**Translation dependencies**: `HeaderSearch` (Shop) reads Core key `header.search_placeholder` (F5); Shop presenter reads `notifications.order_*` (its own keys, in the shared file); Core `admin.*` namespace mixes Core and Shop keys.
+**Translation dependencies**: `ShopHeaderSearch` (Shop) reads Core key `header.search_placeholder` (F5); Shop presenter reads `notifications.order_*` (its own keys, in the shared file); Core `admin.*` namespace mixes Core and Shop keys.
 
 No frontend file cycles.
 
@@ -218,7 +218,7 @@ No frontend file cycles.
 |---|---|---|---|---|---|---|
 | ~~**F1**~~ | ~~Infrastructure adapters import `core/config/env.validation.ts`~~ **Closed 2026-09-18.** Consumers used only the one-line runtime presence helpers (`isStorageConfigured`, `isPaymentsConfigured`, `isMailConfigured`) — no schema, type or constant. Each helper now lives with its provider (`storage/storage.module.ts`, `payments-provider/stripe.provider.ts`, `mail/mail.service.ts`), identical expressions; `env.validation.ts` keeps the boot schema and Core's `isGoogleAuthConfigured`. Options weighed: (1) move the whole file to `common/`/Infrastructure — rejected, it would add a *new* Core→Infra edge (`auth` → the moved file) and move Core's required keys into Infrastructure; (2) move only helpers to a shared file — same new edge, and it separates each rule from its Joi block's owner; (3) provider-local rules — chosen; (4) document as exception — unnecessary, fix is 3 one-liners. No re-export (all 3 importers updated), no migration, env names/validation/messages unchanged. `verify-boundaries` rule A widened to INFRA→CORE; audit positive test asserts `backend.forbidden = []`. Verified: typecheck, build, 8/8 tests, boundaries 0 (negative control fails on a re-added import), routes 65/65, providers (core-only → all 503; partial-minio/google/stripe rejected at boot with the same Joi messages; full → storage/payments/mail/google enabled; resend → mail enabled) | backend | placement / config | 0 forbidden edges | — | — |
 | **P1** | Core shells/pages import project brand (`BrandLockup` ×7, `WhatsAppButton`, `utils/business.ts` ×3, `useBusinessSchema`) | frontend | ownership / config | 12 forbidden CORE→PROJECT edges | Brand as a slot/contribution: `app.config.brand` (`{ component: 'BrandLockup' }` rendered with `<component :is>` like header actions) or a Core `BrandSlot` component overridden by the project layer (Nuxt layer component override); `useBusinessSchema`/`BUSINESS` moved behind a Core `useProjectConfig()` fed by `app.config`/`runtimeConfig` (roadmap C3) | Reusable Core frontend layer |
-| **F5** | `AppFooter` hard-codes `/products`, `/account/orders`; `HeaderSearch` reads `header.search_placeholder` | frontend | presentation | grep (not an import edge) | `app.config.footerLinks[]` contribution; own key for HeaderSearch | Shop-free Core shell (soft) |
+| **F5** | `AppFooter` hard-codes `/products`, `/account/orders`; `ShopHeaderSearch` reads `header.search_placeholder` | frontend | presentation | grep (not an import edge) | `app.config.footerLinks[]` contribution; own key for HeaderSearch | Shop-free Core shell (soft) |
 | **F7** | `types/index.ts`, `i18n/*.json` mixed | frontend | type / presentation | 12+12 SHARED importers | Mechanical split at layer creation | None at runtime; required at move time |
 | **S1** | `core.prisma` `NotificationType` enum carries Shop values | backend | schema | schema read | `type String` + module-side validation, one migration | Only a *second* module with notification types; not this extraction |
 | **S2** | `core.prisma` `User` back-relations to Shop models | backend | schema | schema read | None now; at packaging, generate the schema from enabled modules (blueprint §9) | Optional-module builds only |
@@ -246,7 +246,7 @@ No frontend file cycles.
 |---|---|---|
 | ~~Backend Infrastructure~~ | ~~F1~~ done — provider-local presence rules; rule A widened | — |
 | Backend `orders`, `analytics` | F2: `UsersService.exists()` / `countCustomers()` (optional; reads only) | 2 methods, 2 call sites |
-| Frontend Core shells | P1 + F5: brand slot/contribution, footer links contribution, HeaderSearch key | 7 components/pages, `app.config` keys, `contributions.ts` types |
+| Frontend Core shells | P1 + F5: brand slot/contribution, footer links contribution, ShopHeaderSearch key | 7 components/pages, `app.config` keys, `contributions.ts` types |
 | `types/index.ts`, `i18n/*.json` | F7 split (at layer creation, mechanical) | ~25 import rewrites; two JSON files → four |
 | `pages/admin/notifications/index.vue` | Decide owner (Shop) or presenter-ise | 1 page |
 | `useCurrency` | Decide owner (Core/project config vs Shop) | 1 composable |

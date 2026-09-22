@@ -31,7 +31,7 @@
 
     <!-- Product grid -->
     <div v-else class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-      <ProductCard
+      <ShopProductCard
         v-for="product in products"
         :key="product.id"
         v-memo="[product.id, favouritesStore.isFavourite(product.id)]"

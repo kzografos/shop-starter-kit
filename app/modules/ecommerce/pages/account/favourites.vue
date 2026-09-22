@@ -23,7 +23,7 @@
         </div>
 
         <!-- Products -->
-        <ProductGrid v-else-if="products && products.length > 0" :products="products" />
+        <ShopProductGrid v-else-if="products && products.length > 0" :products="products" />
 
         <!-- Empty -->
         <div v-else class="flex flex-col items-center justify-center py-24 text-center">

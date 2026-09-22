@@ -119,10 +119,10 @@ adminSections: [
 Implemented in seam 9; contracts in `app/types/contributions.ts`. The Core shells (`AppHeader`, `layouts/default.vue`, `AccountSidebar`, `pages/account/index.vue`) read these lists with `useAppConfig()`, sort each by `order` and render them; they never import a module. Until layers exist the entries live in the root `app/app.config.ts`; they move into your layer's `app.config.ts` unchanged (Nuxt concatenates the arrays across layers).
 
 - `navItems[]` — storefront header links `{ to, labelKey, order }`. `to` is unlocalised; the shell applies `localePath()`.
-- `headerActions[]` — components rendered in the header `{ component, order, area? }`. `area: 'actions'` (default) is the right-hand action cluster (e.g. `CartButton`); `area: 'center'` is the flexible desktop zone between the nav and the actions (e.g. `HeaderSearch`). The component owns its own wrapper and any route-based `v-if`.
-- `globalWidgets[]` — components mounted once in the default layout `{ component, order }` (e.g. `CartDrawer`).
+- `headerActions[]` — components rendered in the header `{ component, order, area? }`. `area: 'actions'` (default) is the right-hand action cluster (e.g. `ShopCartButton`); `area: 'center'` is the flexible desktop zone between the nav and the actions (e.g. `ShopHeaderSearch`). The component owns its own wrapper and any route-based `v-if`.
+- `globalWidgets[]` — components mounted once in the default layout `{ component, order }` (e.g. `ShopCartDrawer`).
 - `accountItems[]` — account sidebar links `{ to, icon, labelKey, order }`, rendered after the Core dashboard link.
-- `accountCards[]` — dashboard blocks rendered below the welcome header `{ component, order }` (e.g. `LoyaltyCard`, `AccountStats`).
+- `accountCards[]` — dashboard blocks rendered below the welcome header `{ component, order }` (e.g. `ShopLoyaltyCard`, `ShopAccountStats`). Names carry the layer prefix (`Shop*`), so the string in `app.config` is the prefixed name.
 
 Declare each list with `satisfies <Contract>[]` so a wrong entry fails type-checking at the source.
 
@@ -300,6 +300,6 @@ export default defineNuxtPlugin(() => {
 | ~~`backend/src/analytics`~~ → `backend/src/modules/ecommerce/analytics` — **moved (E3a)** | `modules/ecommerce/analytics/` | analytics |
 | `backend/src/core/uploads` (Core, `manage:media` — seam 7 step 2) over `infrastructure/storage/` (`StorageAdapter` — seam 7 step 1, E2) | **stays Core** (decision, E3 recon 2026-09-22): generic image upload is a Core capability; no `modules/ecommerce/media/` | media (Core) |
 | `backend/src/admin/admin.service.ts` (stats, orders, products, categories) | split into the sub-domains' admin controllers | — |
-| `app/stores/{cart,favourites,filters}`, `app/composables/{useProducts,useCurrency}`, `app/components/{product,cart,checkout,filters,loyalty}`, `app/components/admin/ProductDrawer.vue`, `app/pages/{products,checkout,brands}`, `app/pages/account/{orders,favourites,loyalty}`, `app/pages/admin/{index (content),analytics,products,categories,orders}`, `types/index.ts`, shop i18n namespaces | `app/modules/ecommerce/` layer | — |
+| `app/stores/{cart,favourites,filters}`, `app/composables/{useProducts,useCurrency}`, `app/components/{product,cart,checkout,filters,loyalty}`, `app/components/admin/ProductDrawer.vue` (now `ShopProductDrawer.vue`), `app/pages/{products,checkout,brands}`, `app/pages/account/{orders,favourites,loyalty}`, `app/pages/admin/{index (content),analytics,products,categories,orders}`, `types/index.ts`, shop i18n namespaces | `app/modules/ecommerce/` layer | — |
 
 The first non-shop module built against this guide (Phase 4 validation) should be small — a contact-form or blog stub — to prove that Core exposes every slot and registry a module needs.

@@ -130,7 +130,7 @@ Everything specific to one client:
 | Enabled modules | `project.config.ts` |
 | Client-specific pages (home, about, contact) | project Nuxt layer / `app/project/` |
 | Client-specific business rules | project config values or a project-owned module |
-| Client-specific components (`BrandsMarquee`, `WhatsAppButton`, hero content) | project layer |
+| Client-specific components (`WhatsAppButton`, brand lockup, hero content) | project layer |
 | Seed content (demo catalogue, initial settings values) | project seed, not the Core image |
 
 ---
@@ -384,8 +384,8 @@ Rules:
 | Layer | Owns |
 |---|---|
 | **Core frontend** | `useApi` (single HTTP client), `stores/auth`, `plugins/auth.*`, `middleware/{auth,guest,admin}`, `usePermissions` (mechanism + registry reader), auth pages, account shell (`AccountSidebar`, `account/index` composed from `accountItems[]`), admin shell (`layouts/admin.vue`, `admin.css` shell + `.ac-*` primitives, `DateRangeControl`, `AdminInfo`), generic admin pages (staff, users, newsletter, notifications, settings-from-registry), `useAdminNotifications`, header/footer/default-layout **shells** with slots, `Brand*` components (mechanism), `useBusinessSchema` and `useOpeningHours` (mechanism), shared utilities, core `Profile` type, core i18n namespaces |
-| **Module frontend (e-commerce)** | `stores/{cart,favourites,filters}`, `useProducts`, `useCurrency`, `components/{product,cart,checkout,filters,loyalty}`, `admin/ProductDrawer`, pages `products/*`, `checkout/*`, `brands`, `account/{orders,favourites,loyalty}`, admin `index` dashboard content, `analytics`, `products`, `categories`, `orders`; e-commerce wire types; e-commerce i18n namespaces; its `navItems`, `headerActions` (cart button), `globalWidgets` (`CartDrawer`), `accountItems`, `adminSections` |
-| **Project frontend** | `pages/{index,about,contact}`, `BrandsMarquee`, `WhatsAppButton`, `brand.css` values, fonts, `project.config.ts`, project i18n namespaces (`home`, `hero`, `about`, `contact`, `testimonials`), any client-specific layouts or workflows |
+| **Module frontend (e-commerce)** | `stores/{cart,favourites,filters}`, `useProducts`, `useCurrency`, `components/{product,cart,checkout,filters,loyalty}` (all `Shop*`-named since E5c), `admin/ShopProductDrawer`, pages `products/*`, `checkout/*`, `brands`, `account/{orders,favourites,loyalty}`, admin `index` dashboard content, `analytics`, `products`, `categories`, `orders`; e-commerce wire types; e-commerce i18n namespaces; its `navItems`, `headerActions` (cart button), `globalWidgets` (`CartDrawer`), `accountItems`, `adminSections` |
+| **Project frontend** | `pages/{index,about,contact}`, `WhatsAppButton`, `brand.css` values, fonts, `project.config.ts`, project i18n namespaces (`home`, `hero`, `about`, `contact`, `testimonials`), any client-specific layouts or workflows |
 
 ### 10.2 Rules
 

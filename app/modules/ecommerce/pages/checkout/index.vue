@@ -3,7 +3,7 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="font-display text-2xl font-bold text-[--color-bark] mb-6">{{ $t('checkout.title') }}</h1>
 
-    <CheckoutSteps :current-step="2" />
+    <ShopCheckoutSteps :current-step="2" />
 
     <div v-if="cartStore.items.length === 0" class="text-center py-20">
       <p class="text-gray-500 mb-4">{{ $t('cart.empty') }}</p>

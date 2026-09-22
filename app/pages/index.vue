@@ -167,7 +167,7 @@
             {{ $t('home.deals_all') }} <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
           </NuxtLink>
         </div>
-        <ProductGrid :products="deals" />
+        <ShopProductGrid :products="deals" />
         <div class="mt-8 text-center sm:hidden">
           <NuxtLink
             :to="{ path: localePath('/products'), query: { onSale: 'true' } }"
@@ -180,7 +180,7 @@
     </section>
 
     <!-- Brands marquee -->
-    <BrandsMarquee />
+    <ShopBrandsMarquee />
 
     <!-- Shipping info banner -->
     <section class="bg-bark border-y border-bark-light/20">

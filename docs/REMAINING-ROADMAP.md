@@ -51,7 +51,7 @@ Order chosen so every step is a pure move (revertible, no behaviour, no migratio
 | ~~E3b~~ | ~~**Shop root module**~~ **done 2026-09-22** — `EcommerceModule` (imports 7 sub-modules, exports nothing, provides `EcommercePermissions`); `SHOP_ROLE_PRESETS` moved to `ecommerce-permissions.ts`; `OrdersPermissions` capabilities only; `AppModule` imports `EcommerceModule` (F10 closed). Residual follow-up: `core/staff/dto/staff.dto.ts` literal role list | ~~E3a~~ | verify green, 17 unit tests incl. pinned registry outputs, pre/post permissions + admin matrix identical, routes 65/65 byte-identical |
 | E4 | **F2** `UsersService.exists()/countCustomers()` (optional) | — | harnesses |
 | E5 | **Frontend Shop layer** `app/modules/ecommerce` (+ `Shop*` prefixes, Shop half of `types`/`i18n`, its `app.config` entries) | — | `pnpm lint/typecheck/test/build`, UI harnesses EL/EN |
-| E6 | **P1 + F5** brand/footer contributions (`app.config.brand`, `footerLinks[]`, HeaderSearch key) | decision Q1 in the audit §15 | audit frontend forbidden → 0 |
+| E6 | **P1 + F5** brand/footer contributions (`app.config.brand`, `footerLinks[]`, ShopHeaderSearch key) | decision Q1 in the audit §15 | audit frontend forbidden → 0 |
 | E7 | **Frontend Core layer** `app/core` + project layer (`app.config.ts`, brand, `business.ts`, home/about/contact) | E5, E6 | `--strict` audit passes |
 | E8 | **Module Registry** (C2): `app.module.ts`/`nuxt.config.ts` and both scripts read one registry (F11) | E3b, E7 | — |
 | later | **S1** `NotificationType` enum → string; **S2** schema generation per enabled module; Event Registry code | a second module | — |

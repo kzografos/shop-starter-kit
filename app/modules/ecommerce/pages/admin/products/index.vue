@@ -123,7 +123,7 @@
     </UModal>
 
     <!-- Create / edit drawer -->
-    <ProductDrawer v-model:open="drawerOpen" :product-id="editingId" @saved="refresh" />
+    <ShopProductDrawer v-model:open="drawerOpen" :product-id="editingId" @saved="refresh" />
   </div>
 </template>
 
