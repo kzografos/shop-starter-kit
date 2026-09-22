@@ -123,6 +123,7 @@ Implemented in seam 9; contracts in `app/types/contributions.ts`. The Core shell
 - `globalWidgets[]` — components mounted once in the default layout `{ component, order }` (e.g. `ShopCartDrawer`).
 - `accountItems[]` — account sidebar links `{ to, icon, labelKey, order }`, rendered after the Core dashboard link.
 - `accountCards[]` — dashboard blocks rendered below the welcome header `{ component, order }` (e.g. `ShopLoyaltyCard`, `ShopAccountStats`). Names carry the layer prefix (`Shop*`), so the string in `app.config` is the prefixed name.
+- `footerColumns[]` / `footerItems[]` — the footer's columns and their entries. A column is `{ id, labelKey, order }`; an item is `{ column, labelKey, order, to?, icon? }` — with `to` it renders as a link, without it as plain text (the shipping note), and `icon` is an optional leading icon name. Any layer may declare a column and any layer may add items to someone else's column (Core declares `account` and contributes `/account`; the shop adds `/account/orders` and `/account/loyalty` to it). `app/utils/footer-registry.ts` sorts columns and items by `order`, groups items by `column`, drops empty columns and sends an item naming an unknown column to the first one — the same fallback `groupAdminSections()` uses.
 
 Declare each list with `satisfies <Contract>[]` so a wrong entry fails type-checking at the source.
 

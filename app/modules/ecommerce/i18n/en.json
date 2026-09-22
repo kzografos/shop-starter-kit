@@ -12,5 +12,8 @@
     "order_completed_body": "Order {order} has been completed. Thank you!",
     "order_cancelled_title": "Order cancelled",
     "order_cancelled_body": "Order {order} has been cancelled."
+  },
+  "products": {
+    "search_placeholder": "Search products..."
   }
 }

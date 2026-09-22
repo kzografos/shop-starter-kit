@@ -12,5 +12,8 @@
     "order_completed_body": "Η παραγγελία {order} ολοκληρώθηκε. Ευχαριστούμε!",
     "order_cancelled_title": "Η παραγγελία ακυρώθηκε",
     "order_cancelled_body": "Η παραγγελία {order} ακυρώθηκε."
+  },
+  "products": {
+    "search_placeholder": "Αναζήτηση προϊόντων..."
   }
 }

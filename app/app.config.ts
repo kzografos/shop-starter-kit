@@ -3,6 +3,8 @@ import type {
   AccountItemContribution,
   AdminGroupContribution,
   AdminSectionContribution,
+  FooterColumnContribution,
+  FooterItemContribution,
   GlobalWidgetContribution,
   HeaderActionContribution,
   NavItemContribution,
@@ -47,6 +49,15 @@ export default defineAppConfig({
     { component: 'ShopLoyaltyCard', order: 10 },
     { component: 'ShopAccountStats', order: 20 },
   ] satisfies AccountCardContribution[],
+
+  // Footer columns and items (E6b). Core owns the account dashboard link; the
+  // shop and project layers contribute their own column and entries.
+  footerColumns: [
+    { id: 'account', labelKey: 'footer.account_title', order: 30 },
+  ] satisfies FooterColumnContribution[],
+  footerItems: [
+    { column: 'account', to: '/account', labelKey: 'nav.account', order: 10 },
+  ] satisfies FooterItemContribution[],
 
   // Admin Registry (docs/ADMIN-REGISTRY.md). The admin shell renders exactly
   // this list; `capability` decides who sees a section, the backend guard on

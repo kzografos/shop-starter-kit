@@ -45,6 +45,25 @@ export interface GlobalWidgetContribution {
 }
 
 /** Account sidebar link. `to` is an unlocalised path; the shell applies `localePath()`. */
+/** A footer column heading. Any layer may declare one; items attach by `id`. */
+export interface FooterColumnContribution {
+  id: string
+  labelKey: string
+  order: number
+}
+
+/**
+ * One entry inside a footer column. With `to` it renders as a link, without it
+ * as plain text (the shipping note); `icon` is the optional leading icon name.
+ */
+export interface FooterItemContribution {
+  column: string
+  labelKey: string
+  order: number
+  to?: string
+  icon?: string
+}
+
 export interface AccountItemContribution {
   to: string
   icon: string
@@ -108,6 +127,8 @@ declare module 'nuxt/schema' {
     navItems?: NavItemContribution[]
     headerActions?: HeaderActionContribution[]
     globalWidgets?: GlobalWidgetContribution[]
+    footerColumns?: FooterColumnContribution[]
+    footerItems?: FooterItemContribution[]
     accountItems?: AccountItemContribution[]
     accountCards?: AccountCardContribution[]
     adminGroups?: AdminGroupContribution[]
