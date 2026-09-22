@@ -1,8 +1,8 @@
 // Notification presenter registry (app/utils/notification-presenters.ts) and the
-// shop's order_status presenter (app/utils/order-notification-presenter.ts).
+// shop's order_status presenter (app/modules/ecommerce/utils/order-notification-presenter.ts).
 // Core phrases nothing itself; a module registers how its rows read.
 import { describeNotification, registerNotificationPresenter, registeredNotificationTypes } from '../app/utils/notification-presenters.ts'
-import { orderStatusPresenter } from '../app/utils/order-notification-presenter.ts'
+import { orderStatusPresenter } from '../app/modules/ecommerce/utils/order-notification-presenter.ts'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 

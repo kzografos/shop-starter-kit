@@ -20,7 +20,7 @@
  *            (`prisma.<model>` / `tx.<model>`) mapped to the schema file that
  *            owns the model, `events.emit/on('<name>')`, ConfigService /
  *            process.env use.
- *   frontend relative + `~/`, `~~/`, `@/`, `@@/` imports (runtime vs type),
+ *   frontend relative + `~/`, `~~/`, `@/`, `@@/`, `#shop/` imports (runtime vs type),
  *            Nuxt component auto-imports found in templates (`<PascalCase`,
  *            `components/**` with pathPrefix false, `.global.vue` stripped),
  *            composable/store auto-imports (`useXxx(` → composables/useXxx.ts,
@@ -86,6 +86,7 @@ const FE_PROJECT_FILES = [
 ]
 const feLayer = (rel) => {
   if (rel.startsWith('types/')) return 'SHARED' // ../types/index.ts — mixed contracts, see the doc
+  if (rel.startsWith('modules/ecommerce/')) return 'SHOP' // the e-commerce Nuxt layer (E5); the lists below cover files not yet moved into it
   if (FE_SHOP_FILES.includes(rel) || FE_SHOP_PREFIXES.some((p) => rel.startsWith(p))) return 'SHOP'
   if (FE_PROJECT_FILES.includes(rel)) return 'PROJECT'
   return 'CORE'
@@ -219,6 +220,7 @@ function scanFrontend() {
     if (r.startsWith('stores/')) stores.set('use' + path.basename(stripExt(r))[0].toUpperCase() + path.basename(stripExt(r)).slice(1) + 'Store', r)
   }
   const aliasRoot = (spec) => {
+    if (spec.startsWith('#shop/')) return path.join(FRONTEND, 'modules', 'ecommerce', spec.slice(6)) // e-commerce layer alias (its nuxt.config.ts)
     if (spec.startsWith('~~/') || spec.startsWith('@@/')) return path.join(FRONTEND, '..', spec.slice(3))
     if (spec.startsWith('~/') || spec.startsWith('@/')) return path.join(FRONTEND, spec.slice(2))
     return null

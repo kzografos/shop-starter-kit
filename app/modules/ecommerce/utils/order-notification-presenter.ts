@@ -1,4 +1,4 @@
-import type { NotificationPresenter } from './notification-presenters'
+import type { NotificationPresenter } from '~/utils/notification-presenters'
 
 // Shop (orders): how an `order_status` row reads. The `meta` shape
 // (`order_id`, `status`) is what backend/src/orders/order-notifications.service.ts

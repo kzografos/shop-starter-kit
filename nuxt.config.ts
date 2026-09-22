@@ -1,4 +1,8 @@
 export default defineNuxtConfig({
+  // Nuxt layers (blueprint §3): the e-commerce module is a layer under app/.
+  // Not under `layers/`, so it is listed explicitly.
+  extends: ['./app/modules/ecommerce'],
+
   devtools: { enabled: false },
 
   app: {
