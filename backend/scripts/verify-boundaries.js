@@ -13,9 +13,9 @@
  *   B  No *.service.ts may import a *.controller file.
  *   C  Controllers in Core folders must not require Shop capabilities.
  *   D  Services in Core folders must not access Shop Prisma models.
- *   E  `users/` must not import from `auth/` except the guard/decorator
+ *   E  `core/users` must not import from `core/auth` except the guard/decorator
  *      contract every controller uses (auth → users is the allowed direction;
- *      the role values users writes live in users/roles.ts).
+ *      the role values users writes live in core/users/roles.ts).
  *
  * Baseline
  *   Violations that existed at Architecture Verification Pass 10 are listed in
@@ -34,8 +34,8 @@ const SRC = path.resolve(__dirname, '..', 'src')
 
 // ── Layer map (blueprint §2, current paths) ──────────────────────
 const INFRA = ['infrastructure'] // prisma, redis, storage, payments-provider, mail, health, common live under it (E2)
-const CORE = ['core', 'auth', 'users', 'profile', 'staff', 'settings', 'notifications', 'newsletter', 'uploads']
-const SHOP = ['products', 'categories', 'favourites', 'orders', 'payments', 'loyalty', 'analytics']
+const CORE = ['core'] // auth, users, profile, staff, settings, notifications, newsletter, uploads, config, events under it (E3a)
+const SHOP = ['modules'] // modules/ecommerce/{products, categories, favourites, orders, payments, loyalty, analytics} (E3a)
 // app.module.ts / main.ts at the root are the composition root and may import everything.
 
 // Capabilities owned by the shop (permissions.ts is itself a documented seam-3
@@ -61,14 +61,25 @@ function walk(dir, out = []) {
 }
 const rel = (file) => path.relative(SRC, file).split(path.sep).join('/')
 const topFolder = (relFile) => (relFile.includes('/') ? relFile.split('/')[0] : null)
+// Architectural unit = layer folder + first child (`core/auth`, `modules/ecommerce/orders`,
+// `infrastructure/mail`); rule E reasons about units, not layers.
+const unitOf = (relFile) => {
+  const parts = relFile.split('/')
+  if (parts.length < 3) return null
+  return parts[0] === 'modules' ? parts.slice(0, 3).join('/') : parts.slice(0, 2).join('/')
+}
 const layerOf = (folder) => (INFRA.includes(folder) ? 'INFRA' : CORE.includes(folder) ? 'CORE' : SHOP.includes(folder) ? 'SHOP' : folder === null ? 'ROOT' : 'UNMAPPED')
 
-// Resolve a relative import to its top-level folder under src.
-function importFolder(fromRel, spec) {
+// Resolve a relative import to a path under src (null for package imports).
+function importPath(fromRel, spec) {
   if (!spec.startsWith('.')) return null // package import
   const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(fromRel), spec))
-  if (resolved.startsWith('..')) return null
-  return resolved.includes('/') ? resolved.split('/')[0] : null
+  return resolved.startsWith('..') ? null : resolved
+}
+// …and to its top-level folder.
+function importFolder(fromRel, spec) {
+  const resolved = importPath(fromRel, spec)
+  return resolved && resolved.includes('/') ? resolved.split('/')[0] : null
 }
 
 // ── Scan ─────────────────────────────────────────────────────────
@@ -116,11 +127,12 @@ for (const file of walk(SRC)) {
     }
   }
 
-  // Rule E: users → auth only through the cross-cutting guard/decorator contract
-  if (folder === 'users') {
+  // Rule E: core/users → core/auth only through the cross-cutting guard/decorator contract
+  if (unitOf(r) === 'core/users') {
     for (const spec of imports) {
-      if (importFolder(r, spec) === 'auth' && !/\/auth\/(guards|decorators)\//.test(spec)) {
-        findings.push({ rule: 'E', file: r, detail: spec, message: `users/ imports auth at runtime (${spec}); auth depends on users, not the reverse` })
+      const target = importPath(r, spec)
+      if (target && unitOf(target + '/') === 'core/auth' && !/\/auth\/(guards|decorators)\//.test(spec)) {
+        findings.push({ rule: 'E', file: r, detail: spec, message: `core/users imports core/auth at runtime (${spec}); auth depends on users, not the reverse` })
       }
     }
   }

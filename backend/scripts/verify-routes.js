@@ -62,7 +62,7 @@ const META = { path: 'path', method: 'method', guards: '__guards__' }
 const { NestFactory, Reflector, ModulesContainer } = require('@nestjs/core')
 const { RequestMethod } = require('@nestjs/common')
 const { AppModule } = require(path.join(DIST, 'app.module.js'))
-const { PERMISSIONS_KEY } = require(path.join(DIST, 'auth/decorators/permissions.decorator.js'))
+const { PERMISSIONS_KEY } = require(path.join(DIST, 'core/auth/decorators/permissions.decorator.js'))
 
 const methodName = (m) => RequestMethod[m] ?? `METHOD_${m}`
 

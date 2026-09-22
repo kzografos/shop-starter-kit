@@ -52,8 +52,8 @@ const PRISMA = path.resolve(opt('--prisma') ?? path.join(REPO, 'backend', 'prism
 // ── Layer maps ───────────────────────────────────────────────────
 // Backend: same folder map as verify-boundaries.js (blueprint §2).
 const BE_INFRA = ['infrastructure'] // prisma, redis, storage, payments-provider, mail, health, common (E2)
-const BE_CORE = ['core', 'auth', 'users', 'profile', 'staff', 'settings', 'notifications', 'newsletter', 'uploads']
-const BE_SHOP = ['products', 'categories', 'favourites', 'orders', 'payments', 'loyalty', 'analytics']
+const BE_CORE = ['core'] // auth, users, profile, staff, settings, notifications, newsletter, uploads, config, events (E3a)
+const BE_SHOP = ['modules'] // modules/ecommerce/{products, categories, favourites, orders, payments, loyalty, analytics} (E3a)
 const beLayer = (rel) => {
   const top = rel.includes('/') ? rel.split('/')[0] : null
   if (top === null) return 'ROOT' // app.module.ts, main.ts — composition root
@@ -292,8 +292,13 @@ function cycles(nodes, edges) {
   return out.sort((a, b) => a[0].localeCompare(b[0]))
 }
 function folderCycles(edges) {
-  // top-level folder graph (backend) — the extraction unit
-  const folder = (f) => (f.includes('/') ? f.split('/')[0] : '(root)')
+  // unit graph (backend): layer folder + first child — `core/auth`, `modules/ecommerce/orders`,
+  // `infrastructure/mail`; the root files are one unit
+  const folder = (f) => {
+    const parts = f.split('/')
+    if (parts.length < 3) return '(root)'
+    return parts[0] === 'modules' ? parts.slice(0, 3).join('/') : parts.slice(0, 2).join('/')
+  }
   const pairs = new Set()
   for (const e of edges) if (e.kind !== 'type' && e.kind !== 'prisma') { const a = folder(e.from), b = folder(e.to); if (a !== b) pairs.add(`${a}>${b}`) }
   const out = []

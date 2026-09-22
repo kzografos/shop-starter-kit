@@ -22,32 +22,32 @@ Layers, as the blueprint defines them and the boundary script enforces them: **I
 | health | `infrastructure/health/` | `GET /health` (Postgres + Redis), `RedisHealthIndicator` | route | prisma, redis | Docker healthcheck, Nginx |
 | common | `infrastructure/common/` | `GlobalExceptionFilter` (Prisma error mapping), `SnakeCaseInterceptor`, `serialize` util, `afterCommit` | classes | — | main.ts, products, orders, payments |
 
-### 1.2 Backend — Core
+### 1.2 Backend — Core (`backend/src/core/…` since E3a, 2026-09-22; `core/config`, `core/events` were already there)
 
 | Module | Path | Responsibility | Public entry points | Depends on | Consumers |
 |---|---|---|---|---|---|
 | core/events | `core/events/` | `CoreEventBus` (typed, awaited, log-and-continue), `user.authenticated` (global) | `CoreEventBus`, `CoreEventMap` | — | auth (emits), orders (subscribes) |
 | core/config | `core/config/` | Joi env contract (boot schema, Core block required, provider blocks conditional); `isGoogleAuthConfigured` | `envValidationSchema`, `isGoogleAuthConfigured` | — | app.module, auth (google). Provider presence checks live with their providers (F1) |
-| auth | `auth/` | Register/login/logout/refresh (Redis-rotated), Google OAuth, password reset; `JwtAuthGuard`, `OptionalJwtAuthGuard`, `PermissionsGuard`, `RequirePermissions`, `CurrentUser`; **Permission Registry** (`PermissionsRegistryService`, global) with Core capabilities/roles in `permissions.ts` | routes `/auth/*`; guards/decorators; `PermissionsRegistryService`; `OWNER_ROLE/MEMBER_ROLE` | users, redis, mail, core/events, core/config | every guarded controller; profile, staff, users, analytics (constants); all modules that register capabilities |
-| users | `users/` | `User` rows (create/find/link Google/password/profile), customer list; **User-extensions registry** | `UsersService`, `UserExtensionsRegistry`; `GET /admin/customers` | prisma, auth (guards, `MEMBER_ROLE`) | auth, profile, staff, loyalty, orders |
-| profile | `profile/` | `GET/PATCH /profile` with `permissions[]` and extension fields | routes | users, auth | frontend session |
-| staff | `staff/` | Staff CRUD (roles from the registry), last-owner guard | `/admin/staff/*` | prisma, auth | admin |
-| settings | `settings/` | **Settings Registry**: definitions/groups, defaults-on-read, validated admin writes, public subset | `SettingsService`; `GET /settings`; `GET/PATCH /admin/settings` | prisma, redis, auth | orders (pricing), admin form, storefront |
-| notifications | `notifications/` | `Notification` rows: staff inbox (`userId null`) + per-user feed; idempotent `create`, tx-joinable `createWrite`; unread caches | `NotificationsService`; `/admin/notifications/*`; `/notifications/*` | prisma, redis, auth | products (stock alerts), orders (status), admin + customer UIs |
-| newsletter | `newsletter/` | Subscribe, tokened unsubscribe (HMAC), admin list | `/newsletter/*`, `/admin/newsletter` | prisma, mail, auth | footer, admin |
-| uploads | `uploads/` | `POST /uploads/image` (5 MB, magic bytes, `manage:media`) | `UploadsService` | storage, auth | products (image sub-resource) |
+| auth | `core/auth/` | Register/login/logout/refresh (Redis-rotated), Google OAuth, password reset; `JwtAuthGuard`, `OptionalJwtAuthGuard`, `PermissionsGuard`, `RequirePermissions`, `CurrentUser`; **Permission Registry** (`PermissionsRegistryService`, global) with Core capabilities/roles in `permissions.ts` | routes `/auth/*`; guards/decorators; `PermissionsRegistryService`; `OWNER_ROLE/MEMBER_ROLE` | users, redis, mail, core/events, core/config | every guarded controller; profile, staff, users, analytics (constants); all modules that register capabilities |
+| users | `core/users/` | `User` rows (create/find/link Google/password/profile), customer list; **User-extensions registry** | `UsersService`, `UserExtensionsRegistry`; `GET /admin/customers` | prisma, auth (guards, `MEMBER_ROLE`) | auth, profile, staff, loyalty, orders |
+| profile | `core/profile/` | `GET/PATCH /profile` with `permissions[]` and extension fields | routes | users, auth | frontend session |
+| staff | `core/staff/` | Staff CRUD (roles from the registry), last-owner guard | `/admin/staff/*` | prisma, auth | admin |
+| settings | `core/settings/` | **Settings Registry**: definitions/groups, defaults-on-read, validated admin writes, public subset | `SettingsService`; `GET /settings`; `GET/PATCH /admin/settings` | prisma, redis, auth | orders (pricing), admin form, storefront |
+| notifications | `core/notifications/` | `Notification` rows: staff inbox (`userId null`) + per-user feed; idempotent `create`, tx-joinable `createWrite`; unread caches | `NotificationsService`; `/admin/notifications/*`; `/notifications/*` | prisma, redis, auth | products (stock alerts), orders (status), admin + customer UIs |
+| newsletter | `core/newsletter/` | Subscribe, tokened unsubscribe (HMAC), admin list | `/newsletter/*`, `/admin/newsletter` | prisma, mail, auth | footer, admin |
+| uploads | `core/uploads/` | `POST /uploads/image` (5 MB, magic bytes, `manage:media`) | `UploadsService` | storage, auth | products (image sub-resource) |
 
-### 1.3 Backend — Shop (the e-commerce module; one module, seven sub-domains)
+### 1.3 Backend — Shop (the e-commerce module; one module, seven sub-domains — `backend/src/modules/ecommerce/…` since E3a, 2026-09-22)
 
 | Sub-domain | Path | Responsibility | Public entry points | Depends on | Consumers |
 |---|---|---|---|---|---|
-| products (catalog) | `products/` | Catalogue queries/caching, admin CRUD, image sub-resource, `StockAlertsService`, `CatalogPermissions` | `ProductsService`, `StockAlertsService`; `/products*`, `/admin/products*` | prisma, redis, storage, uploads, notifications, auth, common | categories, orders, favourites |
-| categories (catalog) | `categories/` | Tree + admin CRUD; invalidates through the products owner | `CategoriesService`; `/categories`, `/admin/categories*` | products, prisma, redis, auth | storefront, admin |
-| favourites | `favourites/` | Per-user favourites | `/favourites*` | prisma, storage, auth | account |
-| orders | `orders/` | Order creation (idempotent), lifecycle (`order-status.ts`), cancel/restock, customer + admin routes, `PricingSettingsService` (+ definitions), `GuestOrderLinkerService`, `OrderNotificationsService`, `OrdersPermissions` (+ shop role presets), `OrdersUserExtension`, order mail template | `OrdersService`, `PricingSettingsService`, `OrderNotificationsService`; `/orders*`, `/admin/orders*` | products, settings, users, loyalty, analytics, notifications, mail, storage, core/events, auth | payments |
-| payments | `payments/` | Checkout session orchestration, webhook settlement with `ProcessedEvent` ledger, expiry release | `/payments/*` | orders, loyalty, payments-provider, mail, prisma, auth | Stripe webhooks, checkout |
-| loyalty | `loyalty/` | `LoyaltyAccount` + ledger (only writer), earn/redeem/reverse, `LoyaltyUserExtension` | `LoyaltyService`; `GET /profile/loyalty` | prisma, users, auth | orders, payments |
-| analytics | `analytics/` | Overview + dashboard stats (5-min cache), `AnalyticsPermissions` | `AnalyticsService`; `/admin/analytics`, `/admin/stats` | prisma, redis, auth | orders (invalidate), admin dashboard |
+| products (catalog) | `modules/ecommerce/products/` | Catalogue queries/caching, admin CRUD, image sub-resource, `StockAlertsService`, `CatalogPermissions` | `ProductsService`, `StockAlertsService`; `/products*`, `/admin/products*` | prisma, redis, storage, uploads, notifications, auth, common | categories, orders, favourites |
+| categories (catalog) | `modules/ecommerce/categories/` | Tree + admin CRUD; invalidates through the products owner | `CategoriesService`; `/categories`, `/admin/categories*` | products, prisma, redis, auth | storefront, admin |
+| favourites | `modules/ecommerce/favourites/` | Per-user favourites | `/favourites*` | prisma, storage, auth | account |
+| orders | `modules/ecommerce/orders/` | Order creation (idempotent), lifecycle (`order-status.ts`), cancel/restock, customer + admin routes, `PricingSettingsService` (+ definitions), `GuestOrderLinkerService`, `OrderNotificationsService`, `OrdersPermissions` (+ shop role presets), `OrdersUserExtension`, order mail template | `OrdersService`, `PricingSettingsService`, `OrderNotificationsService`; `/orders*`, `/admin/orders*` | products, settings, users, loyalty, analytics, notifications, mail, storage, core/events, auth | payments |
+| payments | `modules/ecommerce/payments/` | Checkout session orchestration, webhook settlement with `ProcessedEvent` ledger, expiry release | `/payments/*` | orders, loyalty, payments-provider, mail, prisma, auth | Stripe webhooks, checkout |
+| loyalty | `modules/ecommerce/loyalty/` | `LoyaltyAccount` + ledger (only writer), earn/redeem/reverse, `LoyaltyUserExtension` | `LoyaltyService`; `GET /profile/loyalty` | prisma, users, auth | orders, payments |
+| analytics | `modules/ecommerce/analytics/` | Overview + dashboard stats (5-min cache), `AnalyticsPermissions` | `AnalyticsService`; `/admin/analytics`, `/admin/stats` | prisma, redis, auth | orders (invalidate), admin dashboard |
 
 Root: `app.module.ts`, `main.ts` — composition root, may import everything. `prisma/*.prisma` follows the same split (`core`, `infrastructure`, `ecommerce`).
 
@@ -203,7 +203,7 @@ Read from the code before any edit. "Kind" says what the dependency is made of; 
 > | Frontend Core layer | **Blocked by P1** — 12 Core→Project edges (`BrandLockup`, `WhatsAppButton`, `utils/business.ts`, `useBusinessSchema`) + F5 footer links | P1, F5 |
 > | `types/index.ts`, `i18n/*.json` | Mechanical split at layer time (F7) | — |
 >
-> First slice done: backend Infrastructure package (E2). Next per roadmap §B2: E3 (`core/`, `modules/ecommerce/`).
+> Done: E2 (Infrastructure package), E3a (Core → `src/core/`, Shop → `src/modules/ecommerce/`, pure moves, 90 renames R100, 100 import rewrites; layer maps by top folder, units `core/<x>` / `modules/ecommerce/<x>`). Next per roadmap §B2: E3b (`ecommerce.module.ts`, role presets, `AppModule` composition — F10).
 
 
 Target (blueprint §13 Phase 2): backend `core/`, `modules/ecommerce/`, `infrastructure/`; Nuxt layers `app/core`, `app/modules/ecommerce`, later `app/project`.

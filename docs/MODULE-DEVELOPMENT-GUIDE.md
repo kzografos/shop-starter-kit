@@ -147,7 +147,7 @@ Declare each list with `satisfies <Contract>[]` so a wrong entry fails type-chec
 
 ### 3.8a User extensions (fields on user payloads)
 
-Implemented in seam 2 (`backend/src/users/user-extensions.registry.ts`). When your module owns per-user data that the client expects to see *on the user object* — the loyalty balance is the model case — do not add a column to `User` and do not make Core read your table. Register a user extension from your module's `onModuleInit`:
+Implemented in seam 2 (`backend/src/core/users/user-extensions.registry.ts`). When your module owns per-user data that the client expects to see *on the user object* — the loyalty balance is the model case — do not add a column to `User` and do not make Core read your table. Register a user extension from your module's `onModuleInit`:
 
 ```ts
 this.registry.define({
@@ -163,7 +163,7 @@ this.registry.define({
 - Field names are camelCase; the Core interceptor snake-cases them on the wire (`loyaltyPoints` → `loyalty_points`).
 - Do not use an extension to smuggle behaviour into Core (no writes, no side effects); it is a read-only projection.
 - **Reading it on the frontend:** Core's `Profile` type carries extensions as `[extension: string]: unknown` and names none of them. Declare your field's type next to your module's types (`LoyaltyProfileExtension { loyalty_points: number }`) and read it through a module composable (`useLoyalty()` → `loyaltyPointsOf(profile)`, `app/utils/loyalty.ts`), never by adding a computed to the Core auth store.
-- Role values Core writes (`OWNER_ROLE`, `MEMBER_ROLE`) live in `backend/src/users/roles.ts`; import them from there in `users/`, and from `auth/permissions` (which re-exports them) elsewhere. `users/` never imports `auth/` at runtime — boundary rule E.
+- Role values Core writes (`OWNER_ROLE`, `MEMBER_ROLE`) live in `backend/src/core/users/roles.ts`; import them from there in `core/users/`, and from `core/auth/permissions` (which re-exports them) elsewhere. `core/users` never imports `core/auth` at runtime — boundary rule E.
 
 ### 3.9 Mail
 
@@ -176,7 +176,7 @@ this.registry.define({
 
 ### 3.10a Product images (reference implementation)
 
-The e-commerce module's product images are the worked example of a module owning per-entity media over the storage adapter (`backend/src/products/products.service.ts`, `products-admin.controller.ts`, `dto/product-images.dto.ts`; admin UI in `app/components/admin/ProductDrawer.vue`).
+The e-commerce module's product images are the worked example of a module owning per-entity media over the storage adapter (`backend/src/modules/ecommerce/products/products.service.ts`, `products-admin.controller.ts`, `dto/product-images.dto.ts`; admin UI in `app/components/admin/ProductDrawer.vue`).
 
 - **`Product.images String[]` is the single source of truth.** There is no image table. The array order is the display order and `images[0]` is the primary image — every storefront, cart and order view reads it that way. A reference is either an object key returned by `StorageAdapter.put()` or an absolute `http(s)` URL (seeded or imported); a product may not hold the same reference twice (`ArrayUnique` on every write, including the product upsert).
 - **Endpoints** (`/admin/products/:id/images`, guards `JwtAuthGuard` + `PermissionsGuard`; each returns the updated `{ images, image_urls }` and invalidates the product caches; unknown product → 404 `Product not found`):
@@ -188,7 +188,7 @@ The e-commerce module's product images are the worked example of a module owning
 
 ### 3.10b Order lifecycle (reference implementation)
 
-The e-commerce orders sub-domain is the worked example of a module owning a state machine with side effects across the storage of stock, a ledger (loyalty) and a provider webhook (`backend/src/orders/order-status.ts`, `orders.service.ts`, `backend/src/payments/payments.service.ts`, `backend/src/infrastructure/payments-provider/`).
+The e-commerce orders sub-domain is the worked example of a module owning a state machine with side effects across the storage of stock, a ledger (loyalty) and a provider webhook (`backend/src/modules/ecommerce/orders/order-status.ts`, `orders.service.ts`, `backend/src/modules/ecommerce/payments/payments.service.ts`, `backend/src/infrastructure/payments-provider/`).
 
 **Transitions.** `Order.status` only moves forward:
 
@@ -292,12 +292,12 @@ export default defineNuxtPlugin(() => {
 
 | Current path | Target | Sub-domain |
 |---|---|---|
-| `backend/src/products`, `categories`, `favourites` | `modules/ecommerce/catalog/` | catalog |
-| `backend/src/orders` + pricing keys from `settings` + `checkStock` from `notifications` + `linkGuestOrders` from `auth` | `modules/ecommerce/orders/` | orders |
-| `backend/src/payments` (orchestration) + `backend/src/payments-provider` (`PaymentProvider`, `StripePaymentProvider` — done, seam 6) | `modules/ecommerce/payments/` over `infrastructure/payments-provider/` (folder move only) | payments |
-| `backend/src/loyalty` (`LoyaltyAccount`, `LoyaltyTransaction`, `GET /profile/loyalty`, `loyaltyPoints` user extension) — **done (seam 2)** | `modules/ecommerce/loyalty/` (folder move only) | loyalty |
-| `backend/src/analytics` | `modules/ecommerce/analytics/` | analytics |
-| `backend/src/uploads` (Core, `manage:media` — done, seam 7 step 2) + `backend/src/storage` (`StorageAdapter` — done, seam 7 step 1) | `modules/ecommerce/media/` over `infrastructure/storage/` (folder move only; candidate for promotion to a shared `media` module) | media |
+| ~~`backend/src/products`, `categories`, `favourites`~~ → `backend/src/modules/ecommerce/{products,categories,favourites}` — **moved (E3a)**, kept flat by decision; no `catalog/` grouping | `modules/ecommerce/{products,categories,favourites}/` | catalog |
+| ~~`backend/src/orders`~~ → `backend/src/modules/ecommerce/orders` — **moved (E3a)**; pricing keys, `checkStock`, `linkGuestOrders` already extracted (seams 1/4/5b) | `modules/ecommerce/orders/` | orders |
+| ~~`backend/src/payments`~~ → `backend/src/modules/ecommerce/payments` — **moved (E3a)**; `infrastructure/payments-provider/` (E2) | `modules/ecommerce/payments/` over `infrastructure/payments-provider/` | payments |
+| ~~`backend/src/loyalty`~~ → `backend/src/modules/ecommerce/loyalty` — **moved (E3a)** (`LoyaltyAccount`, `LoyaltyTransaction`, `GET /profile/loyalty`, `loyaltyPoints` user extension — seam 2) | `modules/ecommerce/loyalty/` | loyalty |
+| ~~`backend/src/analytics`~~ → `backend/src/modules/ecommerce/analytics` — **moved (E3a)** | `modules/ecommerce/analytics/` | analytics |
+| `backend/src/core/uploads` (Core, `manage:media` — seam 7 step 2) over `infrastructure/storage/` (`StorageAdapter` — seam 7 step 1, E2) | **stays Core** (decision, E3 recon 2026-09-22): generic image upload is a Core capability; no `modules/ecommerce/media/` | media (Core) |
 | `backend/src/admin/admin.service.ts` (stats, orders, products, categories) | split into the sub-domains' admin controllers | — |
 | `app/stores/{cart,favourites,filters}`, `app/composables/{useProducts,useCurrency}`, `app/components/{product,cart,checkout,filters,loyalty}`, `app/components/admin/ProductDrawer.vue`, `app/pages/{products,checkout,brands}`, `app/pages/account/{orders,favourites,loyalty}`, `app/pages/admin/{index (content),analytics,products,categories,orders}`, `types/index.ts`, shop i18n namespaces | `app/modules/ecommerce/` layer | — |
 

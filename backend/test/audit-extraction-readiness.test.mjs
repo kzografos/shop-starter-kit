@@ -26,7 +26,7 @@ test('positive: real tree — baseline boundaries hold and output is determinist
   assert.deepEqual(r.backend.forbidden, [], JSON.stringify(r.backend.forbidden))
   assert.equal(r.backend.shopPrismaFromCore.length, 0, 'no Core service touches a shop model')
   assert.deepEqual(r.backend.fileCycles, [], 'no file-level runtime cycle')
-  assert.deepEqual(r.backend.folderCycles, [['auth', 'users']], 'the one known folder cycle (guards contract)')
+  assert.deepEqual(r.backend.folderCycles, [['core/auth', 'core/users']], 'the one known unit cycle (guards contract)')
   assert.deepEqual(r.backend.events.publishers.map((p) => p.event), ['user.authenticated'])
   // Frontend: no Core→Shop code edge; Core→Project edges are the documented brand residue.
   assert.equal(r.frontend.forbidden.filter((e) => e.toLayer === 'SHOP').length, 0, JSON.stringify(r.frontend.forbidden.filter((e) => e.toLayer === 'SHOP')))
@@ -43,9 +43,9 @@ test('negative: synthetic tree — forbidden edges, DI, auto-component and a cyc
   try {
     const w = (rel, content) => { mkdirSync(dirname(join(root, rel)), { recursive: true }); writeFileSync(join(root, rel), content) }
     // backend: Core service imports + injects a Shop service; Shop imports Core back (runtime cycle)
-    w('src/users/users.service.ts', "import { ProductsService } from '../products/products.service'\nexport class UsersService { constructor(private products: ProductsService) {} }\n")
-    w('src/products/products.service.ts', "import { UsersService } from '../users/users.service'\nimport type { Thing } from '../users/thing'\nexport class ProductsService { constructor(private users: UsersService) {} }\n")
-    w('src/users/thing.ts', 'export type Thing = string\n')
+    w('src/core/users/users.service.ts', "import { ProductsService } from '../../modules/ecommerce/products/products.service'\nexport class UsersService { constructor(private products: ProductsService) {} }\n")
+    w('src/modules/ecommerce/products/products.service.ts', "import { UsersService } from '../../../core/users/users.service'\nimport type { Thing } from '../../../core/users/thing'\nexport class ProductsService { constructor(private users: UsersService) {} }\n")
+    w('src/core/users/thing.ts', 'export type Thing = string\n')
     w('src/infrastructure/mail/mail.service.ts', "export class MailService { async x() { await this.prisma.order.findMany() } }\n")
     w('prisma/ecommerce.prisma', 'model Order {\n  id String @id\n}\n')
     // frontend: Core layout uses a Shop component through the template; Core page auto-imports a Shop store
@@ -61,12 +61,12 @@ test('negative: synthetic tree — forbidden edges, DI, auto-component and a cyc
     assert.equal(json.status, 0, json.stderr)
     const r = JSON.parse(json.stdout)
     const be = r.backend.forbidden.map((e) => `${e.from}>${e.to}:${e.kind}`)
-    assert.ok(be.includes('users/users.service.ts>products/products.service.ts:import'), be.join(', '))
-    assert.ok(be.includes('users/users.service.ts>products/products.service.ts:di'), 'constructor injection is an edge')
+    assert.ok(be.includes('core/users/users.service.ts>modules/ecommerce/products/products.service.ts:import'), be.join(', '))
+    assert.ok(be.includes('core/users/users.service.ts>modules/ecommerce/products/products.service.ts:di'), 'constructor injection is an edge')
     assert.ok(!be.some((x) => x.includes('thing.ts')), 'type-only imports are not forbidden edges')
     assert.ok(r.backend.forbiddenTypeOnly.length === 0, 'shop → core type import is allowed')
-    assert.deepEqual(r.backend.fileCycles, [['products/products.service.ts', 'users/users.service.ts']])
-    assert.deepEqual(r.backend.folderCycles, [['products', 'users']])
+    assert.deepEqual(r.backend.fileCycles, [['core/users/users.service.ts', 'modules/ecommerce/products/products.service.ts']])
+    assert.deepEqual(r.backend.folderCycles, [['core/users', 'modules/ecommerce/products']])
     assert.ok(r.backend.edgeList.some((e) => e.kind === 'prisma' && e.from === 'infrastructure/mail/mail.service.ts' && e.toLayer === 'SHOP'), 'Infra touching a shop model is a prisma edge')
     const fe = r.frontend.forbidden.map((e) => `${e.from}>${e.to}:${e.kind}`)
     assert.ok(fe.includes('layouts/default.vue>components/cart/CartButton.global.vue:auto-component'), fe.join(', '))
@@ -77,7 +77,7 @@ test('negative: synthetic tree — forbidden edges, DI, auto-component and a cyc
     const strict = run(...args, '--strict')
     assert.equal(strict.status, 1)
     assert.match(strict.stderr, /forbidden cross-layer edge/)
-    assert.match(strict.stdout, /users\/users\.service\.ts → products\/products\.service\.ts/)
+    assert.match(strict.stdout, /core\/users\/users\.service\.ts → modules\/ecommerce\/products\/products\.service\.ts/)
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

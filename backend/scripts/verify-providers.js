@@ -100,12 +100,12 @@ async function runScenario(name) {
 
   const get = (rel, cls) => app.get(require(path.join(DIST, rel))[cls])
   const minio = get('infrastructure/storage/minio-storage.adapter.js', 'MinioStorageAdapter')
-  const payments = get('payments/payments.service.js', 'PaymentsService')
+  const payments = get('modules/ecommerce/payments/payments.service.js', 'PaymentsService')
   const mail = get('infrastructure/mail/mail.service.js', 'MailService')
-  const { GoogleStrategy } = require(path.join(DIST, 'auth/strategies/google.strategy.js'))
+  const { GoogleStrategy } = require(path.join(DIST, 'core/auth/strategies/google.strategy.js'))
   const google = app.get(GoogleStrategy)
-  const guard = get('auth/guards/google-auth.guard.js', 'GoogleAuthGuard')
-  const uploads = get('uploads/uploads.service.js', 'UploadsService')
+  const guard = get('core/auth/guards/google-auth.guard.js', 'GoogleAuthGuard')
+  const uploads = get('core/uploads/uploads.service.js', 'UploadsService')
 
   console.log(`   booted; storage=${minio.isEnabled} payments=${payments.isEnabled} mail=${mail.isEnabled} google=${google ? google.constructor.name : null}`)
 

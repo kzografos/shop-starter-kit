@@ -51,12 +51,12 @@ Generic functionality that almost every project uses. Core is what boots when no
 
 | Area | What it owns today (file references are the current locations, not target ones) |
 |---|---|
-| Authentication | Cookie JWT + Redis-backed refresh rotation, Google OAuth, password reset — `backend/src/auth/`, `app/plugins/auth.*`, `app/middleware/*`, auth pages |
-| Users | Identity, profile, staff management — `backend/src/users/`, `profile/`, `staff/` |
-| Generic roles & capabilities | `PermissionsGuard`, `RequirePermissions`, `permissionsFor()` mechanism — `backend/src/auth/guards`, `auth/decorators`; frontend `usePermissions` mechanism |
-| Settings mechanism | Key/value table, cached read, invalidate-on-write — `backend/src/settings/` |
-| Notifications mechanism | Inbox, unread count, mark-read — `backend/src/notifications/` (generic parts) |
-| Newsletter / subscribers | `backend/src/newsletter/`, `app/pages/unsubscribe.vue` |
+| Authentication | Cookie JWT + Redis-backed refresh rotation, Google OAuth, password reset — `backend/src/core/auth/`, `app/plugins/auth.*`, `app/middleware/*`, auth pages |
+| Users | Identity, profile, staff management — `backend/src/core/users/`, `core/profile/`, `core/staff/` |
+| Generic roles & capabilities | `PermissionsGuard`, `RequirePermissions`, `permissionsFor()` mechanism — `backend/src/core/auth/guards`, `core/auth/decorators`; frontend `usePermissions` mechanism |
+| Settings mechanism | Key/value table, cached read, invalidate-on-write — `backend/src/core/settings/` |
+| Notifications mechanism | Inbox, unread count, mark-read — `backend/src/core/notifications/` (generic parts) |
+| Newsletter / subscribers | `backend/src/core/newsletter/`, `app/pages/unsubscribe.vue` |
 | Database foundation | `PrismaService`; the core schema file |
 | Configuration | Env validation (Joi) with per-module fragments; the loader for project config |
 | Validation | Global `ValidationPipe`, DTO conventions |
@@ -178,10 +178,10 @@ starter-system/
 │
 ├── backend/
 │   └── src/
-│       ├── core/                 # auth, users, staff, profile, permissions, settings, notifications, newsletter, config, events, health, common/
+│       ├── core/                 # auth/ (incl. permissions), users/, staff/, profile/, settings/, notifications/, newsletter/, uploads/, config/, events/  (E3a — DONE)
 │       ├── modules/
-│       │   └── ecommerce/        # catalog/, orders/, payments/, loyalty/, analytics/, media/, ecommerce.module.ts
-│       ├── infrastructure/       # prisma/, redis/, storage/, mail/, payments-providers/
+│       │   └── ecommerce/        # products/, categories/, favourites/, orders/, payments/, loyalty/, analytics/ (flat, E3a — DONE); ecommerce.module.ts (E3b)
+│       ├── infrastructure/       # prisma/, redis/, storage/, mail/, payments-provider/, health/, common/  (E2 — DONE)
 │       ├── project/              # project config loader, project seed, project-specific providers
 │       ├── app.module.ts         # composes core + enabled modules from project config
 │       └── main.ts
@@ -484,7 +484,7 @@ Each phase ends with a bootable, deployable system. Phases are sequential; steps
 - Separate mail/notification mechanisms from shop templates (seam 5) — **DONE (code + capability)**: the inbox is guarded by Core's `view:notifications`; remaining residue = `NotificationType` enum and `Notification.productId`/`stock` columns, deferred to the schema step.
 - Remove global frontend shop coupling (seam 9) — **DONE**: the shells are config-driven — `app.config` contribution lists (`navItems`, `headerActions`, `globalWidgets`, `accountItems`, `accountCards`) read via `useAppConfig()` and rendered by registered component name (`.global.vue`); no Core shell imports a shop store, component, state key or i18n key. Open residue: `AppFooter` links; `header.search_placeholder` read by the shop search component.
 - Fix the `useApi ↔ useAuthStore` cycle — **DONE** (`api:unauthenticated` Nuxt hook + `plugins/auth-hooks.ts`); migrate raw `$fetch` calls to `useApi` — **DONE** (`docs/USEAPI-MIGRATION.md`; one justified SSR exception; refresh single-flight made per-tab).
-- Introduce backend folder layers (`core/`, `modules/ecommerce/`, `infrastructure/`) — open; the multi-file Prisma schema — **DONE (seam 3b step 1)**: `backend/prisma/{core,infrastructure,ecommerce}.prisma`, `migrations/` in place, datamodel diff empty, no migration created. Seam 3b step 2 (`UserRole` enum → `role String` migration) remains open.
+- Introduce backend folder layers (`core/`, `modules/ecommerce/`, `infrastructure/`) — **DONE (E2 + E3a, pure moves; `ecommerce.module.ts` root pending in E3b)**; the multi-file Prisma schema — **DONE (seam 3b step 1)**: `backend/prisma/{core,infrastructure,ecommerce}.prisma`, `migrations/` in place, datamodel diff empty, no migration created. Seam 3b step 2 (`UserRole` enum → `role String` migration) remains open.
 
 ### Phase 2 — Registries and Module Boundaries
 
@@ -495,7 +495,7 @@ Each phase ends with a bootable, deployable system. Phases are sequential; steps
 - Event Registry (typed names) on top of the Phase 1 bus.
 - Module-driven frontend navigation: the lists exist (seam 9); Phase 2 moves the shop entries from the root `app.config.ts` into the e-commerce layer's `app.config.ts` and gives `AppFooter` the same treatment.
 - Nuxt layers: `app/core`, `app/modules/ecommerce`; component prefixing; per-layer i18n.
-- Loyalty extraction (seam 2), storage adapter (seam 7), payments provider surface (seam 6) and cache namespace hygiene (seam 8) — **all DONE** ahead of the layer split on the flat layout: `backend/src/loyalty/` owns `LoyaltyAccount` + ledger with Core's `UserExtensionsRegistry` (D13); `backend/src/infrastructure/storage/` and `backend/src/infrastructure/payments-provider/` are the D7 adapters (moved under `infrastructure/` in E2, 2026-09-20); cache owners expose `invalidate()`. The seam table (§11) has no open rows; the boundary baseline is empty. What the layer split still does: move the Core and Shop folders under `core/` and `modules/ecommerce/` (incl. `uploads/` → `media/`), without changing the contracts.
+- Loyalty extraction (seam 2), storage adapter (seam 7), payments provider surface (seam 6) and cache namespace hygiene (seam 8) — **all DONE** ahead of the layer split on the flat layout: `backend/src/modules/ecommerce/loyalty/` owns `LoyaltyAccount` + ledger with Core's `UserExtensionsRegistry` (D13); `backend/src/infrastructure/storage/` and `backend/src/infrastructure/payments-provider/` are the D7 adapters (moved under `infrastructure/` in E2, 2026-09-20); cache owners expose `invalidate()`. The seam table (§11) has no open rows; the boundary baseline is empty. The layer split of the folders is done (E2, E3a: `infrastructure/`, `core/`, `modules/ecommerce/`; `uploads/` stays Core); what remains is the shop root module (E3b) and the Module Registry composition (E8).
 
 ### Phase 3 — Project Configuration
 
