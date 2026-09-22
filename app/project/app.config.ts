@@ -1,5 +1,5 @@
 import { BUSINESS } from './utils/business'
-import type { BrandContribution, FooterColumnContribution, FooterItemContribution, GlobalWidgetContribution } from '~/types/contributions'
+import type { BrandContribution, FooterColumnContribution, FooterItemContribution, GlobalWidgetContribution } from '#core/types/contributions'
 
 // Project contributions. Nuxt merges every layer's app.config with the root's
 // (objects deep-merge, arrays concatenate), so the entries below are added to

@@ -89,8 +89,8 @@
 </template>
 
 <script setup lang="ts">
-import type { AdminSectionContribution } from '~/types/contributions'
-import { validAdminSections } from '~/utils/admin-registry'
+import type { AdminSectionContribution } from '#core/types/contributions'
+import { validAdminSections } from '#core/utils/admin-registry'
 
 // The brand mark is the project's, contributed through `app.config.brand`.
 const brand = computed(() => useAppConfig().brand)

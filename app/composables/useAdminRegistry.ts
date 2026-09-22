@@ -1,11 +1,11 @@
-import type { AdminSectionContribution } from '~/types/contributions'
+import type { AdminSectionContribution } from '#core/types/contributions'
 import {
   groupAdminSections,
   isActiveAdminSection,
   matchAdminSection,
   validAdminSections,
   visibleAdminSections,
-} from '~/utils/admin-registry'
+} from '#core/utils/admin-registry'
 
 /**
  * The Admin Registry as the shell sees it: `app.config.adminSections` and

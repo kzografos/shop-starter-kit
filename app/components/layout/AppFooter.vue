@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { footerColumns } from '~/utils/footer-registry'
+import { footerColumns } from '#core/utils/footer-registry'
 
 const api = useApi()
 const localePath = useLocalePath()

@@ -293,7 +293,7 @@ void isAdmin // kept for backward compat; admin link now uses isStaff
 const route = useRoute()
 const scrolled = ref(false)
 
-// Links and header components are contributed through app.config (see app/types/contributions.ts).
+// Links and header components are contributed through app.config (see app/core/types/contributions.ts).
 const navLinks = computed(() =>
   [...(appConfig.navItems ?? [])]
     .sort((a, b) => a.order - b.order)

@@ -1,4 +1,4 @@
-import type { FooterColumnContribution, FooterItemContribution } from '~/types/contributions'
+import type { FooterColumnContribution, FooterItemContribution } from '#core/types/contributions'
 
 // Shop contributions to the Core registries (nav items, header actions, global
 // widgets, account items/cards, admin sections) move here from the root

@@ -8,7 +8,7 @@ import type {
   GlobalWidgetContribution,
   HeaderActionContribution,
   NavItemContribution,
-} from '~/types/contributions'
+} from '#core/types/contributions'
 
 export default defineAppConfig({
   ui: {
@@ -22,7 +22,7 @@ export default defineAppConfig({
     },
   },
 
-  // Contribution lists rendered by the Core shells (see app/types/contributions.ts).
+  // Contribution lists rendered by the Core shells (see app/core/types/contributions.ts).
   // Entries are sorted by `order`. Shop entries move into the e-commerce layer's
   // app.config.ts when Nuxt layers are introduced; the shells do not change.
   navItems: [

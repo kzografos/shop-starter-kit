@@ -1,9 +1,9 @@
-// Registry-driven settings form helpers (app/utils/settings-form.ts): which
+// Registry-driven settings form helpers (app/core/utils/settings-form.ts): which
 // fields render, in which cards, initial values, and the PATCH body.
 //   pnpm test
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { renderableDefinitions, settingsCards, initialFormValues, patchBody } from '../app/utils/settings-form.ts'
+import { renderableDefinitions, settingsCards, initialFormValues, patchBody } from '../app/core/utils/settings-form.ts'
 
 const D = (o) => ({ type: 'number', default: '1', group: 'g', label_key: 'l', ...o })
 const groups = [

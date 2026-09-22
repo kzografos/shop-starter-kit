@@ -2,7 +2,7 @@
 // `order_status` rows. Core renders every row through describeNotification();
 // this plugin is the only place that knows those rows are about orders.
 // Universal so SSR and client phrase a row identically.
-import { registerNotificationPresenter } from '~/utils/notification-presenters'
+import { registerNotificationPresenter } from '#core/utils/notification-presenters'
 import { orderStatusPresenter } from '#shop/utils/order-notification-presenter'
 
 export default defineNuxtPlugin(() => {

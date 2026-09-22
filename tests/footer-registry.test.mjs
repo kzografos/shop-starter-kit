@@ -1,7 +1,7 @@
-// Footer registry pure helper (app/utils/footer-registry.ts): column order,
+// Footer registry pure helper (app/core/utils/footer-registry.ts): column order,
 // item grouping, item order, unknown-column fallback, empty input. Plain Node
 // test runner:  pnpm test
-import { footerColumns } from '../app/utils/footer-registry.ts'
+import { footerColumns } from '../app/core/utils/footer-registry.ts'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 

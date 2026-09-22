@@ -1,7 +1,7 @@
-// Admin Registry pure helpers (app/utils/admin-registry.ts): validation,
+// Admin Registry pure helpers (app/core/utils/admin-registry.ts): validation,
 // visibility, grouping, route matching, landing page. Plain Node test runner:
 //   pnpm test   (node --experimental-strip-types --test tests/)
-import { validAdminSections, visibleAdminSections, groupAdminSections, matchAdminSection, requiredAdminCapability, firstAllowedAdminPath, isActiveAdminSection } from '../app/utils/admin-registry.ts'
+import { validAdminSections, visibleAdminSections, groupAdminSections, matchAdminSection, requiredAdminCapability, firstAllowedAdminPath, isActiveAdminSection } from '../app/core/utils/admin-registry.ts'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 const check = (name, ok, detail = '') => test(name, () => assert.ok(ok, detail))

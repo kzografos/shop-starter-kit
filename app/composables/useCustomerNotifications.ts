@@ -1,5 +1,5 @@
 import type { Notification, NotificationList } from '~~/types'
-import { describeNotification, type NotificationView } from '~/utils/notification-presenters'
+import { describeNotification, type NotificationView } from '#core/utils/notification-presenters'
 
 export type { NotificationView }
 

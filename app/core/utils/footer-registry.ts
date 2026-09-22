@@ -1,4 +1,4 @@
-import type { FooterColumnContribution, FooterItemContribution } from '~/types/contributions'
+import type { FooterColumnContribution, FooterItemContribution } from '#core/types/contributions'
 
 /**
  * Pure function behind the footer contributions, the counterpart of

@@ -66,7 +66,7 @@
 // registered (Settings Registry, docs/SETTINGS-REGISTRY.md) with the current
 // values; this page renders exactly that list and never names a setting.
 import type { AdminSettingsPayload } from '~~/types'
-import { initialFormValues, patchBody, settingsCards, type SettingFormValue } from '~/utils/settings-form'
+import { initialFormValues, patchBody, settingsCards, type SettingFormValue } from '#core/utils/settings-form'
 
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 

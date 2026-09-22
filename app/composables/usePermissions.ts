@@ -1,4 +1,4 @@
-import { firstAllowedAdminPath, requiredAdminCapability, validAdminSections } from '~/utils/admin-registry'
+import { firstAllowedAdminPath, requiredAdminCapability, validAdminSections } from '#core/utils/admin-registry'
 
 /**
  * Client-side mirror of the backend capability model (the backend is the real

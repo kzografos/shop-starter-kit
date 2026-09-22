@@ -1,4 +1,4 @@
-import type { AdminGroupContribution, AdminSectionContribution } from '~/types/contributions'
+import type { AdminGroupContribution, AdminSectionContribution } from '#core/types/contributions'
 
 /**
  * Pure functions behind the Admin Registry. They take the contribution lists
