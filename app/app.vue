@@ -7,9 +7,6 @@
 </template>
 
 <script setup lang="ts">
-// Site-wide LocalBusiness structured data for local SEO (project composable).
-useBusinessSchema()
-
 // Titles, icons and share cards are project data, read from `app.config`;
 // the SEO mechanism below stays Core.
 const { project } = useAppConfig()

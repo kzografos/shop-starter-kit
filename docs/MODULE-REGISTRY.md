@@ -83,7 +83,7 @@ Root: `app.module.ts`, `main.ts` — composition root, may import everything. `p
 
 ### 1.6 Project layer
 
-`app/project/utils/business.ts` (identity, address, hours, social; E6a), `assets/css/brand.css`, `app/app.config.ts` (the merged contribution lists until layers exist), `pages/{index,about,contact}.vue`, `components/BrandsMarquee.vue`, `composables/{useBusinessSchema,useOpeningHours}.ts`, `nuxt.config.ts` (locales), `PETSHOPCY-MANUAL.md`.
+`app/project/utils/business.ts` (identity, address, hours, social; E6a), `app/project/plugins/business-schema.ts` (registers the store's JSON-LD; E6c), `assets/css/brand.css`, `app/app.config.ts` (the merged contribution lists until layers exist), `pages/{index,about,contact}.vue`, `components/BrandsMarquee.vue`, `composables/{useBusinessSchema,useOpeningHours}.ts`, `nuxt.config.ts` (locales), `PETSHOPCY-MANUAL.md`.
 
 ### 1.7 Shared
 
@@ -201,7 +201,7 @@ Read from the code before any edit. "Kind" says what the dependency is made of; 
 > | Backend Core (as one package) | Ready — 0 Core→Shop code or Prisma edges, 0 file cycles; `auth↔users` folder cycle is the guard contract (rule E) | — |
 > | Backend Shop (`modules/ecommerce`) | Ready — inbound 0 from Core/Infra; `EcommerceModule` root in place (E3b); F2 (`prisma.user` reads ×2) is the remaining optional cleanup | — |
 > | Frontend Shop layer (40 files) | Ready — 0 Core→Shop code edges; 38 Shop→Core edges all on the Core surface; the 5 Core→Shop *registry* references are `app.config.ts` contributions | — |
-> | Frontend Core layer | **P1 closed by E6a, F5 closed by E6b** — brand/WhatsApp/business data are contributions; the footer renders contributed `footerColumns`/`footerItems` (Core `/account`, Shop `/products` + order/loyalty, Project `/about`, `/contact`, shipping note) and `ShopHeaderSearch` owns its placeholder key. Core→Project stays **1** (`app.vue` → `useBusinessSchema()`, deferred) | — |
+> | Frontend Core layer | **P1 closed by E6a, F5 by E6b, the last edge by E6c** — brand/WhatsApp/business data are contributions; the footer renders contributed `footerColumns`/`footerItems` (Core `/account`, Shop `/products` + order/loyalty, Project `/about`, `/contact`, shipping note) and `ShopHeaderSearch` owns its placeholder key; the store's JSON-LD is registered by the project plugin `app/project/plugins/business-schema.ts`, so `app.vue` names no project code. **Core→Project = 0** | — |
 > | `types/index.ts`, `i18n/*.json` | Mechanical split at layer time (F7) | — |
 >
 > Done: E2 (Infrastructure package), E3a (Core → `src/core/`, Shop → `src/modules/ecommerce/`, pure moves, 90 renames R100, 100 import rewrites; layer maps by top folder, units `core/<x>` / `modules/ecommerce/<x>`). E3b done (`EcommerceModule` root, `EcommercePermissions` owns the presets, `AppModule` imports one shop module — F10 closed). Next per roadmap §B2: E4 (F2, optional) / E5 (frontend Shop layer).

@@ -12,7 +12,7 @@ Related: [MODULE-REGISTRY.md](MODULE-REGISTRY.md) (module inventory, findings F1
 
 - **The backend is extraction-ready as three packages** (Infrastructure, Core, Shop/e-commerce). ~~One cleanup first: three Infrastructure adapters import `core/config/env.validation.ts` for `isXConfigured()` helpers (F1).~~ **F1 closed (same day, §8):** each provider owns its presence check; backend forbidden edges are now **0**. Zero Core→Shop code edges, zero Core→Shop Prisma access, zero file-level cycles. The `auth↔users` folder cycle is the guard/decorator contract only and does not stop Core moving as one package.
 - **The frontend Shop is extraction-ready as a Nuxt layer.** 40 shop files consume Core only through the documented surface (`useApi`, `useAuthStore`, `usePermissions`, `AccountSidebar`, admin shell, presenter registry) — 38 Shop→Core edges, all to that surface. Zero Core→Shop code edges; the 5 Core→Shop *registry* references are `app.config.ts` contributions, which is the intended composition and move with the project layer.
-- **The frontend Core is brand-free since E6a** (P1 closed): `app/project/` is a real Nuxt layer; the brand mark is an `app.config.brand` contribution, the WhatsApp button a `globalWidget`, and page titles/share cards/footer location read a `project` app.config block. 12 Core→Project edges → **1**: `app.vue` still calls the project composable `useBusinessSchema()` (composition root; see §8 P1).
+- **The frontend Core is project-free since E6c** (P1 closed by E6a, F5 by E6b): `app/project/` is a real Nuxt layer; the brand mark is an `app.config.brand` contribution, the WhatsApp button a `globalWidget`, page titles/share cards/footer location read a `project` app.config block, and the store's JSON-LD is registered by the project's own Nuxt plugin. 12 Core→Project edges → **0** — the frontend has no forbidden edge left.
 - **Shared resources**: `types/index.ts` and `i18n/*.json` are mixed but mechanically splittable; `app.config.ts` is project-owned by design. The only semantic leaks in them were removed in the pre-extraction cleanup.
 - **Recommended first slice**: backend Infrastructure package (F1 is done, so it is a pure move) **or** frontend Shop layer — both are low-risk and reversible; the doc recommends the backend Infrastructure move because it proves the move mechanics with the smallest blast radius. Full order in §11.
 
@@ -92,7 +92,7 @@ Not present in this codebase (checked): cart persistence (cart is a client Pinia
 
 | Path | Category | Owner | Important dependencies | Status | Blocker | Notes |
 |---|---|---|---|---|---|---|
-| `app.vue` | CORE / PRESENTATION | core | `useBusinessSchema()` (**PROJECT**, the one remaining Core→Project edge) | Ready with note | — | SEO values come from `app.config.project` since E6a; the mechanism (`useHead`/`useSeoMeta`) stays here |
+| `app.vue` | CORE / PRESENTATION | core | `app.config.project`, `runtimeConfig.public.siteUrl` | Ready | — | SEO values come from `app.config.project` since E6a; the mechanism (`useHead`/`useSeoMeta`) stays here. Since E6c it names no project code: the JSON-LD is registered by `project/plugins/business-schema.ts` |
 | `layouts/default.vue`, `components/layout/AppHeader.vue`, `AppFooter.vue` | CORE / PRESENTATION | core | `app.config` `navItems/headerActions/globalWidgets` (dynamic `<component :is>`), `BrandLockup` (**PROJECT**), `WhatsAppButton` (**PROJECT**), `utils/business.ts` (**PROJECT**), footer hard-codes `/products`, `/account/orders` (**F5**) | Blocked | P1, F5 | Registry-driven for actions/widgets; brand and footer links are not |
 | `layouts/admin.vue` + `pages/admin/index.vue`… shell parts (`AdminIcon`, `AdminInfo`, `DateRangeControl`) | CORE / PRESENTATION | core | `useAdminRegistry`, `usePermissions`, `useAdminNotifications`, `BrandLockup` (**PROJECT**) | Blocked (brand only) | P1 | Sections from `app.config.adminSections` — no section knowledge in the shell |
 | `pages/login.vue`, `forgot-password.vue`, `reset-password.vue`, `auth/callback.vue`, `unsubscribe.vue` | CORE / PRESENTATION | core | `useApi`, `useAuthStore`, `BrandLockup` (**PROJECT**), `utils/business.ts` (unsubscribe) | Blocked (brand only) | P1 | |
@@ -175,7 +175,7 @@ Not present in this codebase (checked): cart persistence (cart is a client Pinia
 | SHOP → CORE | 38 | `useApi` (21), `useAuthStore` (8), `AccountSidebar` (4), `AdminInfo` (2), `DateRangeControl` (1), `notification-presenters` (2) | Allowed — exactly the documented Core surface |
 | SHOP → SHARED | 12 | `types/index.ts` | Split with F7 |
 | CORE → SHARED | 12 | `types/index.ts`, `types/contributions.ts` | Core-owned declarations only (checked: `Profile`, `Notification*`, `Setting*`, contributions) |
-| **CORE → PROJECT** | **1** (was 12) | `app.vue` → `useBusinessSchema()`. The other eleven are gone (E6a): brand via `app.config.brand`, WhatsApp via `globalWidgets`, business data via the `project` app.config block | Remaining edge is the composition root's SEO call; closes when a project plugin owns it or `app.vue` joins the project layer (E7) |
+| **CORE → PROJECT** | **0** (was 12) | — | Closed: eleven edges by E6a (brand via `app.config.brand`, WhatsApp via `globalWidgets`, business data via the `project` app.config block), the last one by E6c — `project/plugins/business-schema.ts` calls `useBusinessSchema()` from inside the layer, so the project registers its own schema instead of the composition root calling into it |
 | CORE → SHOP | 0 code | — | Clean |
 | PROJECT → SHOP | 8 | `app.config.ts` contributions (5), `pages/index.vue` → `ShopProductGrid`, `ShopBrandsMarquee` and `#shop/types` (3) | By design: the project composes the shop |
 | PROJECT → CORE | 2 | `app.config.ts` → `NotificationBell`; `about/contact` → shell only | By design |
@@ -246,7 +246,7 @@ No frontend file cycles.
 |---|---|---|
 | ~~Backend Infrastructure~~ | ~~F1~~ done — provider-local presence rules; rule A widened | — |
 | Backend `orders`, `analytics` | F2: `UsersService.exists()` / `countCustomers()` (optional; reads only) | 2 methods, 2 call sites |
-| ~~Frontend Core shells~~ | ~~P1 + F5~~ done (E6a + E6b) — the only Core→Project edge left is `app.vue` → `useBusinessSchema()` | — |
+| ~~Frontend Core shells~~ | ~~P1 + F5 + the `app.vue` schema call~~ done (E6a + E6b + E6c) — frontend forbidden edges are 0 | — |
 | `types/index.ts`, `i18n/*.json` | F7 split (at layer creation, mechanical) | ~25 import rewrites; two JSON files → four |
 | `pages/admin/notifications/index.vue` | Decide owner (Shop) or presenter-ise | 1 page |
 | `useCurrency` | Decide owner (Core/project config vs Shop) | 1 composable |
@@ -261,7 +261,7 @@ Each step leaves the app green (`npm run verify`, `pnpm lint/typecheck/test/buil
 2. **Backend folder layers** — `backend/src/{infrastructure,core,modules/ecommerce}/…` (blueprint Phase 1). *`infrastructure/` done (E2); `core/` and `modules/ecommerce/` done (E3a: 90 renames R100, 100 import rewrites, flat shop layout, `uploads` stays Core).* E3b done: `ecommerce.module.ts` shop root, presets moved (F10), `AppModule` imports `EcommerceModule`. Original text — pure moves; update the layer map in `verify-boundaries.js` and the audit script to the new paths; `verify-routes` snapshot must not change (paths are routes, not folders). Create `modules/ecommerce/ecommerce.module.ts` as the shop root and move the role presets there (F10).
 3. **F2** (optional, same PR as 2 or after) — `UsersService.exists()/countCustomers()`.
 4. **Frontend Shop layer** — `app/modules/ecommerce/{pages,components,composables,stores,utils,plugins,app.config.ts,i18n}`; `Shop*` prefixes; Shop `types` and `i18n` split out (F7, shop half). Root `nuxt.config.ts` `extends` the layer. Core→Shop still 0 by construction.
-5. **P1 (done, E6a)** + **F5** — brand contribution done; footer link contributions remain (E6b). Then **frontend Core layer** `app/core/…` with the Core half of `types`/`i18n`; the project layer keeps `app.config.ts`, brand components, `business.ts`, home/about/contact.
+5. **P1 (done, E6a)**, **F5 (done, E6b)**, **the schema call (done, E6c)** — the frontend Core owns no project code. Then **frontend Core layer** `app/core/…` with the Core half of `types`/`i18n`; the project layer keeps `app.config.ts`, brand components, `business.ts`, its plugin, home/about/contact.
 6. **Module Registry / enabled modules** (roadmap C2) — `app.module.ts` and `nuxt.config.ts` read one `modules.registry`; the audit script and `verify-boundaries` read the same registry instead of path arrays (F11).
 7. Later, only when needed: **S1** (`NotificationType` → string), **S2** (schema generation per enabled module), Event Registry code (merged `EventMap`).
 
@@ -321,7 +321,7 @@ Alternative if backend is frozen: **frontend Shop layer** (step 4) — equally r
 - `ProcessedEvent` written only by Shop `payments`: expected until a second webhook consumer exists.
 
 **Open questions (decide before the corresponding step)**
-1. ~~Brand mechanism for P1~~ decided and implemented in E6a: an explicit `app.config.brand` contribution (not a layer component override), consistent with the header/account/admin registries. Open follow-up: who calls `useBusinessSchema()` so the last Core→Project edge disappears — a project plugin (the layer convention used by `plugins/order-notifications.ts`) or moving `app.vue` into the project layer with E7.
+1. ~~Brand mechanism for P1~~ decided and implemented in E6a: an explicit `app.config.brand` contribution (not a layer component override), consistent with the header/account/admin registries. ~~Follow-up: who calls `useBusinessSchema()`~~ answered by E6c: a project plugin (`app/project/plugins/business-schema.ts`), the same layer convention as `modules/ecommerce/plugins/order-notifications.ts`. The JSON-LD is now a layer contribution to the head, not a Core call — E7 does not need to revisit it.
 2. `useCurrency`: Shop, or Core fed by project config (roadmap C3)? Affects where `Intl.NumberFormat` options live.
 3. Staff inbox page: move with Shop admin pages, or make the inbox render through the presenter registry so Core owns the page? Recommendation: move with Shop for this project; presenter-ise when a second module writes staff notifications.
 4. `NotificationType` enum (S1): change to `String` now (one small migration, before any second module) or defer? Recommendation: defer until a second module needs a type; record in DEPENDENCY-RULES §7.
