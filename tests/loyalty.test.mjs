@@ -1,6 +1,6 @@
-// Shop loyalty view of the Core profile (app/utils/loyalty.ts): the balance is a
+// Shop loyalty view of the Core profile (app/modules/ecommerce/utils/loyalty.ts): the balance is a
 // user-extension field Core does not name; absent or malformed reads as 0.
-import { loyaltyPointsOf } from '../app/utils/loyalty.ts'
+import { loyaltyPointsOf } from '../app/modules/ecommerce/utils/loyalty.ts'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 

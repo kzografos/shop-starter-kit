@@ -1,4 +1,4 @@
-import { loyaltyPointsOf } from '~/utils/loyalty'
+import { loyaltyPointsOf } from '#shop/utils/loyalty'
 
 /**
  * Shop-owned view of the signed-in customer's loyalty balance. Reads the

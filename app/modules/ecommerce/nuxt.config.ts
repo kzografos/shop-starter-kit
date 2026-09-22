@@ -12,6 +12,14 @@ export default defineNuxtConfig({
   alias: {
     '#shop': fileURLToPath(new URL('.', import.meta.url)),
   },
+  // Same flat naming the root app uses: a layer's components/ would otherwise
+  // be registered with its sub-directory as a prefix (FiltersHeaderSearch…),
+  // which would rename components and break the app.config contributions that
+  // name them. The layer prefix (`Shop*`) is E5c, done by renaming the files.
+  components: [{ path: './components', pathPrefix: false }],
+  // @pinia/nuxt scans `<srcDir>/stores` only, so a layer must name its own
+  // store directory or its stores lose their auto-import.
+  pinia: { storesDirs: [fileURLToPath(new URL('./stores/**', import.meta.url))] },
   i18n: {
     langDir: '.',
     locales: [

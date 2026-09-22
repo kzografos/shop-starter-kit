@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LoyaltyTransaction } from '~~/types'
+import type { LoyaltyTransaction } from '#shop/types'
 
 definePageMeta({ middleware: 'auth' })
 

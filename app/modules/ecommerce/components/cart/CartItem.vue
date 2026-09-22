@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CartItem } from '~~/types'
+import type { CartItem } from '#shop/types'
 
 const props = defineProps<{ item: CartItem }>()
 

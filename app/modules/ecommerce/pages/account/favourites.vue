@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Product } from '~~/types'
+import type { Product } from '#shop/types'
 
 definePageMeta({ middleware: 'auth' })
 

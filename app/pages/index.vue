@@ -207,7 +207,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Category, Product } from '~~/types'
+import type { Category, Product } from '#shop/types'
 import { BUSINESS } from '~/utils/business'
 
 const localePath = useLocalePath()

@@ -209,8 +209,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Order } from '~~/types'
-import type { LifecycleStep } from '~/composables/useOrderPresentation'
+import type { Order } from '#shop/types'
+import type { LifecycleStep } from '#shop/composables/useOrderPresentation'
 
 definePageMeta({ middleware: 'auth' })
 

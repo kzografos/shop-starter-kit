@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Order } from '~~/types'
+import type { Order } from '#shop/types'
 
 definePageMeta({ middleware: 'auth' })
 

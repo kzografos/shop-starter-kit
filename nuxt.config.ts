@@ -63,6 +63,11 @@ export default defineNuxtConfig({
 
   components: [{ path: '~/components', pathPrefix: false }],
 
+  // Each layer names its own store directory (the e-commerce layer names its
+  // own in app/modules/ecommerce/nuxt.config.ts); @pinia/nuxt's default only
+  // covers <srcDir>/stores, and naming one directory replaces that default.
+  pinia: { storesDirs: ['./stores/**'] }, // relative to srcDir (app/)
+
   i18n: {
     locales: [
       { code: 'el', name: 'Ελληνικά', file: 'el.json' },

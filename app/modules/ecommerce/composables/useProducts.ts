@@ -1,4 +1,4 @@
-import type { Product } from '~~/types'
+import type { Product } from '#shop/types'
 
 const LIMIT = 12
 

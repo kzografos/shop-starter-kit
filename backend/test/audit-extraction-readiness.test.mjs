@@ -50,9 +50,9 @@ test('negative: synthetic tree — forbidden edges, DI, auto-component and a cyc
     w('prisma/ecommerce.prisma', 'model Order {\n  id String @id\n}\n')
     // frontend: Core layout uses a Shop component through the template; Core page auto-imports a Shop store
     w('app/layouts/default.vue', '<template><div><CartButton /><UIcon /></div></template>\n')
-    w('app/components/cart/CartButton.global.vue', '<template><button>x</button></template>\n')
+    w('app/modules/ecommerce/components/cart/CartButton.global.vue', '<template><button>x</button></template>\n')
     w('app/pages/login.vue', '<template><div /></template>\n<script setup lang="ts">\nconst cart = useCartStore()\n</script>\n')
-    w('app/stores/cart.ts', 'export const useCartStore = () => ({})\n')
+    w('app/modules/ecommerce/stores/cart.ts', 'export const useCartStore = () => ({})\n')
     w('app/utils/x.ts', "// useCartStore() mentioned in a comment must not count\nexport const x = 1\n")
     w('types/index.ts', 'export interface Profile { id: string }\n')
 
@@ -69,8 +69,8 @@ test('negative: synthetic tree — forbidden edges, DI, auto-component and a cyc
     assert.deepEqual(r.backend.folderCycles, [['core/users', 'modules/ecommerce/products']])
     assert.ok(r.backend.edgeList.some((e) => e.kind === 'prisma' && e.from === 'infrastructure/mail/mail.service.ts' && e.toLayer === 'SHOP'), 'Infra touching a shop model is a prisma edge')
     const fe = r.frontend.forbidden.map((e) => `${e.from}>${e.to}:${e.kind}`)
-    assert.ok(fe.includes('layouts/default.vue>components/cart/CartButton.global.vue:auto-component'), fe.join(', '))
-    assert.ok(fe.includes('pages/login.vue>stores/cart.ts:auto-import'))
+    assert.ok(fe.includes('layouts/default.vue>modules/ecommerce/components/cart/CartButton.global.vue:auto-component'), fe.join(', '))
+    assert.ok(fe.includes('pages/login.vue>modules/ecommerce/stores/cart.ts:auto-import'))
     assert.ok(!r.frontend.edgeList.some((e) => e.from === 'utils/x.ts'), 'identifiers inside comments are ignored')
     assert.equal(r.frontend.packageComponentUses, 1, 'UIcon counted as a package component, not unresolved')
 

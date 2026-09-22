@@ -1,4 +1,4 @@
-import type { Order, OrderItem, OrderStatus } from '~~/types'
+import type { Order, OrderItem, OrderStatus } from '#shop/types'
 
 /**
  * Shared presentation of a customer order (list and detail pages): status

@@ -1,5 +1,5 @@
 import { defineStore, skipHydrate } from 'pinia'
-import type { CartItem, Product } from '~~/types'
+import type { CartItem, Product } from '#shop/types'
 
 export const useCartStore = defineStore('cart', () => {
   const items = ref<CartItem[]>([])

@@ -1,4 +1,5 @@
-import type { LoyaltyProfileExtension, Profile } from '~~/types'
+import type { Profile } from '~~/types'
+import type { LoyaltyProfileExtension } from '#shop/types'
 
 /**
  * The loyalty balance carried on a profile payload by the loyalty module's

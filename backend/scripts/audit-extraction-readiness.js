@@ -66,28 +66,19 @@ const beLayer = (rel) => {
 // Frontend: folders are Core by default; shop files are listed explicitly
 // because they still live in Core folders (MODULE-REGISTRY F8). Project =
 // this shop's own content (brand, business facts), neither Core nor Shop.
-const FE_SHOP_PREFIXES = [
-  'components/cart/', 'components/checkout/', 'components/filters/', 'components/loyalty/', 'components/product/',
-  'pages/products/', 'pages/checkout/', 'pages/account/orders/', 'pages/admin/analytics/', 'pages/admin/products/',
-  'pages/admin/categories/', 'pages/admin/orders/',
-]
-const FE_SHOP_FILES = [
-  'components/account/AccountStats.global.vue', 'components/admin/ProductDrawer.vue', 'components/BrandsMarquee.vue',
-  'pages/account/loyalty.vue', 'pages/account/favourites.vue', 'pages/admin/index.vue', 'pages/brands.vue',
-  'stores/cart.ts', 'stores/favourites.ts', 'stores/filters.ts',
-  'composables/useProducts.ts', 'composables/useCartDrawer.ts', 'composables/useOrderPresentation.ts',
-  'composables/useCurrency.ts', 'composables/useLoyalty.ts',
-  'utils/loyalty.ts', 'utils/order-notification-presenter.ts', 'plugins/order-notifications.ts',
-]
+// Shop is the e-commerce Nuxt layer (E5b): everything under it, including its
+// own `types/`. The per-file lists are empty now that the move is complete;
+// they stay as the hook for a future module that is not yet a layer.
+const FE_SHOP_PREFIXES = ['modules/ecommerce/']
+const FE_SHOP_FILES = []
 const FE_PROJECT_FILES = [
   'components/BrandLockup.vue', 'components/BrandWordmark.vue', 'components/layout/WhatsAppButton.vue',
   'composables/useBusinessSchema.ts', 'composables/useOpeningHours.ts', 'utils/business.ts',
   'pages/about.vue', 'pages/contact.vue', 'pages/index.vue', 'app.config.ts',
 ]
 const feLayer = (rel) => {
-  if (rel.startsWith('types/')) return 'SHARED' // ../types/index.ts — mixed contracts, see the doc
-  if (rel.startsWith('modules/ecommerce/')) return 'SHOP' // the e-commerce Nuxt layer (E5); the lists below cover files not yet moved into it
-  if (FE_SHOP_FILES.includes(rel) || FE_SHOP_PREFIXES.some((p) => rel.startsWith(p))) return 'SHOP'
+  if (FE_SHOP_FILES.includes(rel) || FE_SHOP_PREFIXES.some((p) => rel.startsWith(p))) return 'SHOP' // incl. modules/ecommerce/types (E5b)
+  if (rel.startsWith('types/')) return 'SHARED' // root types/index.ts — Core wire contracts
   if (FE_PROJECT_FILES.includes(rel)) return 'PROJECT'
   return 'CORE'
 }
@@ -207,17 +198,18 @@ function scanFrontend() {
   const files = [...appFiles, ...typeFiles]
   const nodes = files.map((f) => ({ file: rel(f), layer: feLayer(rel(f)) }))
   const byRel = new Map(nodes.map((n) => [n.file, n]))
-  // Nuxt auto-import tables
+  // Nuxt auto-import tables. Every layer contributes its own components/,
+  // composables/ and stores/ (E5: `modules/<module>/…`), so the tables are keyed
+  // by the directory name wherever it appears, not only at the app root.
+  const inDir = (r, dir) => r.startsWith(dir + '/') || /^modules\/[^/]+\//.test(r) && r.split('/').slice(2).join('/').startsWith(dir + '/')
   const components = new Map() // Name → rel file
-  for (const f of appFiles) {
-    const r = rel(f)
-    if (r.startsWith('components/') && r.endsWith('.vue')) components.set(path.basename(r).replace(/\.global\.vue$|\.vue$/, ''), r)
-  }
   const composables = new Map(), stores = new Map()
   for (const f of appFiles) {
     const r = rel(f)
-    if (r.startsWith('composables/')) composables.set(stripExt(path.basename(r)), r)
-    if (r.startsWith('stores/')) stores.set('use' + path.basename(stripExt(r))[0].toUpperCase() + path.basename(stripExt(r)).slice(1) + 'Store', r)
+    const base = path.basename(r)
+    if (inDir(r, 'components') && r.endsWith('.vue')) components.set(base.replace(/\.global\.vue$|\.vue$/, ''), r)
+    if (inDir(r, 'composables')) composables.set(stripExt(base), r)
+    if (inDir(r, 'stores')) stores.set('use' + stripExt(base)[0].toUpperCase() + stripExt(base).slice(1) + 'Store', r)
   }
   const aliasRoot = (spec) => {
     if (spec.startsWith('#shop/')) return path.join(FRONTEND, 'modules', 'ecommerce', spec.slice(6)) // e-commerce layer alias (its nuxt.config.ts)
