@@ -1,7 +1,10 @@
 export default defineNuxtConfig({
-  // Nuxt layers (blueprint §3): the e-commerce module is a layer under app/.
-  // Not under `layers/`, so it is listed explicitly.
-  extends: ['./app/modules/ecommerce', './app/project'],
+  // Nuxt layers (blueprint §3): Core, the e-commerce module and the project are
+  // layers under app/. Not under `layers/`, so they are listed explicitly.
+  // Earlier entries take precedence, and layer plugins run in reverse order of
+  // this list, so Core first keeps its plugins running after the module's and
+  // the project's — the position they have at the app root.
+  extends: ['./app/core', './app/modules/ecommerce', './app/project'],
 
   devtools: { enabled: false },
 
