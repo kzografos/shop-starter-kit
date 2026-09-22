@@ -20,7 +20,7 @@
  *            (`prisma.<model>` / `tx.<model>`) mapped to the schema file that
  *            owns the model, `events.emit/on('<name>')`, ConfigService /
  *            process.env use.
- *   frontend relative + `~/`, `~~/`, `@/`, `@@/`, `#shop/`, `#project/` imports (runtime vs type),
+ *   frontend relative + `~/`, `~~/`, `@/`, `@@/`, `#core/`, `#shop/`, `#project/` imports (runtime vs type),
  *            Nuxt component auto-imports found in templates (`<PascalCase`,
  *            `components/**` with pathPrefix false, `.global.vue` stripped),
  *            composable/store auto-imports (`useXxx(` → composables/useXxx.ts,
@@ -215,6 +215,7 @@ function scanFrontend() {
     if (inDir(r, 'stores')) stores.set('use' + stripExt(base)[0].toUpperCase() + stripExt(base).slice(1) + 'Store', r)
   }
   const aliasRoot = (spec) => {
+    if (spec.startsWith('#core/')) return path.join(FRONTEND, 'core', spec.slice(6)) // Core layer alias (its nuxt.config.ts)
     if (spec.startsWith('#shop/')) return path.join(FRONTEND, 'modules', 'ecommerce', spec.slice(6)) // e-commerce layer alias (its nuxt.config.ts)
     if (spec.startsWith('#project/')) return path.join(FRONTEND, 'project', spec.slice(9)) // project layer alias (its nuxt.config.ts)
     if (spec.startsWith('~~/') || spec.startsWith('@@/')) return path.join(FRONTEND, '..', spec.slice(3))
