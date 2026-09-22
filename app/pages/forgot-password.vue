@@ -3,7 +3,7 @@
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <NuxtLink :to="localePath('/')">
-          <BrandLockup class="text-2xl" />
+          <component :is="brand.component" v-if="brand" class="text-2xl" />
         </NuxtLink>
       </div>
 
@@ -50,6 +50,9 @@
 
 <script setup lang="ts">
 definePageMeta({ middleware: 'guest', layout: false })
+
+// The brand mark is the project's, contributed through `app.config.brand`.
+const brand = computed(() => useAppConfig().brand)
 
 const { t } = useI18n()
 

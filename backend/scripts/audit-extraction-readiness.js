@@ -20,7 +20,7 @@
  *            (`prisma.<model>` / `tx.<model>`) mapped to the schema file that
  *            owns the model, `events.emit/on('<name>')`, ConfigService /
  *            process.env use.
- *   frontend relative + `~/`, `~~/`, `@/`, `@@/`, `#shop/` imports (runtime vs type),
+ *   frontend relative + `~/`, `~~/`, `@/`, `@@/`, `#shop/`, `#project/` imports (runtime vs type),
  *            Nuxt component auto-imports found in templates (`<PascalCase`,
  *            `components/**` with pathPrefix false, `.global.vue` stripped),
  *            composable/store auto-imports (`useXxx(` → composables/useXxx.ts,
@@ -71,15 +71,16 @@ const beLayer = (rel) => {
 // they stay as the hook for a future module that is not yet a layer.
 const FE_SHOP_PREFIXES = ['modules/ecommerce/']
 const FE_SHOP_FILES = []
+// The project layer (E6a) plus the project-owned files that still sit at the
+// app root: the composition root's app.config and this shop's own pages.
+const FE_PROJECT_PREFIXES = ['project/']
 const FE_PROJECT_FILES = [
-  'components/BrandLockup.vue', 'components/BrandWordmark.vue', 'components/layout/WhatsAppButton.vue',
-  'composables/useBusinessSchema.ts', 'composables/useOpeningHours.ts', 'utils/business.ts',
   'pages/about.vue', 'pages/contact.vue', 'pages/index.vue', 'app.config.ts',
 ]
 const feLayer = (rel) => {
   if (FE_SHOP_FILES.includes(rel) || FE_SHOP_PREFIXES.some((p) => rel.startsWith(p))) return 'SHOP' // incl. modules/ecommerce/types (E5b)
   if (rel.startsWith('types/')) return 'SHARED' // root types/index.ts — Core wire contracts
-  if (FE_PROJECT_FILES.includes(rel)) return 'PROJECT'
+  if (FE_PROJECT_FILES.includes(rel) || FE_PROJECT_PREFIXES.some((p) => rel.startsWith(p))) return 'PROJECT'
   return 'CORE'
 }
 
@@ -201,7 +202,9 @@ function scanFrontend() {
   // Nuxt auto-import tables. Every layer contributes its own components/,
   // composables/ and stores/ (E5: `modules/<module>/…`), so the tables are keyed
   // by the directory name wherever it appears, not only at the app root.
-  const inDir = (r, dir) => r.startsWith(dir + '/') || /^modules\/[^/]+\//.test(r) && r.split('/').slice(2).join('/').startsWith(dir + '/')
+  // `components/x.vue` at the app root, `modules/<module>/components/x.vue` and
+  // `project/components/x.vue` all register the same way.
+  const inDir = (r, dir) => { const i = r.split('/').indexOf(dir); return i !== -1 && i <= 2 }
   const components = new Map() // Name → rel file
   const composables = new Map(), stores = new Map()
   for (const f of appFiles) {
@@ -213,6 +216,7 @@ function scanFrontend() {
   }
   const aliasRoot = (spec) => {
     if (spec.startsWith('#shop/')) return path.join(FRONTEND, 'modules', 'ecommerce', spec.slice(6)) // e-commerce layer alias (its nuxt.config.ts)
+    if (spec.startsWith('#project/')) return path.join(FRONTEND, 'project', spec.slice(9)) // project layer alias (its nuxt.config.ts)
     if (spec.startsWith('~~/') || spec.startsWith('@@/')) return path.join(FRONTEND, '..', spec.slice(3))
     if (spec.startsWith('~/') || spec.startsWith('@/')) return path.join(FRONTEND, spec.slice(2))
     return null
@@ -251,8 +255,8 @@ function scanFrontend() {
       if (target && target !== from) edges.push({ from, to: target, kind: 'auto-import', detail: `${name}()` })
     }
     if (/\bimport\(/.test(src)) unresolved.push({ file: from, spec: 'import()', reason: 'dynamic import not followed' })
-    // app.config component contributions: `component: 'Name'`
-    if (from === 'app.config.ts') {
+    // app.config component contributions: `component: 'Name'` — the root's and every layer's
+    if (from.endsWith('app.config.ts')) {
       for (const m of src.matchAll(/component:\s*'([A-Za-z0-9]+)'/g)) {
         const target = components.get(m[1])
         if (target) edges.push({ from, to: target, kind: 'registry', detail: `component: '${m[1]}'` })

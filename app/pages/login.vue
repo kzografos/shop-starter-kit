@@ -32,7 +32,7 @@
     >
       <div class="mb-10">
         <NuxtLink :to="localePath('/')">
-          <BrandLockup class="text-3xl hover:opacity-80 transition-opacity" />
+          <component :is="brand.component" v-if="brand" class="text-3xl hover:opacity-80 transition-opacity" />
         </NuxtLink>
       </div>
 
@@ -68,7 +68,7 @@
     >
       <!-- Mobile logo -->
       <div class="lg:hidden mb-8 flex justify-center">
-        <BrandLockup class="text-2xl" />
+        <component :is="brand.component" v-if="brand" class="text-2xl" />
       </div>
 
       <div class="w-full max-w-105 min-h-130 flex flex-col">
@@ -229,6 +229,9 @@
 
 <script setup lang="ts">
 definePageMeta({ middleware: 'guest', layout: false })
+
+// The brand mark is the project's, contributed through `app.config.brand`.
+const brand = computed(() => useAppConfig().brand)
 
 const { t, locale: currentLocale, setLocale } = useI18n()
 const api = useApi()

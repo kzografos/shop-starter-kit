@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { BUSINESS } from '~/utils/business'
+import { BUSINESS } from '#project/utils/business'
 
 defineProps<{ inverted?: boolean }>()
 

@@ -1,4 +1,4 @@
-import { BUSINESS } from '~/utils/business'
+import { BUSINESS } from '#project/utils/business'
 
 // Live "open now / closed" status based on the shop's hours in its configured timezone.
 // Client-only (null on server) to avoid SSR vs client timezone hydration mismatch.

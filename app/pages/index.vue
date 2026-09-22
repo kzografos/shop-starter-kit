@@ -208,7 +208,7 @@
 
 <script setup lang="ts">
 import type { Category, Product } from '#shop/types'
-import { BUSINESS } from '~/utils/business'
+import { BUSINESS } from '#project/utils/business'
 
 const localePath = useLocalePath()
 const { locale } = useI18n()

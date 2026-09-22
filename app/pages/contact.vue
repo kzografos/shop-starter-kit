@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { BUSINESS } from '~/utils/business'
+import { BUSINESS } from '#project/utils/business'
 
 const { t } = useI18n()
 

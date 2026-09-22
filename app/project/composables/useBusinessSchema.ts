@@ -1,6 +1,6 @@
 // Injects schema.org LocalBusiness/Store JSON-LD so the shop is eligible for
 // Google rich results (name, address, geo, hours, phone) — local SEO for the store.
-import { BUSINESS } from '~/utils/business'
+import { BUSINESS } from '#project/utils/business'
 
 export const useBusinessSchema = () => {
   const { public: { siteUrl } } = useRuntimeConfig()

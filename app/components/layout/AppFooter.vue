@@ -41,8 +41,8 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
           <!-- Brand -->
           <div class="md:col-span-1">
-            <BrandLockup inverted class="text-lg mb-4" />
-            <p class="text-sm leading-relaxed">{{ $t('footer.description', { city: BUSINESS.address.city, country: BUSINESS.address.countryName }) }}</p>
+            <component :is="brand.component" v-if="brand" inverted class="text-lg mb-4" />
+            <p class="text-sm leading-relaxed">{{ $t('footer.description', { city: project.city, country: project.country }) }}</p>
           </div>
 
           <!-- Shop -->
@@ -72,7 +72,7 @@
               <li>
                 <span class="flex items-center gap-1.5">
                   <UIcon name="i-heroicons-truck" class="w-3.5 h-3.5 text-gold shrink-0" />
-                  {{ $t('footer.shipping_info', { country: BUSINESS.address.countryName }) }}
+                  {{ $t('footer.shipping_info', { country: project.country }) }}
                 </span>
               </li>
             </ul>
@@ -80,10 +80,10 @@
         </div>
 
         <div class="mt-10 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-cream/40">
-          <span>© {{ new Date().getFullYear() }} {{ BUSINESS.legalName }}. {{ $t('footer.rights') }}</span>
+          <span>© {{ new Date().getFullYear() }} {{ project.legalName }}. {{ $t('footer.rights') }}</span>
           <span class="flex items-center gap-1">
             <UIcon name="i-heroicons-heart" class="w-3 h-3 text-terracotta" />
-            {{ $t('footer.made_with_love', { country: BUSINESS.address.countryName }) }}
+            {{ $t('footer.made_with_love', { country: project.country }) }}
           </span>
         </div>
       </div>
@@ -92,10 +92,13 @@
 </template>
 
 <script setup lang="ts">
-import { BUSINESS } from '~/utils/business'
-
 const api = useApi()
 const localePath = useLocalePath()
+// Brand mark and the store's location/legal name are the project's, read
+// from `app.config` (brand contribution + project block) instead of imported.
+const appConfig = useAppConfig()
+const brand = computed(() => appConfig.brand)
+const project = computed(() => appConfig.project)
 const { t } = useI18n()
 
 const email = ref('')

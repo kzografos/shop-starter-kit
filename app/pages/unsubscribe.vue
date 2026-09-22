@@ -3,7 +3,7 @@
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <NuxtLink :to="localePath('/')">
-          <BrandLockup class="text-2xl" />
+          <component :is="brand.component" v-if="brand" class="text-2xl" />
         </NuxtLink>
       </div>
 
@@ -60,16 +60,18 @@
 </template>
 
 <script setup lang="ts">
-import { BUSINESS } from '~/utils/business'
-
 definePageMeta({ layout: false })
+
+// The brand mark is the project's, contributed through `app.config.brand`. The store's name is project data too.
+const appConfig = useAppConfig()
+const brand = computed(() => appConfig.brand)
 
 const { t } = useI18n()
 const route = useRoute()
 const localePath = useLocalePath()
 const api = useApi()
 
-const brandName = BUSINESS.name
+const brandName = appConfig.project.name
 const email = typeof route.query.email === 'string' ? route.query.email.trim() : ''
 const token = typeof route.query.token === 'string' ? route.query.token.trim() : ''
 // Both halves come from the link in the email; a bare address is not enough.

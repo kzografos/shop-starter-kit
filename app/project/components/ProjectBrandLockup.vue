@@ -7,13 +7,13 @@
         style="width: 1.55em; height: 1.55em; font-size: 0.9em;"
         aria-hidden="true"
       >{{ monogram }}</span>
-      <BrandWordmark :inverted="inverted" />
+      <ProjectBrandWordmark :inverted="inverted" />
     </template>
   </span>
 </template>
 
 <script setup lang="ts">
-import { BUSINESS } from '~/utils/business'
+import { BUSINESS } from '#project/utils/business'
 
 defineProps<{ inverted?: boolean }>()
 

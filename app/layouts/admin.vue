@@ -5,7 +5,7 @@
       <!-- Logo -->
       <div class="admin-sidebar-head" style="flex-direction: column; align-items: flex-start; gap: 8px;">
         <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-          <BrandLockup inverted class="text-base" />
+          <component :is="brand.component" v-if="brand" inverted class="text-base" />
           <span class="admin-pill">Admin</span>
         </div>
         <NuxtLink :to="localePath('/')" class="admin-back-link">
@@ -91,6 +91,9 @@
 <script setup lang="ts">
 import type { AdminSectionContribution } from '~/types/contributions'
 import { validAdminSections } from '~/utils/admin-registry'
+
+// The brand mark is the project's, contributed through `app.config.brand`.
+const brand = computed(() => useAppConfig().brand)
 
 // The shell knows no section by name: the sidebar, the active state, the page
 // title and the landing page all come from the Admin Registry

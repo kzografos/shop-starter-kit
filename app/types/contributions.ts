@@ -29,6 +29,16 @@ export interface HeaderActionContribution {
 }
 
 /** Component mounted once in the default layout (drawers, modals, floating widgets). */
+/**
+ * The project's brand mark, rendered by the Core shells wherever the identity
+ * appears (header, footer, admin sidebar, auth pages) — `app.config.brand`.
+ * The named component is a globally registered one and accepts an optional
+ * `inverted` boolean for dark surfaces.
+ */
+export interface BrandContribution {
+  component: string
+}
+
 export interface GlobalWidgetContribution {
   component: string
   order: number
