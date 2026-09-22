@@ -1,4 +1,4 @@
-// useApi (app/composables/useApi.ts): success, 401 → refresh → one retry,
+// useApi (app/core/composables/useApi.ts): success, 401 → refresh → one retry,
 // refresh failure → hook + original error, no refresh for /auth/ urls,
 // 403/404/409 untouched, single-flight refresh across instances, FormData and
 // headers passed through untouched.
@@ -23,7 +23,7 @@ globalThis.$fetch = async (url, opts) => {
 // import.meta.client is not set by plain Node; the composable falls back to
 // the per-instance path, which is also what the server uses. The shared-tab
 // path is exercised in the browser harness.
-const { useApi } = await import('../app/composables/useApi.ts')
+const { useApi } = await import('../app/core/composables/useApi.ts')
 
 beforeEach(() => { calls.length = 0; responses = []; hooks.length = 0 })
 

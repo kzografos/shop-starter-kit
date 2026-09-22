@@ -4,7 +4,7 @@
 // It owns the base URL, the credentials policy and the 401 → refresh → retry
 // dance. It knows nothing about stores: when a refresh fails it announces
 // `api:unauthenticated` on the Nuxt app hooks and whoever owns the session
-// (plugins/auth-hooks.ts) reacts. That keeps useApi ← store one-directional.
+// (core/plugins/auth-hooks.ts) reacts. That keeps useApi ← store one-directional.
 //
 // Errors are ofetch `FetchError`s, rethrown untouched: callers read
 // `err.data.message` (the backend payload) and `err.response.status` /
