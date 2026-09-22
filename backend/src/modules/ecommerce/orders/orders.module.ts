@@ -22,7 +22,8 @@ import { OrderNotificationsService } from './order-notifications.service'
   // GuestOrderLinkerService subscribes to Core's user.authenticated event on init.
   // PricingSettingsService registers the pricing settings (definitions, defaults,
   // groups) with Core settings on init; Core serves the public read at GET /settings.
-  // OrdersPermissions registers the order capabilities and the shop staff-role presets.
+  // OrdersPermissions registers the order capabilities (the shop staff-role
+  // presets are registered by EcommercePermissions at the shop root).
   // OrdersUserExtension registers the `_count.orders` field of /admin/customers.
   providers: [OrdersService, GuestOrderLinkerService, PricingSettingsService, OrdersPermissions, OrdersUserExtension, OrderNotificationsService],
   // OrderNotificationsService is exported for the payment webhook, which

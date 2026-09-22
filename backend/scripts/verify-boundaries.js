@@ -66,7 +66,9 @@ const topFolder = (relFile) => (relFile.includes('/') ? relFile.split('/')[0] : 
 const unitOf = (relFile) => {
   const parts = relFile.split('/')
   if (parts.length < 3) return null
-  return parts[0] === 'modules' ? parts.slice(0, 3).join('/') : parts.slice(0, 2).join('/')
+  // `modules/<module>/<file>` (the module root, e.g. ecommerce.module.ts) belongs to `modules/<module>`
+  if (parts[0] === 'modules') return parts.slice(0, parts.length > 3 ? 3 : 2).join('/')
+  return parts.slice(0, 2).join('/')
 }
 const layerOf = (folder) => (INFRA.includes(folder) ? 'INFRA' : CORE.includes(folder) ? 'CORE' : SHOP.includes(folder) ? 'SHOP' : folder === null ? 'ROOT' : 'UNMAPPED')
 

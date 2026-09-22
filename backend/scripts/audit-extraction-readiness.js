@@ -297,7 +297,9 @@ function folderCycles(edges) {
   const folder = (f) => {
     const parts = f.split('/')
     if (parts.length < 3) return '(root)'
-    return parts[0] === 'modules' ? parts.slice(0, 3).join('/') : parts.slice(0, 2).join('/')
+    // `modules/<module>/<file>` (module root files) belong to unit `modules/<module>`
+    if (parts[0] === 'modules') return parts.slice(0, parts.length > 3 ? 3 : 2).join('/')
+    return parts.slice(0, 2).join('/')
   }
   const pairs = new Set()
   for (const e of edges) if (e.kind !== 'type' && e.kind !== 'prisma') { const a = folder(e.from), b = folder(e.to); if (a !== b) pairs.add(`${a}>${b}`) }

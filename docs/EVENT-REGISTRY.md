@@ -85,7 +85,7 @@ Category: infrastructure event (Redis key deletion). Synchronous, idempotent, fa
 
 ### 1.6 Boot-time registry contributions (not runtime events)
 
-`OnModuleInit` hooks that *register* rather than react: `CatalogPermissions`, `OrdersPermissions`, `AnalyticsPermissions` (capabilities/presets), `PricingSettingsService` (settings + groups), `LoyaltyUserExtension`, `OrdersUserExtension` (profile fields), `GuestOrderLinkerService` (the one bus subscription), `PrismaService` (`$connect`), `MinioStorageAdapter` (client). Ordering: Nest initialises modules in import order; duplicate registrations fail boot. Not events; listed so they are not mistaken for ones.
+`OnModuleInit` hooks that *register* rather than react: `CatalogPermissions`, `OrdersPermissions`, `AnalyticsPermissions` (capabilities), `EcommercePermissions` (shop staff-role presets, at the shop root since E3b), `PricingSettingsService` (settings + groups), `LoyaltyUserExtension`, `OrdersUserExtension` (profile fields), `GuestOrderLinkerService` (the one bus subscription), `PrismaService` (`$connect`), `MinioStorageAdapter` (client). Ordering: Nest initialises modules in import order; duplicate registrations fail boot. Not events; listed so they are not mistaken for ones.
 
 ### 1.7 Frontend event-like mechanisms
 

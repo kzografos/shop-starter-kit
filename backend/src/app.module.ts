@@ -12,19 +12,13 @@ import { MailModule } from './infrastructure/mail/mail.module'
 import { HealthModule } from './infrastructure/health/health.module'
 import { AuthModule } from './core/auth/auth.module'
 import { UsersModule } from './core/users/users.module'
-import { ProductsModule } from './modules/ecommerce/products/products.module'
-import { CategoriesModule } from './modules/ecommerce/categories/categories.module'
-import { OrdersModule } from './modules/ecommerce/orders/orders.module'
-import { PaymentsModule } from './modules/ecommerce/payments/payments.module'
-import { LoyaltyModule } from './modules/ecommerce/loyalty/loyalty.module'
-import { FavouritesModule } from './modules/ecommerce/favourites/favourites.module'
+import { EcommerceModule } from './modules/ecommerce/ecommerce.module'
 import { NewsletterModule } from './core/newsletter/newsletter.module'
 import { ProfileModule } from './core/profile/profile.module'
 import { StorageModule } from './infrastructure/storage/storage.module'
 import { PaymentsProviderModule } from './infrastructure/payments-provider/payments-provider.module'
 import { UploadsModule } from './core/uploads/uploads.module'
 import { NotificationsModule } from './core/notifications/notifications.module'
-import { AnalyticsModule } from './modules/ecommerce/analytics/analytics.module'
 import { StaffModule } from './core/staff/staff.module'
 import { SettingsModule } from './core/settings/settings.module'
 
@@ -49,19 +43,13 @@ import { SettingsModule } from './core/settings/settings.module'
     HealthModule,
     AuthModule,
     UsersModule,
-    ProductsModule,
-    CategoriesModule,
-    OrdersModule,
-    PaymentsModule,
-    LoyaltyModule,
-    FavouritesModule,
+    EcommerceModule,
     NewsletterModule,
     ProfileModule,
     StorageModule,
     PaymentsProviderModule,
     UploadsModule,
     NotificationsModule,
-    AnalyticsModule,
     StaffModule,
     SettingsModule,
   ],

@@ -180,7 +180,7 @@ starter-system/
 │   └── src/
 │       ├── core/                 # auth/ (incl. permissions), users/, staff/, profile/, settings/, notifications/, newsletter/, uploads/, config/, events/  (E3a — DONE)
 │       ├── modules/
-│       │   └── ecommerce/        # products/, categories/, favourites/, orders/, payments/, loyalty/, analytics/ (flat, E3a — DONE); ecommerce.module.ts (E3b)
+│       │   └── ecommerce/        # products/, categories/, favourites/, orders/, payments/, loyalty/, analytics/ (flat, E3a — DONE); ecommerce.module.ts + ecommerce-permissions.ts (E3b — DONE)
 │       ├── infrastructure/       # prisma/, redis/, storage/, mail/, payments-provider/, health/, common/  (E2 — DONE)
 │       ├── project/              # project config loader, project seed, project-specific providers
 │       ├── app.module.ts         # composes core + enabled modules from project config
@@ -484,7 +484,7 @@ Each phase ends with a bootable, deployable system. Phases are sequential; steps
 - Separate mail/notification mechanisms from shop templates (seam 5) — **DONE (code + capability)**: the inbox is guarded by Core's `view:notifications`; remaining residue = `NotificationType` enum and `Notification.productId`/`stock` columns, deferred to the schema step.
 - Remove global frontend shop coupling (seam 9) — **DONE**: the shells are config-driven — `app.config` contribution lists (`navItems`, `headerActions`, `globalWidgets`, `accountItems`, `accountCards`) read via `useAppConfig()` and rendered by registered component name (`.global.vue`); no Core shell imports a shop store, component, state key or i18n key. Open residue: `AppFooter` links; `header.search_placeholder` read by the shop search component.
 - Fix the `useApi ↔ useAuthStore` cycle — **DONE** (`api:unauthenticated` Nuxt hook + `plugins/auth-hooks.ts`); migrate raw `$fetch` calls to `useApi` — **DONE** (`docs/USEAPI-MIGRATION.md`; one justified SSR exception; refresh single-flight made per-tab).
-- Introduce backend folder layers (`core/`, `modules/ecommerce/`, `infrastructure/`) — **DONE (E2 + E3a, pure moves; `ecommerce.module.ts` root pending in E3b)**; the multi-file Prisma schema — **DONE (seam 3b step 1)**: `backend/prisma/{core,infrastructure,ecommerce}.prisma`, `migrations/` in place, datamodel diff empty, no migration created. Seam 3b step 2 (`UserRole` enum → `role String` migration) remains open.
+- Introduce backend folder layers (`core/`, `modules/ecommerce/`, `infrastructure/`) — **DONE (E2 + E3a pure moves; E3b `EcommerceModule` root with the shop role presets)**; the multi-file Prisma schema — **DONE (seam 3b step 1)**: `backend/prisma/{core,infrastructure,ecommerce}.prisma`, `migrations/` in place, datamodel diff empty, no migration created. Seam 3b step 2 (`UserRole` enum → `role String` migration) remains open.
 
 ### Phase 2 — Registries and Module Boundaries
 
