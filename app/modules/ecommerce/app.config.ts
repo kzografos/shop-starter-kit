@@ -6,6 +6,7 @@ import type {
   FooterItemContribution,
   GlobalWidgetContribution,
   HeaderActionContribution,
+  HomeSectionContribution,
   NavItemContribution,
 } from '#core/types/contributions'
 
@@ -31,6 +32,14 @@ export default defineAppConfig({
   globalWidgets: [
     { component: 'ShopCartDrawer', order: 10 },
   ] satisfies GlobalWidgetContribution[],
+
+  // Home page sections (E8d2). Order 10 is left free for the categories rail,
+  // which moves here in E8d3, so the rendered order stays categories → deals →
+  // brands.
+  homeSections: [
+    { component: 'ShopHomeDeals', order: 20 },
+    { component: 'ShopBrandsMarquee', order: 30 },
+  ] satisfies HomeSectionContribution[],
 
   // Account sidebar entries and dashboard cards.
   accountItems: [
