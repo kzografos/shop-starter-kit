@@ -89,6 +89,17 @@ export interface HomeSectionContribution {
 }
 
 /**
+ * Item rendered inline in the home page's closing banner, beside the project's
+ * own promises. A module contributes the one line it can make good on (E8d4) —
+ * the loyalty promise belongs to the module that runs the programme, so a
+ * project without it simply shows one item fewer.
+ */
+export interface HomeBannerItemContribution {
+  component: string
+  order: number
+}
+
+/**
  * An admin section (Admin Registry). The admin shell renders the sidebar,
  * decides which sections a staff member sees, resolves the page title and the
  * landing page after login from this list alone — it never names a section.
@@ -143,6 +154,7 @@ declare module 'nuxt/schema' {
     accountItems?: AccountItemContribution[]
     accountCards?: AccountCardContribution[]
     homeSections?: HomeSectionContribution[]
+    homeBannerItems?: HomeBannerItemContribution[]
     adminGroups?: AdminGroupContribution[]
     adminSections?: AdminSectionContribution[]
   }

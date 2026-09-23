@@ -68,10 +68,12 @@
             <UIcon name="i-heroicons-truck" class="w-5 h-5 text-gold" />
             {{ $t('footer.shipping_info', { country: BUSINESS.address.countryName }) }}
           </span>
-          <span class="flex items-center gap-2">
-            <UIcon name="i-heroicons-star" class="w-5 h-5 text-gold" />
-            {{ $t('loyalty.earn_info') }}
-          </span>
+          <!-- Module promises — contributed through app.config `homeBannerItems`. -->
+          <component
+            :is="item.component"
+            v-for="item in homeBannerItems"
+            :key="item.component"
+          />
           <span class="flex items-center gap-2">
             <UIcon name="i-heroicons-shield-check" class="w-5 h-5 text-gold" />
             {{ $t('home.vet_approved') }}
@@ -93,6 +95,9 @@ const appConfig = useAppConfig()
 // contribute, and the page never names a module.
 const homeSections = computed(() =>
   [...(appConfig.homeSections ?? [])].sort((a, b) => a.order - b.order),
+)
+const homeBannerItems = computed(() =>
+  [...(appConfig.homeBannerItems ?? [])].sort((a, b) => a.order - b.order),
 )
 
 const stats = [

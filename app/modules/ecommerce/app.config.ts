@@ -6,6 +6,7 @@ import type {
   FooterItemContribution,
   GlobalWidgetContribution,
   HeaderActionContribution,
+  HomeBannerItemContribution,
   HomeSectionContribution,
   NavItemContribution,
 } from '#core/types/contributions'
@@ -39,6 +40,12 @@ export default defineAppConfig({
     { component: 'ShopHomeDeals', order: 20 },
     { component: 'ShopBrandsMarquee', order: 30 },
   ] satisfies HomeSectionContribution[],
+
+  // The loyalty promise in the home page's closing banner (E8d4): the shop runs
+  // the programme, so it owns both the line and its wording.
+  homeBannerItems: [
+    { component: 'ShopHomeLoyaltyNote', order: 10 },
+  ] satisfies HomeBannerItemContribution[],
 
   // Account sidebar entries and dashboard cards.
   accountItems: [
