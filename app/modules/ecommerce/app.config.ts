@@ -33,10 +33,9 @@ export default defineAppConfig({
     { component: 'ShopCartDrawer', order: 10 },
   ] satisfies GlobalWidgetContribution[],
 
-  // Home page sections (E8d2). Order 10 is left free for the categories rail,
-  // which moves here in E8d3, so the rendered order stays categories → deals →
-  // brands.
+  // Home page sections (E8d2, E8d3), in the order the storefront shows them.
   homeSections: [
+    { component: 'ShopHomeCategories', order: 10 },
     { component: 'ShopHomeDeals', order: 20 },
     { component: 'ShopBrandsMarquee', order: 30 },
   ] satisfies HomeSectionContribution[],
