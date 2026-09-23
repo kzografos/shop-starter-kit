@@ -182,6 +182,14 @@
     <!-- Brands marquee -->
     <ShopBrandsMarquee />
 
+    <!-- Module sections — contributed through app.config `homeSections` (E8d).
+         The sections above move in here as contributions in the next slices. -->
+    <component
+      :is="section.component"
+      v-for="section in homeSections"
+      :key="section.component"
+    />
+
     <!-- Shipping info banner -->
     <section class="bg-bark border-y border-bark-light/20">
       <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
@@ -213,6 +221,13 @@ import { BUSINESS } from '#project/utils/business'
 const localePath = useLocalePath()
 const { locale } = useI18n()
 const api = useApi()
+const appConfig = useAppConfig()
+
+// Home sections contributed by the enabled modules (E8d); empty until they
+// contribute, and the page never names a module.
+const homeSections = computed(() =>
+  [...(appConfig.homeSections ?? [])].sort((a, b) => a.order - b.order),
+)
 
 // On-sale products for the Deals rail (client-only fetch — non-blocking).
 const { data: dealsData } = useAsyncData('home-deals', () =>

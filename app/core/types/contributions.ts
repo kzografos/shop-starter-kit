@@ -78,6 +78,17 @@ export interface AccountCardContribution {
 }
 
 /**
+ * Section rendered on the project's home page, between the hero and the closing
+ * banner. A module contributes what it has to show there (E8d) instead of the
+ * page naming it, so the home page holds no module knowledge and a disabled
+ * module simply contributes nothing.
+ */
+export interface HomeSectionContribution {
+  component: string
+  order: number
+}
+
+/**
  * An admin section (Admin Registry). The admin shell renders the sidebar,
  * decides which sections a staff member sees, resolves the page title and the
  * landing page after login from this list alone — it never names a section.
@@ -131,6 +142,7 @@ declare module 'nuxt/schema' {
     footerItems?: FooterItemContribution[]
     accountItems?: AccountItemContribution[]
     accountCards?: AccountCardContribution[]
+    homeSections?: HomeSectionContribution[]
     adminGroups?: AdminGroupContribution[]
     adminSections?: AdminSectionContribution[]
   }
