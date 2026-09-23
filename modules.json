@@ -1,0 +1,12 @@
+{
+  "modules": [
+    {
+      "id": "ecommerce",
+      "enabled": true,
+      "nuxtLayer": "./app/modules/ecommerce",
+      "backendDir": "modules/ecommerce",
+      "prismaSchema": "ecommerce.prisma",
+      "nuxtModules": ["nuxt-charts"]
+    }
+  ]
+}

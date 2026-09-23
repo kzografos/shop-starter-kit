@@ -1,10 +1,16 @@
+import { enabledModuleLayers } from './modules.registry'
+
 export default defineNuxtConfig({
-  // Nuxt layers (blueprint §3): Core, the e-commerce module and the project are
-  // layers under app/. Not under `layers/`, so they are listed explicitly.
-  // Earlier entries take precedence, and layer plugins run in reverse order of
-  // this list, so Core first keeps its plugins running after the module's and
-  // the project's — the position they have at the app root.
-  extends: ['./app/core', './app/modules/ecommerce', './app/project'],
+  // Nuxt layers (blueprint §3): Core, the enabled application modules and the
+  // project are layers under app/. Not under `layers/`, so they are listed
+  // explicitly — the module ones come from modules.json (E8a), so enabling or
+  // disabling a module is a registry edit rather than a config edit.
+  //
+  // The order is the composition's, not the registry's: earlier entries take
+  // precedence and layer plugins run in reverse order of this list, so Core
+  // first keeps its plugins running after the modules' and the project's — the
+  // position they have at the app root.
+  extends: ['./app/core', ...enabledModuleLayers, './app/project'],
 
   devtools: { enabled: false },
 
@@ -64,12 +70,9 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/brand.css', '~/assets/css/main.css', '~/assets/css/admin.css'],
 
-  components: [{ path: '~/components', pathPrefix: false }],
-
-  // Each layer names its own store directory (the e-commerce layer names its
-  // own in app/modules/ecommerce/nuxt.config.ts); @pinia/nuxt's default only
-  // covers <srcDir>/stores, and naming one directory replaces that default.
-  pinia: { storesDirs: ['./stores/**'] }, // relative to srcDir (app/)
+  // Components and stores are declared by the layers that own them
+  // (app/core, app/modules/*, app/project); the app root holds neither since
+  // E7c/E7d.
 
   i18n: {
     locales: [
