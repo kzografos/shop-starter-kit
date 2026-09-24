@@ -38,6 +38,7 @@
 
 const fs = require('node:fs')
 const path = require('node:path')
+const registry = require('./lib/modules-registry')
 
 // ── CLI ──────────────────────────────────────────────────────────
 const argv = process.argv.slice(2)
@@ -69,7 +70,12 @@ const beLayer = (rel) => {
 // Shop is the e-commerce Nuxt layer (E5b): everything under it, including its
 // own `types/`. The per-file lists are empty now that the move is complete;
 // they stay as the hook for a future module that is not yet a layer.
-const FE_SHOP_PREFIXES = ['modules/ecommerce/']
+// Module layer prefixes relative to the Nuxt srcDir, derived from each
+// descriptor's `nuxtLayer` (E9b3). `repoRoot` is the parent of the frontend
+// root so a synthetic tree (`--frontend`) resolves its own layers, not the
+// repository's. Registered modules count whether or not they are enabled: the
+// files are there either way, and the layer they belong to does not change.
+const FE_SHOP_PREFIXES = registry.frontendPrefixes({ frontendRoot: FRONTEND, repoRoot: path.dirname(FRONTEND) })
 const FE_SHOP_FILES = []
 // The project layer (E6a) plus the project-owned files that still sit at the
 // app root: the composition root's app.config and this shop's own pages.
@@ -77,6 +83,8 @@ const FE_PROJECT_PREFIXES = ['project/']
 const FE_PROJECT_FILES = [
   'pages/about.vue', 'pages/contact.vue', 'pages/index.vue', 'app.config.ts',
 ]
+const MODULE_ALIASES = registry.frontendAliases({ frontendRoot: FRONTEND, repoRoot: path.dirname(FRONTEND) })
+
 const feLayer = (rel) => {
   if (FE_SHOP_FILES.includes(rel) || FE_SHOP_PREFIXES.some((p) => rel.startsWith(p))) return 'SHOP' // incl. modules/ecommerce/types (E5b)
   if (rel.startsWith('types/')) return 'SHARED' // root types/index.ts — Core wire contracts
@@ -216,7 +224,12 @@ function scanFrontend() {
   }
   const aliasRoot = (spec) => {
     if (spec.startsWith('#core/')) return path.join(FRONTEND, 'core', spec.slice(6)) // Core layer alias (its nuxt.config.ts)
-    if (spec.startsWith('#shop/')) return path.join(FRONTEND, 'modules', 'ecommerce', spec.slice(6)) // e-commerce layer alias (its nuxt.config.ts)
+    // Module layer aliases (`#shop` → modules/ecommerce) read from each layer's
+    // own nuxt.config.ts by the registry helper (E9b3), so a module's alias is
+    // never assumed from its id.
+    for (const [alias, dir] of Object.entries(MODULE_ALIASES)) {
+      if (spec.startsWith(alias + '/')) return path.join(FRONTEND, dir, spec.slice(alias.length + 1))
+    }
     if (spec.startsWith('#project/')) return path.join(FRONTEND, 'project', spec.slice(9)) // project layer alias (its nuxt.config.ts)
     if (spec.startsWith('~~/') || spec.startsWith('@@/')) return path.join(FRONTEND, '..', spec.slice(3))
     if (spec.startsWith('~/') || spec.startsWith('@/')) return path.join(FRONTEND, spec.slice(2))
