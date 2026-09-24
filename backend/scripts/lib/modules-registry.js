@@ -150,6 +150,35 @@ function frontendAliases({ registryPath = DEFAULTS.registry, frontendRoot = DEFA
   return aliases
 }
 
+/**
+ * Module directories that exist on disk but no descriptor claims (E9b4).
+ *
+ * Only the immediate children of `<backendSrc>/modules` count: a module is a
+ * directory there, and anything deeper belongs to one. Registration is what is
+ * checked, not enablement — a registered module that is switched off is still
+ * declared, while an undeclared directory is composed by nobody and would be
+ * dead code the layer map silently treats as a module.
+ *
+ * Returns paths in the same shape as `backendDirs()` (`modules/payments`).
+ */
+function unregisteredBackendDirs({ registryPath = DEFAULTS.registry, backendSrc = DEFAULTS.backendSrc } = {}) {
+  const registered = new Set(backendDirs({ registryPath }))
+  const parents = new Set(backendDirs({ registryPath }).map((d) => d.split('/')[0]))
+  // Nothing registered yet: `modules/` is still the layer, so look there.
+  if (!parents.size) parents.add('modules')
+  const found = []
+  for (const parent of parents) {
+    const root = path.join(backendSrc, parent)
+    if (!fs.existsSync(root)) continue
+    for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue
+      const dir = `${parent}/${entry.name}`
+      if (!registered.has(dir)) found.push(dir)
+    }
+  }
+  return found.sort()
+}
+
 // ── Helpers ──────────────────────────────────────────────────────
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -180,5 +209,6 @@ module.exports = {
   moduleModels,
   moduleCapabilities,
   frontendAliases,
+  unregisteredBackendDirs,
   DEFAULTS,
 }

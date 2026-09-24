@@ -19,12 +19,13 @@
     "test": "node --test \"test/**/*.test.mjs\"",
     "modules:generate": "node scripts/generate-modules-enabled.js",
     "verify:modules": "node scripts/generate-modules-enabled.js --check",
+    "verify:registry": "node scripts/verify-module-registry.js",
     "verify:boundaries": "node scripts/verify-boundaries.js",
     "verify:routes": "node scripts/verify-routes.js",
     "verify:routes:update": "node scripts/verify-routes.js --update",
     "verify:providers": "node scripts/verify-providers.js",
     "audit:extraction": "node scripts/audit-extraction-readiness.js",
-    "verify": "npm run verify:modules && npm run typecheck && npm run build && npm test && npm run verify:boundaries && npm run verify:routes && npm run verify:providers"
+    "verify": "npm run verify:modules && npm run verify:registry && npm run typecheck && npm run build && npm test && npm run verify:boundaries && npm run verify:routes && npm run verify:providers"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
