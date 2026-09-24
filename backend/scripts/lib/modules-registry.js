@@ -29,6 +29,7 @@ const DEFAULTS = {
   backendSrc: path.join(REPO, 'backend', 'src'),
   frontend: path.join(REPO, 'app'),
   prisma: path.join(REPO, 'backend', 'prisma'),
+  dist: path.join(REPO, 'backend', 'dist'),
 }
 
 const posix = (p) => p.split(path.sep).join('/')
@@ -179,6 +180,54 @@ function unregisteredBackendDirs({ registryPath = DEFAULTS.registry, backendSrc 
   return found.sort()
 }
 
+/**
+ * Controllers a module **declares**, i.e. the `controllers` array of the Nest
+ * modules that live inside its own directory (E9c1).
+ *
+ * Ownership is the declaration site, and nothing else:
+ *
+ *  - `imports` are NOT followed. The shop imports Core modules, so walking
+ *    imports would claim `UsersAdminController`, `SettingsController`,
+ *    `NotificationsController` and `UploadsController` for the shop — Core
+ *    controllers it merely depends on.
+ *  - route paths are NOT consulted. They do not separate owners either: the
+ *    shop serves `/profile/loyalty` and several `/admin/*` routes, both of
+ *    which Core also uses.
+ *
+ * Unlike the rest of this file this reads the **build**, because a Nest
+ * module's `controllers` metadata only exists on the compiled class. That is
+ * acceptable for the route tooling, which already requires `npm run build`
+ * and runs after it; nothing here is imported by Nest runtime code.
+ *
+ * Returns controller class names, sorted and de-duplicated: a controller
+ * declared by two modules of the same module directory is still one owner.
+ */
+function declaredControllers({ registryPath = DEFAULTS.registry, distRoot = DEFAULTS.dist, backendDir } = {}) {
+  const dirs = backendDir ? [backendDir] : backendDirs({ registryPath })
+  const names = new Set()
+  // Nest's decorators store metadata through reflect-metadata; without it every
+  // lookup returns undefined and the caller would read "this module owns
+  // nothing". Loaded here rather than at module scope so the other helpers stay
+  // dependency-free.
+  require('reflect-metadata')
+  if (typeof Reflect.getMetadata !== 'function') throw new Error('modules-registry: reflect-metadata did not install Reflect.getMetadata; controller ownership cannot be read')
+  for (const dir of dirs) {
+    const root = path.join(distRoot, dir)
+    if (!fs.existsSync(root)) continue
+    for (const file of walk(root)) {
+      if (!file.endsWith('.module.js')) continue
+      for (const exported of Object.values(require(file))) {
+        if (typeof exported !== 'function') continue
+        // Only the module's own declaration; `imports` is deliberately ignored.
+        for (const controller of Reflect.getMetadata('controllers', exported) ?? []) {
+          if (controller && controller.name) names.add(controller.name)
+        }
+      }
+    }
+  }
+  return [...names].sort()
+}
+
 // ── Helpers ──────────────────────────────────────────────────────
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -210,5 +259,6 @@ module.exports = {
   moduleCapabilities,
   frontendAliases,
   unregisteredBackendDirs,
+  declaredControllers,
   DEFAULTS,
 }
