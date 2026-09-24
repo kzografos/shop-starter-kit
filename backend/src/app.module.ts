@@ -12,7 +12,6 @@ import { MailModule } from './infrastructure/mail/mail.module'
 import { HealthModule } from './infrastructure/health/health.module'
 import { AuthModule } from './core/auth/auth.module'
 import { UsersModule } from './core/users/users.module'
-import { EcommerceModule } from './modules/ecommerce/ecommerce.module'
 import { NewsletterModule } from './core/newsletter/newsletter.module'
 import { ProfileModule } from './core/profile/profile.module'
 import { StorageModule } from './infrastructure/storage/storage.module'
@@ -21,6 +20,7 @@ import { UploadsModule } from './core/uploads/uploads.module'
 import { NotificationsModule } from './core/notifications/notifications.module'
 import { StaffModule } from './core/staff/staff.module'
 import { SettingsModule } from './core/settings/settings.module'
+import { enabledModules } from './modules.composition'
 
 @Module({
   imports: [
@@ -43,7 +43,6 @@ import { SettingsModule } from './core/settings/settings.module'
     HealthModule,
     AuthModule,
     UsersModule,
-    EcommerceModule,
     NewsletterModule,
     ProfileModule,
     StorageModule,
@@ -52,6 +51,9 @@ import { SettingsModule } from './core/settings/settings.module'
     NotificationsModule,
     StaffModule,
     SettingsModule,
+    // The application modules modules.json enables (E9a). Core and
+    // infrastructure above are always composed; these are the optional ones.
+    ...enabledModules,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
