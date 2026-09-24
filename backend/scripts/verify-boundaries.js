@@ -29,6 +29,7 @@
 
 const fs = require('node:fs')
 const path = require('node:path')
+const registry = require('./lib/modules-registry')
 
 const SRC = path.resolve(__dirname, '..', 'src')
 
@@ -38,12 +39,13 @@ const CORE = ['core'] // auth, users, profile, staff, settings, notifications, n
 const SHOP = ['modules'] // modules/ecommerce/{products, categories, favourites, orders, payments, loyalty, analytics} (E3a)
 // app.module.ts / main.ts at the root are the composition root and may import everything.
 
-// Capabilities owned by the shop (permissions.ts is itself a documented seam-3
-// violation; this list is what rule C checks in Core controllers).
-const SHOP_CAPABILITIES = ['view:finance', 'view:orders', 'manage:orders', 'view:catalog', 'manage:catalog', 'manage:inventory']
-
-// Prisma models owned by the shop (blueprint §9).
-const SHOP_MODELS = ['order', 'orderItem', 'product', 'category', 'favourite', 'loyaltyTransaction', 'loyaltyAccount']
+// Capabilities and Prisma models owned by the modules, derived from the Module
+// Registry (E9b2): the ids each module's `*-permissions.ts` defines, and the
+// models its `prismaSchema` declares. The registry supplies these module facts;
+// the rules below stay the architecture. Every registered module counts, enabled
+// or not — its files are still present, and Core still must not reach into them.
+const SHOP_CAPABILITIES = registry.moduleCapabilities({ backendSrc: SRC })
+const SHOP_MODELS = registry.moduleModels()
 
 // ── Baseline: known violations at Pass 10, with the seam that removes them ──
 // Format: rule, file (relative to src, forward slashes), detail (must match the finding text exactly)
