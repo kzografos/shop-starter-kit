@@ -65,6 +65,21 @@ export interface ProjectIdentityContribution {
   }
 }
 
+/**
+ * The project's regional settings as Core and the modules read them —
+ * `app.config.region`. The project layer supplies the values, `satisfies`
+ * this contract; like `ProjectIdentityContribution`, it is deliberately NOT
+ * declared on `CustomAppConfig`, so a missing `region` fails typecheck in
+ * whatever reads it (C3a).
+ *
+ * Only what cannot be derived belongs here: the currency symbol, for one,
+ * comes from `Intl` for the active locale, never from this contract.
+ */
+export interface RegionContribution {
+  /** ISO 4217 currency code of every price this shop shows (`'EUR'`). */
+  currency: string
+}
+
 export interface GlobalWidgetContribution {
   component: string
   order: number

@@ -1,6 +1,6 @@
 // Injects schema.org LocalBusiness/Store JSON-LD so the shop is eligible for
 // Google rich results (name, address, geo, hours, phone) — local SEO for the store.
-import { BUSINESS } from '#project/project.config'
+import { BUSINESS, REGION } from '#project/project.config'
 
 export const useBusinessSchema = () => {
   const { public: { siteUrl } } = useRuntimeConfig()
@@ -18,7 +18,7 @@ export const useBusinessSchema = () => {
     // invalid structured data and can invalidate the whole Store entity.
     ...(BUSINESS.phone ? { telephone: BUSINESS.phone } : {}),
     priceRange: '€€',
-    currenciesAccepted: 'EUR',
+    currenciesAccepted: REGION.currency,
     address: {
       '@type': 'PostalAddress',
       streetAddress: BUSINESS.address.street,

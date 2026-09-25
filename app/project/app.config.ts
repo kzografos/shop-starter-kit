@@ -1,5 +1,5 @@
-import { BUSINESS } from './project.config'
-import type { BrandContribution, FooterColumnContribution, FooterItemContribution, GlobalWidgetContribution, NavItemContribution, ProjectIdentityContribution } from '#core/types/contributions'
+import { BUSINESS, REGION } from './project.config'
+import type { BrandContribution, FooterColumnContribution, FooterItemContribution, GlobalWidgetContribution, NavItemContribution, ProjectIdentityContribution, RegionContribution } from '#core/types/contributions'
 
 // Project contributions. Nuxt merges every layer's app.config with the root's
 // (objects deep-merge, arrays concatenate), so the entries below are added to
@@ -28,6 +28,11 @@ export default defineAppConfig({
       madeWithLoveKey: 'footer.made_with_love',
     },
   } satisfies ProjectIdentityContribution,
+
+  // The project's regional settings, for the core and the modules (C3e).
+  region: {
+    currency: REGION.currency,
+  } satisfies RegionContribution,
 
   // Header links to the project's two static pages (C3b). The shell sorts
   // every layer's entries by `order`.

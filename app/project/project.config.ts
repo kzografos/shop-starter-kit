@@ -51,6 +51,13 @@ export const BUSINESS = {
   ],
 }
 
+// Regional settings (C3e). The currency every price is shown in; the core
+// and the modules receive it through `app.config.region`, never from here.
+// The backend charges in its own configured currency — keep the two equal.
+export const REGION = {
+  currency: 'EUR',
+}
+
 // The languages this shop is served in, and the one served without a URL
 // prefix (C3d). Build-time: the root nuxt.config.ts reads them for
 // @nuxtjs/i18n, which keeps the mechanism (strategy, detection, langDir).
