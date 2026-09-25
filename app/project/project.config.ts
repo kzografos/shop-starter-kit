@@ -50,3 +50,16 @@ export const BUSINESS = {
     { days: ['Saturday'], opens: '09:00', closes: '15:00' },
   ],
 }
+
+// The languages this shop is served in, and the one served without a URL
+// prefix (C3d). Build-time: the root nuxt.config.ts reads them for
+// @nuxtjs/i18n, which keeps the mechanism (strategy, detection, langDir).
+// `file` names the root message file for that locale. `as const`: the i18n
+// module types locale codes as a literal union.
+export const LOCALES = {
+  locales: [
+    { code: 'el', name: 'Ελληνικά', file: 'el.json' },
+    { code: 'en', name: 'English', file: 'en.json' },
+  ],
+  defaultLocale: 'el',
+} as const

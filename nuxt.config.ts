@@ -1,4 +1,5 @@
 import { enabledModuleLayers } from './modules.registry'
+import { LOCALES } from './app/project/project.config'
 
 export default defineNuxtConfig({
   // Nuxt layers (blueprint §3): Core, the enabled application modules and the
@@ -74,12 +75,11 @@ export default defineNuxtConfig({
   // (app/core, app/modules/*, app/project); the app root holds neither since
   // E7c/E7d.
 
+  // Which locales, and the default, are the project's (C3d); how they are
+  // routed and detected is the composition's.
   i18n: {
-    locales: [
-      { code: 'el', name: 'Ελληνικά', file: 'el.json' },
-      { code: 'en', name: 'English', file: 'en.json' },
-    ],
-    defaultLocale: 'el',
+    locales: [...LOCALES.locales],
+    defaultLocale: LOCALES.defaultLocale,
     langDir: '.',
     strategy: 'prefix_except_default',
     detectBrowserLanguage: false,
