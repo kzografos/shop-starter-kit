@@ -77,11 +77,11 @@ const beLayer = (rel) => {
 // files are there either way, and the layer they belong to does not change.
 const FE_SHOP_PREFIXES = registry.frontendPrefixes({ frontendRoot: FRONTEND, repoRoot: path.dirname(FRONTEND) })
 const FE_SHOP_FILES = []
-// The project layer (E6a) plus the project-owned files that still sit at the
-// app root: the composition root's app.config and this shop's own pages.
+// The project layer (E6a) plus the one project-owned file that stays at the
+// app root: the composition root's app.config.
 const FE_PROJECT_PREFIXES = ['project/']
 const FE_PROJECT_FILES = [
-  'pages/about.vue', 'pages/contact.vue', 'pages/index.vue', 'app.config.ts',
+  'app.config.ts',
 ]
 const MODULE_ALIASES = registry.frontendAliases({ frontendRoot: FRONTEND, repoRoot: path.dirname(FRONTEND) })
 
