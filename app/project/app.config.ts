@@ -1,5 +1,5 @@
 import { BUSINESS } from './utils/business'
-import type { BrandContribution, FooterColumnContribution, FooterItemContribution, GlobalWidgetContribution, ProjectIdentityContribution } from '#core/types/contributions'
+import type { BrandContribution, FooterColumnContribution, FooterItemContribution, GlobalWidgetContribution, NavItemContribution, ProjectIdentityContribution } from '#core/types/contributions'
 
 // Project contributions. Nuxt merges every layer's app.config with the root's
 // (objects deep-merge, arrays concatenate), so the entries below are added to
@@ -28,6 +28,13 @@ export default defineAppConfig({
       madeWithLoveKey: 'footer.made_with_love',
     },
   } satisfies ProjectIdentityContribution,
+
+  // Header links to the project's two static pages (C3b). The shell sorts
+  // every layer's entries by `order`.
+  navItems: [
+    { to: '/about', labelKey: 'nav.about', order: 30 },
+    { to: '/contact', labelKey: 'nav.contact', order: 40 },
+  ] satisfies NavItemContribution[],
 
   globalWidgets: [
     { component: 'ProjectWhatsAppButton', order: 20 },
