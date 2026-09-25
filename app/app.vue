@@ -18,7 +18,7 @@ const ogImageUrl = `${base}${project.ogImage}`
 
 // Global SEO defaults — pages that set their own title override the template body.
 // To rebrand: swap public/favicon.svg, public/apple-touch-icon.png, public/og-image.png
-// and the brand.favicon / brand.ogImage paths in app/project/utils/business.ts.
+// and the brand.favicon / brand.ogImage paths in app/project/project.config.ts.
 useHead({
   titleTemplate: (title) => (title ? `${title} · ${project.name}` : project.legalName),
   link: [

@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { BUSINESS } from '#project/utils/business'
+import { BUSINESS } from '#project/project.config'
 
 const { t } = useI18n()
 

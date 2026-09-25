@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { BUSINESS } from '#project/utils/business'
+import { BUSINESS } from '#project/project.config'
 
 const enabled = BUSINESS.brand.whatsappEnabled && !!BUSINESS.whatsapp
 const whatsappUrl = `https://wa.me/${BUSINESS.whatsapp}`

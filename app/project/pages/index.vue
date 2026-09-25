@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { BUSINESS } from '#project/utils/business'
+import { BUSINESS } from '#project/project.config'
 
 const localePath = useLocalePath()
 const { locale } = useI18n()
