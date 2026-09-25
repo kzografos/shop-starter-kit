@@ -43,9 +43,11 @@ const path = require('node:path')
 const registry = require('./lib/modules-registry')
 
 const BACKEND = path.resolve(__dirname, '..')
-const REGISTRY = path.resolve(BACKEND, '..', 'modules.json')
-const PRISMA = path.join(BACKEND, 'prisma')
-const SRC = path.join(BACKEND, 'src')
+// The registry's own roots, so `prismaSchema` and `backendDir` resolve exactly
+// as they do for moduleModels(), backendDirs() and the other registry tooling.
+const REGISTRY = registry.DEFAULTS.registry
+const PRISMA = registry.DEFAULTS.prisma
+const SRC = registry.DEFAULTS.backendSrc
 // Core's own schema files: always part of the schema, and the only files that
 // may carry regions.
 const BASE = ['core.prisma', 'infrastructure.prisma']
