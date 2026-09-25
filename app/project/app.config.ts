@@ -1,5 +1,5 @@
 import { BUSINESS } from './utils/business'
-import type { BrandContribution, FooterColumnContribution, FooterItemContribution, GlobalWidgetContribution } from '#core/types/contributions'
+import type { BrandContribution, FooterColumnContribution, FooterItemContribution, GlobalWidgetContribution, ProjectIdentityContribution } from '#core/types/contributions'
 
 // Project contributions. Nuxt merges every layer's app.config with the root's
 // (objects deep-merge, arrays concatenate), so the entries below are added to
@@ -27,7 +27,7 @@ export default defineAppConfig({
       rightsKey: 'footer.rights',
       madeWithLoveKey: 'footer.made_with_love',
     },
-  },
+  } satisfies ProjectIdentityContribution,
 
   globalWidgets: [
     { component: 'ProjectWhatsAppButton', order: 20 },

@@ -39,6 +39,32 @@ export interface BrandContribution {
   component: string
 }
 
+/**
+ * The project's identity as the Core shells and `app.vue` read it —
+ * `app.config.project`. Core renders these values and never names a project:
+ * the project layer supplies them, `satisfies` this contract.
+ *
+ * Like `BrandContribution`, it is deliberately NOT declared on
+ * `CustomAppConfig`: a declared key reads as present even when no layer
+ * provides it, which would let a missing project identity typecheck (C3a).
+ */
+export interface ProjectIdentityContribution {
+  name: string
+  legalName: string
+  tagline: string
+  favicon: string
+  ogImage: string
+  city: string
+  country: string
+  /** i18n keys carrying the project's footer copy. */
+  footer: {
+    descriptionKey: string
+    shippingKey: string
+    rightsKey: string
+    madeWithLoveKey: string
+  }
+}
+
 export interface GlobalWidgetContribution {
   component: string
   order: number
