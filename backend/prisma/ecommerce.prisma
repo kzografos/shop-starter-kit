@@ -1,8 +1,9 @@
 // ─── E-commerce module (ARCHITECTURE-BLUEPRINT §9) ───────────
 //
 // Owned by the shop: catalogue, orders, loyalty, favourites and their enums.
-// The relation fields on `User` these models point at are declared in
-// core.prisma (Prisma keeps a model in one block).
+// The relation fields on `User` these models point at are owned by this module
+// too, in src/modules/ecommerce/prisma/User.relations.fragment; Prisma keeps a
+// model in one block, so scripts/generate-prisma-schema.js writes them into core.prisma.
 
 // ─── Categories ──────────────────────────────────────────────
 

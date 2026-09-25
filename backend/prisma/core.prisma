@@ -1,10 +1,13 @@
 // ─── Core (ARCHITECTURE-BLUEPRINT §9) ────────────────────────
 //
 // Identity, settings, subscribers, notifications. A Prisma model is a single
-// block, so the back-relations that e-commerce models declare on `User`
-// (orders, favourites, loyaltyTransactions, loyaltyAccount) live here even
-// though the owning side is in ecommerce.prisma. `User` carries no module
-// scalar columns: the loyalty balance is `LoyaltyAccount.points` (seam 2).
+// block, so the back-relation fields a module's models need on `User` cannot
+// live in the module's own schema file. Each module owns them as a fragment
+// (src/<backendDir>/prisma/User.relations.fragment), and
+// scripts/generate-prisma-schema.js writes them into the generated region
+// inside `User`. With no module registered the region is empty and this file
+// is a valid Core schema on its own. `User` carries no module scalar columns:
+// the loyalty balance is `LoyaltyAccount.points` (seam 2).
 // `role` is a plain string: values are lowercase (`customer`, `admin`, plus
 // module-registered staff roles) — see auth/permissions.ts.
 //
@@ -45,11 +48,13 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
 
-  // Back-relations owned by the e-commerce module (ecommerce.prisma).
+  // <module-relations model="User"> generated from the registered modules' fragments — do not edit
+  // ecommerce
   orders              Order[]
   favourites          Favourite[]
   loyaltyTransactions LoyaltyTransaction[]
   loyaltyAccount      LoyaltyAccount?
+  // </module-relations>
   notifications       Notification[]
 
   @@map("users")
