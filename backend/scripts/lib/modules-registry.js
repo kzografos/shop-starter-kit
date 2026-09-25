@@ -203,32 +203,68 @@ function unregisteredBackendDirs({ registryPath = DEFAULTS.registry, backendSrc 
  * declared by two modules of the same module directory is still one owner.
  */
 function declaredControllers({ registryPath = DEFAULTS.registry, distRoot = DEFAULTS.dist, backendDir } = {}) {
-  const dirs = backendDir ? [backendDir] : backendDirs({ registryPath })
   const names = new Set()
-  // Nest's decorators store metadata through reflect-metadata; without it every
-  // lookup returns undefined and the caller would read "this module owns
-  // nothing". Loaded here rather than at module scope so the other helpers stay
-  // dependency-free.
+  eachDeclaredModule({ registryPath, distRoot, backendDir }, (moduleClass) => {
+    // Only the module's own declaration; `imports` is deliberately ignored.
+    for (const controller of Reflect.getMetadata('controllers', moduleClass) ?? []) {
+      if (controller && controller.name) names.add(controller.name)
+    }
+  })
+  return [...names].sort()
+}
+
+/**
+ * Nest modules a module **declares**: the classes its own `*.module.js` files
+ * export (E9d2a). The sibling of `declaredControllers`, and the same rule —
+ * ownership is the declaration site.
+ *
+ * A class name says nothing about ownership and is never used to decide it:
+ * `PaymentsModule` is the shop's, `PaymentsProviderModule` is infrastructure,
+ * and only the directory a class is declared in separates them.
+ *
+ * Every exported class of a `*.module.js` counts. The narrower rule — "has
+ * `@Module` metadata" — would silently drop a module declared as `@Module({})`,
+ * whereas a non-module class exported from such a file fails loudly in the
+ * caller instead of disappearing from the check.
+ *
+ * Reads the build, for the reason given on `declaredControllers`. Returns class
+ * names, sorted and de-duplicated.
+ */
+function declaredModules({ registryPath = DEFAULTS.registry, distRoot = DEFAULTS.dist, backendDir } = {}) {
+  const names = new Set()
+  eachDeclaredModule({ registryPath, distRoot, backendDir }, (moduleClass) => {
+    if (moduleClass.name) names.add(moduleClass.name)
+  })
+  return [...names].sort()
+}
+
+// ── Helpers ──────────────────────────────────────────────────────
+
+/**
+ * Visit every class exported by the compiled `*.module.js` files of the given
+ * module directories (all registered ones when `backendDir` is omitted).
+ *
+ * Nest's decorators store metadata through reflect-metadata; without it every
+ * lookup returns undefined and the caller would read "this module declares
+ * nothing". Loaded here rather than at module scope so the file-reading helpers
+ * stay dependency-free.
+ */
+function eachDeclaredModule({ registryPath, distRoot, backendDir }, visit) {
   require('reflect-metadata')
-  if (typeof Reflect.getMetadata !== 'function') throw new Error('modules-registry: reflect-metadata did not install Reflect.getMetadata; controller ownership cannot be read')
+  if (typeof Reflect.getMetadata !== 'function') throw new Error('modules-registry: reflect-metadata did not install Reflect.getMetadata; module ownership cannot be read')
+  const dirs = backendDir ? [backendDir] : backendDirs({ registryPath })
   for (const dir of dirs) {
     const root = path.join(distRoot, dir)
     if (!fs.existsSync(root)) continue
     for (const file of walk(root)) {
       if (!file.endsWith('.module.js')) continue
       for (const exported of Object.values(require(file))) {
-        if (typeof exported !== 'function') continue
-        // Only the module's own declaration; `imports` is deliberately ignored.
-        for (const controller of Reflect.getMetadata('controllers', exported) ?? []) {
-          if (controller && controller.name) names.add(controller.name)
-        }
+        if (typeof exported === 'function') visit(exported)
       }
     }
   }
-  return [...names].sort()
 }
 
-// ── Helpers ──────────────────────────────────────────────────────
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name)
@@ -260,5 +296,6 @@ module.exports = {
   frontendAliases,
   unregisteredBackendDirs,
   declaredControllers,
+  declaredModules,
   DEFAULTS,
 }
