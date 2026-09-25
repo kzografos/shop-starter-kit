@@ -22,13 +22,14 @@
     "verify:registry": "node scripts/verify-module-registry.js",
     "prisma:compose": "node scripts/generate-prisma-schema.js",
     "verify:schema": "node scripts/generate-prisma-schema.js --check",
+    "verify:prisma-core-only": "node scripts/verify-prisma-core-only.js",
     "verify:boundaries": "node scripts/verify-boundaries.js",
     "verify:composition": "node scripts/verify-module-composition.js",
     "verify:routes": "node scripts/verify-routes.js",
     "verify:routes:update": "node scripts/verify-routes.js --update",
     "verify:providers": "node scripts/verify-providers.js",
     "audit:extraction": "node scripts/audit-extraction-readiness.js",
-    "verify": "npm run verify:modules && npm run verify:registry && npm run verify:schema && npm run typecheck && npm run build && npm test && npm run verify:boundaries && npm run verify:composition && npm run verify:routes && npm run verify:providers"
+    "verify": "npm run verify:modules && npm run verify:registry && npm run verify:schema && npm run verify:prisma-core-only && npm run typecheck && npm run build && npm test && npm run verify:boundaries && npm run verify:composition && npm run verify:routes && npm run verify:providers"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
