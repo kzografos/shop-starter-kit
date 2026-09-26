@@ -8,8 +8,6 @@
   "nav": {
     "home": "Home",
     "products": "Products",
-    "about": "About",
-    "contact": "Contact",
     "account": "My Account",
     "brands": "Brands",
     "admin": "Admin Panel",
@@ -18,12 +16,7 @@
   },
   "home": {
     "hero_label": "Your Favourite Online Store",
-    "hero_title": "Everything you need.",
-    "hero_title_accent": "Nothing less.",
-    "hero_subtitle": "Quality products, accessories and essentials at great prices. Free delivery across {country}.",
     "shop_now": "Shop Now",
-    "explore_brands": "Explore Brands",
-    "vet_approved": "Quality checked",
     "badge_vet": "Quality checked",
     "badge_returns": "Free 30-day returns",
     "badge_shipping": "Free shipping over €50",
@@ -94,49 +87,19 @@
     "magic_link_sent": "Check your email for the sign in link"
   },
   "about": {
-    "title": "About Us",
-    "subtitle": "Your favourite online store. Serving customers online.",
-    "story_title": "Our Story",
-    "story_p1": "We started with a simple vision: to create a place where everyone can find everything they need in one place.",
-    "story_p2": "Today we offer hundreds of products from the world's best brands, with fast delivery across {country} and expert customer service.",
-    "values_title": "Why Choose Us",
-    "value1_title": "Customer First",
-    "value1_desc": "Every product is selected with your needs and satisfaction in mind.",
-    "value2_title": "Quality & Reliability",
-    "value2_desc": "We work only with certified brands and trusted suppliers.",
-    "value3_title": "Satisfaction Guarantee",
-    "value3_desc": "Your satisfaction is our priority. No-questions-asked returns.",
     "stat_products": "Products",
     "stat_customers": "Happy Customers",
     "stat_rating": "Rating",
     "stat_since": "Est."
   },
   "contact": {
-    "title": "Get in Touch",
-    "subtitle": "We're here to help. Visit us in store or reach out anytime.",
-    "address_label": "Address",
-    "phone_label": "Phone",
-    "email_label": "Email",
-    "hours_label": "Opening Hours",
-    "hours_weekdays": "Mon–Tue, Thu–Fri",
-    "hours_wednesday": "Wednesday",
-    "hours_saturday": "Saturday",
-    "hours_sunday": "Sunday",
-    "closed": "Closed",
-    "open_now": "Open now",
-    "closed_now": "Closed now",
-    "map_title": "Store location map"
+    "email_label": "Email"
   },
   "footer": {
-    "description": "Your local online store in {city}, {country}. Quality products delivered to your door.",
-    "rights": "All rights reserved.",
-    "made_with_love": "Made with love in {country}",
     "links": "Links",
     "contact": "Info",
-    "shipping_info": "Shipping €5 | Free from €50 | {country} only",
     "shop": "Shop",
     "account_title": "Account",
-    "info": "Info",
     "loyalty": "Loyalty Points"
   },
   "newsletter": {
@@ -160,9 +123,6 @@
     "error_desc": "We couldn't process your request. Please try again later.",
     "invalid_desc": "This unsubscribe link is invalid or incomplete.",
     "back_home": "Back to store"
-  },
-  "whatsapp": {
-    "chat": "Chat on WhatsApp"
   },
   "admin": {
     "settings_load_failed": "Could not load the settings.",
@@ -328,13 +288,6 @@
     "stock": "Stock",
     "active": "Active",
     "inactive": "Inactive"
-  },
-  "hero": {
-    "tagline": "Your Favourite Online Store",
-    "stat_products": "Products",
-    "stat_customers": "Customers",
-    "stat_rating": "Rating",
-    "stat_shipping": "Free shipping"
   },
   "login": {
     "welcome_back": "Welcome back,",

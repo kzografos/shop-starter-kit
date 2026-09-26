@@ -33,6 +33,13 @@
  *   NestJS providers wired by token/factory rather than class, Prisma
  *   relations traversed through `include`/`select`, i18n keys, and anything
  *   in node_modules. Layers are a path map (below), not inferred.
+ *
+ * Report only, outside the graph (`frontend.nonTs`, N0)
+ *   who uses each key of the root locale files (`i18n/*.json`), who refers to
+ *   each `public/` asset, where each CSS custom property is defined and read
+ *   (var(), `[--x]`, and the Tailwind utilities an @theme token generates),
+ *   and which layers name each font family. Informational: nothing in it is a
+ *   forbidden edge and `--strict` ignores it.
  */
 'use strict'
 
@@ -84,11 +91,18 @@ const FE_PROJECT_FILES = [
   'app.config.ts',
 ]
 const MODULE_ALIASES = registry.frontendAliases({ frontendRoot: FRONTEND, repoRoot: path.dirname(FRONTEND) })
+// The composition root (N0): the files directly in the app root (app.vue), its
+// own plugins and its assets belong to no layer. Deliberately narrow — other
+// root folders keep the Core default. The project exception above still wins
+// for app.config.ts.
+const FE_ROOT_DIRS = ['plugins', 'assets']
 
 const feLayer = (rel) => {
   if (FE_SHOP_FILES.includes(rel) || FE_SHOP_PREFIXES.some((p) => rel.startsWith(p))) return 'SHOP' // incl. modules/ecommerce/types (E5b)
   if (rel.startsWith('types/')) return 'SHARED' // root types/index.ts — Core wire contracts
   if (FE_PROJECT_FILES.includes(rel) || FE_PROJECT_PREFIXES.some((p) => rel.startsWith(p))) return 'PROJECT'
+  if (rel.startsWith('../')) return 'ROOT' // repository-root files read by the report (nuxt.config.ts)
+  if (!rel.includes('/') || FE_ROOT_DIRS.some((d) => rel.startsWith(d + '/'))) return 'ROOT'
   return 'CORE'
 }
 
@@ -282,6 +296,111 @@ function scanFrontend() {
   return { files: nodes, edges, unresolved, packageComponents }
 }
 
+// ── Non-TypeScript ownership (report only, N0) ───────────────────
+// What the import graph cannot see: the root locale messages, the public
+// assets, CSS custom properties and font families. Consumers are found by the
+// same name-based matching as the auto-import scan (comments stripped), and a
+// consumer's layer is its file's layer. Nothing here is forbidden or enforced.
+const APP_ROOT = path.dirname(FRONTEND) // the repository root, or a synthetic tree's
+const NONTS_SKIP = new Set(['node_modules', '.nuxt', '.output', 'dist'])
+function listFiles(dir, keep, out = []) {
+  if (!fs.existsSync(dir)) return out
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) { if (!NONTS_SKIP.has(entry.name)) listFiles(full, keep, out); continue }
+    if (keep(entry.name)) out.push(full)
+  }
+  return out
+}
+const layersOf = (rels) => [...new Set(rels.map(feLayer))].sort()
+const ownerOf = (layers) => (layers.length === 0 ? 'UNREFERENCED' : layers.length === 1 ? layers[0] : 'SHARED')
+
+function scanNonTs() {
+  const relOf = (f) => posix(path.relative(FRONTEND, f))
+  const code = walk(FRONTEND, ['.ts', '.vue']).map((f) => ({ rel: relOf(f), src: stripComments(fs.readFileSync(f, 'utf8')) }))
+  const css = listFiles(FRONTEND, (n) => n.endsWith('.css')).map((f) => ({ rel: relOf(f), src: fs.readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '') }))
+  const nuxtConfig = path.join(APP_ROOT, 'nuxt.config.ts')
+  const rootConfig = fs.existsSync(nuxtConfig) ? [{ rel: relOf(nuxtConfig), src: stripComments(fs.readFileSync(nuxtConfig, 'utf8')) }] : []
+  const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+  // Root locale messages: every key, and the layers of the files that use it.
+  const i18nDir = path.join(APP_ROOT, 'i18n')
+  const flat = (o, p = '') => Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' ? flat(v, `${p}${k}.`) : [p + k]))
+  const locales = listFiles(i18nDir, (n) => n.endsWith('.json')).map((f) => ({ file: posix(path.relative(APP_ROOT, f)), keys: flat(JSON.parse(fs.readFileSync(f, 'utf8').trim())) }))
+  const allKeys = [...new Set(locales.flatMap((l) => l.keys))].sort()
+  const identicalKeySets = locales.every((l) => l.keys.length === allKeys.length)
+  // Keys built at runtime (`orders.status_${s}`, 'contact.hours_' + k) count for every key they can produce.
+  const dynamic = []
+  for (const { rel, src } of code) {
+    for (const m of src.matchAll(/`([a-z_]+\.[a-z0-9_.]*)\$\{/g)) dynamic.push({ prefix: m[1], rel })
+    for (const m of src.matchAll(/['"]([a-z_]+\.[a-z0-9_.]*)['"]\s*\+/g)) dynamic.push({ prefix: m[1], rel })
+  }
+  const keyOwner = {}
+  for (const key of allKeys) {
+    const re = new RegExp(`['"\`]${escape(key)}['"\`]`)
+    const users = code.filter(({ src }) => re.test(src)).map(({ rel }) => rel)
+    for (const d of dynamic) if (key.startsWith(d.prefix)) users.push(d.rel)
+    const layers = layersOf(users)
+    keyOwner[key] = layers.length ? layers.join('+') : 'UNREFERENCED'
+  }
+  const i18n = {
+    files: locales.map((l) => l.file), keys: allKeys.length, identicalKeySets,
+    byOwner: count(Object.values(keyOwner), (o) => o),
+    byNamespace: Object.fromEntries(Object.entries(Object.entries(keyOwner).reduce((acc, [k, o]) => {
+      const ns = k.split('.')[0]; (acc[ns] ??= {})[o] = (acc[ns][o] ?? 0) + 1; return acc
+    }, {})).sort()),
+    dynamicPrefixes: [...new Set(dynamic.map((d) => `${d.prefix}* (${feLayer(d.rel)})`))].sort(),
+    keyOwner,
+  }
+
+  // Public assets: the URL each file is served at, and who refers to it.
+  const publicDir = path.join(APP_ROOT, 'public')
+  const publicAssets = listFiles(publicDir, () => true).map((f) => {
+    const url = '/' + posix(path.relative(publicDir, f))
+    const refs = [...code, ...rootConfig].filter(({ src }) => src.includes(url)).map(({ rel }) => rel)
+    const layers = layersOf(refs)
+    return { url, owner: ownerOf(layers), layers, refs }
+  })
+
+  // CSS custom properties: where each is defined, and who reads it — through
+  // var(--x) / [--x] in CSS or templates, or, for @theme tokens, through the
+  // Tailwind utility the token generates (`--color-cream` → `bg-cream`).
+  const UTIL = '(?:bg|text|border|ring|from|to|via|fill|stroke|outline|divide|decoration|placeholder|accent|shadow|caret)'
+  const defs = new Map() // name → { files, theme }
+  for (const { rel, src } of css) {
+    const theme = [...src.matchAll(/@theme\s*\{([\s\S]*?)\n\}/g)].map((m) => m[1]).join('\n')
+    for (const m of src.matchAll(/(?:^|[{;\s])(--[A-Za-z0-9-]+)\s*:/g)) {
+      const d = defs.get(m[1]) ?? { files: new Set(), theme: false }
+      d.files.add(rel); if (new RegExp(`(?:^|[{;\\s])${escape(m[1])}\\s*:`).test(theme)) d.theme = true
+      defs.set(m[1], d)
+    }
+  }
+  const cssVariables = [...defs.keys()].sort().map((name) => {
+    const d = defs.get(name)
+    const readRe = new RegExp(`(?:var\\(\\s*|\\[)${escape(name)}(?![A-Za-z0-9-])`)
+    const readers = new Set([...css, ...code].filter(({ src }) => readRe.test(src)).map(({ rel }) => rel))
+    const util = d.theme && (/^--color-(.+)$/.exec(name)?.[1] ? new RegExp(`\\b${UTIL}-${escape(name.slice(8))}(?![A-Za-z0-9-])`) : /^--font-(.+)$/.test(name) ? new RegExp(`\\bfont-${escape(name.slice(7))}(?![A-Za-z0-9-])`) : null)
+    if (util) for (const { rel, src } of code) if (util.test(src)) readers.add(rel)
+    const definedIn = [...d.files].sort()
+    const readBy = [...readers].sort()
+    const external = readBy.filter((r) => !definedIn.includes(r))
+    return {
+      name, definedIn, theme: d.theme, readBy, readerLayers: layersOf(readBy),
+      use: readBy.length === 0 ? 'unread' : external.length ? 'cross-file' : 'local',
+    }
+  })
+
+  // Font families: loaded by the root config (Google Fonts), named in CSS or code.
+  const google = rootConfig.flatMap(({ src }) => [...src.matchAll(/family=([A-Za-z+]+)/g)].map((m) => m[1].replace(/\+/g, ' ')))
+  const named = css.flatMap(({ src }) => [...src.matchAll(/(?:font-family|--font-[\w-]+)\s*:[^;]*/g)].flatMap((m) => [...m[0].matchAll(/['"]([^'"]+)['"]/g)].map((q) => q[1])))
+  const fonts = [...new Set([...google, ...named])].sort().map((family) => {
+    const refs = [...css, ...code].filter(({ src }) => src.includes(family)).map(({ rel }) => rel)
+    return { family, loadedBy: google.includes(family) ? rootConfig.map((c) => c.rel) : [], refs, layers: layersOf(refs) }
+  })
+
+  return { i18n, publicAssets, cssVariables, fonts }
+}
+
 // ── Graph analysis ───────────────────────────────────────────────
 function cycles(nodes, edges) {
   // Tarjan SCC over runtime edges (import, di, auto-*, registry), type edges excluded
@@ -352,6 +471,8 @@ const report = {
     packageComponentUses: frontend.packageComponents,
     unresolved: frontend.unresolved,
     edgeList: frontend.edges,
+    // Report only (N0): ownership the import graph cannot see. Never forbidden.
+    nonTs: scanNonTs(),
   },
 }
 
@@ -378,6 +499,12 @@ if (flag('--json')) {
   console.log(`frontend types/ importers by layer ${JSON.stringify(report.frontend.sharedTypeImporters)}`)
   console.log(`frontend file cycles     ${report.frontend.fileCycles.length}`); report.frontend.fileCycles.forEach((c) => console.log('  ' + c.join(' ↔ ')))
   console.log(`frontend unresolved      ${report.frontend.unresolved.length}`); report.frontend.unresolved.forEach((u) => console.log(`  ${u.file}: ${u.spec} — ${u.reason}`))
+  const n = report.frontend.nonTs
+  console.log('frontend non-TypeScript ownership (report only)')
+  console.log(`  i18n ${n.i18n.files.join(', ')}: ${n.i18n.keys} keys, identical key sets: ${n.i18n.identicalKeySets ? 'yes' : 'NO'}, by owner ${JSON.stringify(n.i18n.byOwner)}`)
+  n.publicAssets.forEach((a) => console.log(`  public ${a.url}  ${a.owner}${a.layers.length > 1 ? ' (' + a.layers.join('+') + ')' : ''}  ← ${a.refs.join(', ') || '(no reference)'}`))
+  n.cssVariables.filter((v) => v.use === 'cross-file').forEach((v) => console.log(`  css ${v.name}${v.theme ? ' (@theme)' : ''}  defined ${v.definedIn.join(', ')}  read by ${v.readerLayers.join('+')} (${v.readBy.length} files)`))
+  n.fonts.forEach((f) => console.log(`  font ${f.family}  loaded ${f.loadedBy.join(', ') || '(not loaded here)'}  named by ${f.layers.join('+')} (${f.refs.length} files)`))
 }
 
 const bad = report.backend.forbidden.length + report.frontend.forbidden.length

@@ -20,7 +20,7 @@ export default defineAppConfig({
     city: BUSINESS.address.city,
     country: BUSINESS.address.countryName,
     // Which i18n keys carry this project's footer copy (E6b). The keys live in
-    // the root locale files; naming them here keeps the wording the project's.
+    // this layer's locale files (N1); naming them here keeps the wording the project's.
     footer: {
       descriptionKey: 'footer.description',
       shippingKey: 'footer.shipping_info',
