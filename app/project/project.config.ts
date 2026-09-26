@@ -65,8 +65,8 @@ export const REGION = {
 // module types locale codes as a literal union.
 export const LOCALES = {
   locales: [
-    { code: 'el', name: 'Ελληνικά', file: 'el.json' },
-    { code: 'en', name: 'English', file: 'en.json' },
+    { code: 'el', name: 'Ελληνικά', file: 'el.json', language: 'el-GR' },
+    { code: 'en', name: 'English', file: 'en.json', language: 'en-GB' },
   ],
   defaultLocale: 'el',
 } as const
