@@ -60,7 +60,7 @@
               <button class="ac-link-name" style="background: none; border: none; cursor: pointer; padding: 0; font: inherit; text-align: left;" @click="openEdit(p.id)">{{ p.name_el }}</button>
             </td>
             <td class="ac-muted">{{ p.brand || '—' }}</td>
-            <td class="ac-mono">€{{ Number(p.price).toFixed(2) }}</td>
+            <td class="ac-mono">{{ currencySymbol }}{{ Number(p.price).toFixed(2) }}</td>
             <td>
               <span :class="p.stock < 10 ? 'ac-stock-low ac-mono' : 'ac-mono'">{{ p.stock }}</span>
             </td>
@@ -129,6 +129,7 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
+const { currencySymbol } = useCurrency()
 
 // ── Sort icon component ────────────────────────────────────
 const SortIcon = defineComponent({

@@ -99,20 +99,20 @@
                 {{ locale === 'el' ? item.product.name_el : item.product.name_en }}
                 <span class="text-gray-400">× {{ item.quantity }}</span>
               </span>
-              <span class="font-medium">€{{ (Number(item.product.price) * item.quantity).toFixed(2) }}</span>
+              <span class="font-medium">{{ currencySymbol }}{{ (Number(item.product.price) * item.quantity).toFixed(2) }}</span>
             </div>
           </div>
 
           <div class="border-t pt-4 space-y-2 text-sm">
             <div class="flex justify-between">
               <span class="text-gray-600">{{ $t('cart.subtotal') }}</span>
-              <span>€{{ cartStore.subtotal.toFixed(2) }}</span>
+              <span>{{ currencySymbol }}{{ cartStore.subtotal.toFixed(2) }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-600">{{ $t('checkout.shipping_cost') }}</span>
               <span v-if="!pricingReady" class="text-gray-400">—</span>
               <span v-else-if="shippingCost === 0" class="text-success font-medium">{{ $t('checkout.free_shipping') }}</span>
-              <span v-else>€{{ shippingCost.toFixed(2) }}</span>
+              <span v-else>{{ currencySymbol }}{{ shippingCost.toFixed(2) }}</span>
             </div>
 
             <!-- Loyalty points redemption -->
@@ -123,14 +123,14 @@
               </div>
               <div v-if="usePoints" class="flex justify-between text-success">
                 <span>{{ $t('checkout.loyalty_discount') }} ({{ pointsToRedeem }} pts)</span>
-                <span>−€{{ loyaltyDiscount.toFixed(2) }}</span>
+                <span>−{{ currencySymbol }}{{ loyaltyDiscount.toFixed(2) }}</span>
               </div>
             </div>
 
             <div class="flex justify-between font-bold text-base border-t pt-2">
               <span>{{ $t('checkout.total') }}</span>
               <span v-if="!pricingReady" class="text-gray-400">—</span>
-              <span v-else>€{{ total.toFixed(2) }}</span>
+              <span v-else>{{ currencySymbol }}{{ total.toFixed(2) }}</span>
             </div>
           </div>
 
@@ -158,6 +158,7 @@ const authStore = useAuthStore()
 const { points: loyaltyPoints } = useLoyalty()
 const { locale, t } = useI18n()
 const localePath = useLocalePath()
+const { currencySymbol } = useCurrency()
 const loading = ref(false)
 const usePoints = ref(false)
 const orderError = ref('')

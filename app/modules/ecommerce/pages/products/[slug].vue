@@ -83,9 +83,9 @@
           </div>
 
           <div class="flex items-baseline gap-3 flex-wrap">
-            <p class="text-4xl font-bold" :class="onSale ? 'text-warm-red' : 'text-terracotta'">€{{ Number(product.price).toFixed(2) }}</p>
+            <p class="text-4xl font-bold" :class="onSale ? 'text-warm-red' : 'text-terracotta'">{{ currencySymbol }}{{ Number(product.price).toFixed(2) }}</p>
             <template v-if="onSale">
-              <p class="text-xl text-bark-light line-through">€{{ Number(product.compare_at_price).toFixed(2) }}</p>
+              <p class="text-xl text-bark-light line-through">{{ currencySymbol }}{{ Number(product.compare_at_price).toFixed(2) }}</p>
               <span class="bg-warm-red text-white text-sm font-bold px-2.5 py-1 rounded-full">−{{ discountPct }}%</span>
             </template>
           </div>
@@ -186,6 +186,7 @@ const { isOpen: cartOpen } = useCartDrawer()
 const favouritesStore = useFavouritesStore()
 const authStore = useAuthStore()
 const toast = useToast()
+const { currencySymbol } = useCurrency()
 const api = useApi()
 
 const selectedImage = ref(0)

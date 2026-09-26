@@ -122,29 +122,29 @@
                   <div class="min-w-0">
                     <p class="text-sm text-[--color-bark] truncate">{{ itemName(item) }}</p>
                     <p class="text-xs text-[--color-bark-light]">
-                      x{{ item.quantity }} · €{{ Number(item.unit_price).toFixed(2) }}
+                      x{{ item.quantity }} · {{ currencySymbol }}{{ Number(item.unit_price).toFixed(2) }}
                     </p>
                   </div>
                 </div>
                 <span class="text-sm font-medium text-[--color-bark] shrink-0">
-                  €{{ (Number(item.unit_price) * item.quantity).toFixed(2) }}
+                  {{ currencySymbol }}{{ (Number(item.unit_price) * item.quantity).toFixed(2) }}
                 </span>
               </div>
             </div>
             <!-- Totals -->
             <div class="border-t border-[--color-border-warm] px-5 py-4 space-y-1.5 text-sm">
               <div class="flex justify-between text-[--color-bark-light]">
-                <span>{{ $t('orders.subtotal') }}</span><span>€{{ Number(order.subtotal).toFixed(2) }}</span>
+                <span>{{ $t('orders.subtotal') }}</span><span>{{ currencySymbol }}{{ Number(order.subtotal).toFixed(2) }}</span>
               </div>
               <div class="flex justify-between text-[--color-bark-light]">
                 <span>{{ $t('orders.shipping') }}</span>
-                <span>{{ Number(order.shipping_cost) > 0 ? `€${Number(order.shipping_cost).toFixed(2)}` : $t('checkout.free_shipping') }}</span>
+                <span>{{ Number(order.shipping_cost) > 0 ? `${currencySymbol}${Number(order.shipping_cost).toFixed(2)}` : $t('checkout.free_shipping') }}</span>
               </div>
               <div v-if="Number(order.loyalty_discount) > 0" class="flex justify-between text-[--color-bark-light]">
-                <span>{{ $t('orders.discount') }}</span><span>−€{{ Number(order.loyalty_discount).toFixed(2) }}</span>
+                <span>{{ $t('orders.discount') }}</span><span>−{{ currencySymbol }}{{ Number(order.loyalty_discount).toFixed(2) }}</span>
               </div>
               <div class="flex justify-between font-semibold text-[--color-bark] pt-1.5 border-t border-[--color-border-warm]">
-                <span>{{ $t('orders.total') }}</span><span>€{{ Number(order.total).toFixed(2) }}</span>
+                <span>{{ $t('orders.total') }}</span><span>{{ currencySymbol }}{{ Number(order.total).toFixed(2) }}</span>
               </div>
             </div>
           </div>
@@ -218,6 +218,7 @@ const api = useApi()
 const route = useRoute()
 const localePath = useLocalePath()
 const { statusColor, lifecycleSteps, itemName, formatDate, repeatOrder } = useOrderPresentation()
+const { currencySymbol } = useCurrency()
 
 const { t } = useI18n()
 const toast = useToast()

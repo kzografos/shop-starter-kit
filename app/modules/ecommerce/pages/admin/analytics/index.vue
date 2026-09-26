@@ -39,7 +39,7 @@
           :data="revData"
           :height="240"
           :categories="revCategories"
-          :y-formatter="(v: any) => `€${Number(v).toFixed(0)}`"
+          :y-formatter="(v: any) => `${currencySymbol}${Number(v).toFixed(0)}`"
           :x-formatter="xFormatter"
           :x-num-ticks="6"
         />
@@ -181,6 +181,7 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 const api = useApi()
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
+const { currencySymbol } = useCurrency()
 
 type RangePayload = { from: string; to: string; granularity: 'day' | 'week' | 'month'; compare: boolean }
 interface ProdRow { id: string; name_el: string; name_en: string; units: number; revenue: number; profit: number; has_cost: boolean }
@@ -207,7 +208,7 @@ const { data, pending } = useAsyncData<Overview | null>('admin-analytics', () =>
 
 const DONUT_COLORS = ['#C97B5A', '#A8B89A', '#D4A24C', '#5A8FC9', '#6BAE7E', '#B57BA6', '#D67E6B']
 
-const money = (n: number) => `€${Math.round(n).toLocaleString('el-GR')}`
+const money = (n: number) => `${currencySymbol.value}${Math.round(n).toLocaleString('el-GR')}`
 const num = (n: number) => Math.round(n).toLocaleString('el-GR')
 
 // ── KPI cards ──

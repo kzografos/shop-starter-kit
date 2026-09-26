@@ -6,7 +6,7 @@
         <div class="ac-stat-label">Συνολικά Έσοδα<AdminInfo>{{ $t('admin.revenue_info') }}</AdminInfo></div>
         <div class="ac-stat-value">
           <template v-if="loading"><span style="opacity: 0.3">—</span></template>
-          <template v-else>€{{ Math.round(kpi.totalRevenue).toLocaleString('el-GR') }}</template>
+          <template v-else>{{ currencySymbol }}{{ Math.round(kpi.totalRevenue).toLocaleString('el-GR') }}</template>
         </div>
         <div>
           <span class="ac-trend-sub">όλων των εποχών</span>
@@ -20,7 +20,7 @@
         <div class="ac-stat-label">Έσοδα Μήνα<AdminInfo>{{ $t('admin.revenue_info') }}</AdminInfo></div>
         <div class="ac-stat-value">
           <template v-if="loading"><span style="opacity: 0.3">—</span></template>
-          <template v-else>€{{ Math.round(kpi.monthRevenue).toLocaleString('el-GR') }}</template>
+          <template v-else>{{ currencySymbol }}{{ Math.round(kpi.monthRevenue).toLocaleString('el-GR') }}</template>
         </div>
         <div v-if="!loading">
           <span class="ac-trend" :class="kpi.monthRevenueChange >= 0 ? 'up' : 'down'">
@@ -86,7 +86,7 @@
           :data="revenueChartData"
           :height="192"
           :categories="revenueCategories"
-          :y-formatter="(v: any) => `€${Number(v).toFixed(0)}`"
+          :y-formatter="(v: any) => `${currencySymbol}${Number(v).toFixed(0)}`"
           :x-formatter="revenueXFormatter"
           :x-num-ticks="6"
         />
@@ -228,7 +228,7 @@
               <span class="ac-badge-dot" />
               {{ order.status }}
             </span>
-            <span style="font-weight: 600; color: var(--ac-text);">€{{ Number(order.total).toFixed(2) }}</span>
+            <span style="font-weight: 600; color: var(--ac-text);">{{ currencySymbol }}{{ Number(order.total).toFixed(2) }}</span>
           </div>
         </div>
       </div>
@@ -241,6 +241,7 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const api = useApi()
 const localePath = useLocalePath()
+const { currencySymbol } = useCurrency()
 
 const loading = ref(true)
 

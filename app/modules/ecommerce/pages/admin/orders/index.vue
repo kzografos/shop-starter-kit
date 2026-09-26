@@ -72,7 +72,7 @@
                 <option v-for="s in optionsFor(order)" :key="s.value" :value="s.value">{{ s.label }}</option>
               </select>
             </td>
-            <td style="text-align: right; font-weight: 600;">€{{ Number(order.total).toFixed(2) }}</td>
+            <td style="text-align: right; font-weight: 600;">{{ currencySymbol }}{{ Number(order.total).toFixed(2) }}</td>
           </tr>
         </tbody>
       </table>
@@ -95,6 +95,7 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 const api = useApi()
 const { t } = useI18n()
 const toast = useToast()
+const { currencySymbol } = useCurrency()
 
 const search = ref('')
 const paymentFilter = ref('all')

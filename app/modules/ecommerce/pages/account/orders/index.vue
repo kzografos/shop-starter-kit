@@ -64,7 +64,7 @@
                 <p class="text-sm text-[--color-bark-light]">
                   {{ order.items?.length ?? 0 }} {{ $t('orders.items') }} ·
                   <span class="font-semibold text-[--color-bark]"
-                    >€{{ order.total.toFixed(2) }}</span
+                    >{{ currencySymbol }}{{ order.total.toFixed(2) }}</span
                   >
                 </p>
               </div>
@@ -102,7 +102,7 @@
                     </span>
                   </div>
                   <span class="text-sm font-medium text-[--color-bark] shrink-0">
-                    €{{ (item.unit_price * item.quantity).toFixed(2) }}
+                    {{ currencySymbol }}{{ (item.unit_price * item.quantity).toFixed(2) }}
                   </span>
                 </div>
               </div>
@@ -140,6 +140,7 @@ const { locale } = useI18n()
 // Status colours, item names, dates and "repeat order" are shared with the
 // detail page (composables/useOrderPresentation.ts).
 const { statusColor, itemName, formatDate, repeatOrder } = useOrderPresentation()
+const { currencySymbol } = useCurrency()
 
 const error = ref<string | null>(null)
 

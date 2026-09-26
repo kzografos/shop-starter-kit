@@ -118,7 +118,7 @@
 
     <!-- Price range -->
     <div>
-      <h3 class="font-semibold text-bark mb-4">{{ $t('filters.price') }} · €</h3>
+      <h3 class="font-semibold text-bark mb-4">{{ $t('filters.price') }} · {{ currencySymbol }}</h3>
       <div class="relative mb-6">
         <!-- Track -->
         <div class="relative h-1.5 bg-gray-200 rounded-full mx-2.5">
@@ -167,7 +167,7 @@
       </div>
       <div class="flex items-center gap-2 mt-2">
         <div class="relative flex-1">
-          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{ currencySymbol }}</span>
           <input
             v-model.number="localPriceMin"
             type="number"
@@ -179,7 +179,7 @@
         </div>
         <span class="text-xs text-gray-400 shrink-0">—</span>
         <div class="relative flex-1">
-          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{ currencySymbol }}</span>
           <input
             v-model.number="localPriceMax"
             type="number"
@@ -264,6 +264,7 @@ const emit = defineEmits<{ applied: [] }>()
 const filtersStore = useFiltersStore()
 const { locale } = useI18n()
 const api = useApi()
+const { currencySymbol } = useCurrency()
 
 const PRICE_ABS_MIN = 0
 const PRICE_ABS_MAX = 500

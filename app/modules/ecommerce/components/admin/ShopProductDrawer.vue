@@ -42,15 +42,15 @@
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <label class="acf">
-                <span>{{ $t('admin.price') }} (€) *</span>
+                <span>{{ $t('admin.price') }} ({{ currencySymbol }}) *</span>
                 <input v-model.number="form.price" type="number" step="0.01" min="0" />
               </label>
               <label class="acf">
-                <span>{{ $t('admin.compare_at_price') }} (€)</span>
+                <span>{{ $t('admin.compare_at_price') }} ({{ currencySymbol }})</span>
                 <input v-model.number="form.compare_at_price" type="number" step="0.01" min="0" />
               </label>
               <label class="acf">
-                <span>{{ $t('admin.cost') }} (€)</span>
+                <span>{{ $t('admin.cost') }} ({{ currencySymbol }})</span>
                 <input v-model.number="form.cost" type="number" step="0.01" min="0" />
                 <span class="acf-hint">{{ $t('admin.cost_hint') }}</span>
               </label>
@@ -147,6 +147,7 @@ const emit = defineEmits<{ saved: [] }>()
 const api = useApi()
 const { t, locale } = useI18n()
 const toast = useToast()
+const { currencySymbol } = useCurrency()
 
 const editing = computed(() => !!props.productId && props.productId !== 'new')
 
