@@ -4,14 +4,14 @@
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
       <div class="flex items-end justify-between mb-8 gap-4">
         <div>
-          <p class="text-terracotta text-xs font-semibold tracking-widest uppercase mb-2">{{ $t('home.deals_eyebrow') }}</p>
-          <h2 class="font-display text-3xl sm:text-4xl font-bold text-[--color-bark]">{{ $t('home.deals_title') }}</h2>
+          <p class="text-terracotta text-xs font-semibold tracking-widest uppercase mb-2">{{ $t('ecommerce.home.deals_eyebrow') }}</p>
+          <h2 class="font-display text-3xl sm:text-4xl font-bold text-[--color-bark]">{{ $t('ecommerce.home.deals_title') }}</h2>
         </div>
         <NuxtLink
           :to="{ path: localePath('/products'), query: { onSale: 'true' } }"
           class="shrink-0 hidden sm:inline-flex items-center gap-1 text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors"
         >
-          {{ $t('home.deals_all') }} <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
+          {{ $t('ecommerce.home.deals_all') }} <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
         </NuxtLink>
       </div>
       <ShopProductGrid :products="deals" />
@@ -20,7 +20,7 @@
           :to="{ path: localePath('/products'), query: { onSale: 'true' } }"
           class="inline-flex items-center gap-1 text-sm font-medium text-terracotta"
         >
-          {{ $t('home.deals_all') }} <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
+          {{ $t('ecommerce.home.deals_all') }} <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
         </NuxtLink>
       </div>
     </div>

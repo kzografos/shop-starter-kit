@@ -7,17 +7,17 @@
       <div class="flex items-end justify-between mb-10">
         <div>
           <p class="text-terracotta text-xs font-semibold tracking-widest uppercase mb-2">
-            {{ $t('home.categories_eyebrow') }}
+            {{ $t('ecommerce.home.categories_eyebrow') }}
           </p>
           <h2 class="font-display text-3xl sm:text-4xl font-bold text-[--color-bark]">
-            {{ $t('home.categories') }}
+            {{ $t('ecommerce.home.categories') }}
           </h2>
         </div>
         <NuxtLink
           :to="localePath('/products')"
           class="hidden sm:flex items-center gap-1.5 text-sm text-[--color-bark-light] hover:text-terracotta transition-colors"
         >
-          {{ $t('home.view_all') }}
+          {{ $t('ecommerce.home.view_all') }}
           <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
         </NuxtLink>
       </div>
@@ -67,7 +67,7 @@
           <!-- Top-left: eyebrow -->
           <div class="absolute top-4 left-4">
             <span class="text-white/50 text-xs font-medium uppercase tracking-widest">
-              {{ $t('home.category_label') }}
+              {{ $t('ecommerce.home.category_label') }}
             </span>
           </div>
 
@@ -77,7 +77,7 @@
               {{ locale === 'el' ? cat.name_el : cat.name_en }}
             </p>
             <div class="flex items-center gap-1 text-white/70 text-xs font-medium">
-              <span>{{ $t('home.explore') }}</span>
+              <span>{{ $t('ecommerce.home.explore') }}</span>
               <UIcon
                 name="i-heroicons-arrow-right"
                 class="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200"
