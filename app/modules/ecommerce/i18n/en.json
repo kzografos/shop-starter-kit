@@ -1,18 +1,4 @@
 {
-  "notifications": {
-    "order_status_title": "Order update",
-    "order_status_body": "Order {order} has changed status.",
-    "order_confirmed_title": "Order confirmed",
-    "order_confirmed_body": "Order {order} has been confirmed.",
-    "order_processing_title": "Order being prepared",
-    "order_processing_body": "Order {order} is being prepared.",
-    "order_ready_title": "Order ready",
-    "order_ready_body": "Order {order} is ready for pickup or delivery.",
-    "order_completed_title": "Order completed",
-    "order_completed_body": "Order {order} has been completed. Thank you!",
-    "order_cancelled_title": "Order cancelled",
-    "order_cancelled_body": "Order {order} has been cancelled."
-  },
   "products": {
     "search_placeholder": "Search products...",
     "title": "All Products",
@@ -286,6 +272,20 @@
       "payment_cancelled": {
         "title": "Payment Cancelled"
       }
+    },
+    "notifications": {
+      "order_status_title": "Order update",
+      "order_status_body": "Order {order} has changed status.",
+      "order_confirmed_title": "Order confirmed",
+      "order_confirmed_body": "Order {order} has been confirmed.",
+      "order_processing_title": "Order being prepared",
+      "order_processing_body": "Order {order} is being prepared.",
+      "order_ready_title": "Order ready",
+      "order_ready_body": "Order {order} is ready for pickup or delivery.",
+      "order_completed_title": "Order completed",
+      "order_completed_body": "Order {order} has been completed. Thank you!",
+      "order_cancelled_title": "Order cancelled",
+      "order_cancelled_body": "Order {order} has been cancelled."
     }
   }
 }

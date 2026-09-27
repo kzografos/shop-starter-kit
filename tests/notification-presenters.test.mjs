@@ -26,8 +26,8 @@ test('registering the shop presenter routes order_status rows through it', () =>
   assert.deepEqual(registeredNotificationTypes(), ['order_status'])
   const v = describeNotification(row('order_status', { order_id: ORDER, status: 'confirmed' }), ctx)
   assert.deepEqual(v, {
-    title: 'notifications.order_confirmed_title',
-    body: `notifications.order_confirmed_body|#${ORDER.slice(0, 8).toUpperCase()}`,
+    title: 'ecommerce.notifications.order_confirmed_title',
+    body: `ecommerce.notifications.order_confirmed_body|#${ORDER.slice(0, 8).toUpperCase()}`,
     to: `/el/account/orders/${ORDER}`,
   })
 })
@@ -35,20 +35,20 @@ test('registering the shop presenter routes order_status rows through it', () =>
 test('every known status has its own key; status case is normalised', () => {
   for (const s of ['confirmed', 'processing', 'ready', 'completed', 'cancelled']) {
     const v = describeNotification(row('order_status', { order_id: ORDER, status: s.toUpperCase() }), ctx)
-    assert.equal(v.title, `notifications.order_${s}_title`)
-    assert.equal(v.body, `notifications.order_${s}_body|#${ORDER.slice(0, 8).toUpperCase()}`)
+    assert.equal(v.title, `ecommerce.notifications.order_${s}_title`)
+    assert.equal(v.body, `ecommerce.notifications.order_${s}_body|#${ORDER.slice(0, 8).toUpperCase()}`)
   }
 })
 
 test('unknown status keeps the generic order line and still links the order', () => {
   const v = describeNotification(row('order_status', { order_id: ORDER, status: 'refunded' }), ctx)
-  assert.equal(v.title, 'notifications.order_status_title')
-  assert.equal(v.body, `notifications.order_status_body|#${ORDER.slice(0, 8).toUpperCase()}`)
+  assert.equal(v.title, 'ecommerce.notifications.order_status_title')
+  assert.equal(v.body, `ecommerce.notifications.order_status_body|#${ORDER.slice(0, 8).toUpperCase()}`)
   assert.equal(v.to, `/el/account/orders/${ORDER}`)
 })
 
 test('missing or malformed meta: no destination, empty order reference, no throw', () => {
-  assert.deepEqual(describeNotification(row('order_status', null), ctx), { title: 'notifications.order_status_title', body: 'notifications.order_status_body|', to: null })
+  assert.deepEqual(describeNotification(row('order_status', null), ctx), { title: 'ecommerce.notifications.order_status_title', body: 'ecommerce.notifications.order_status_body|', to: null })
   assert.equal(describeNotification(row('order_status', { order_id: 42, status: 7 }), ctx).to, null)
 })
 

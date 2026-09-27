@@ -2,7 +2,7 @@ import type { NotificationPresenter } from '#core/utils/notification-presenters'
 
 // Shop (orders): how an `order_status` row reads. The `meta` shape
 // (`order_id`, `status`) is what backend/src/orders/order-notifications.service.ts
-// writes; the wording keys live under `notifications.order_*`.
+// writes; the wording keys live under `ecommerce.notifications.order_*`.
 const ORDER_STATUSES = ['confirmed', 'processing', 'ready', 'completed', 'cancelled'] as const
 
 /**
@@ -16,8 +16,8 @@ export const orderStatusPresenter: NotificationPresenter = (n, { t, localePath }
   const known = (ORDER_STATUSES as readonly string[]).includes(status)
   const ref = orderId ? `#${orderId.slice(0, 8).toUpperCase()}` : ''
   return {
-    title: known ? t(`notifications.order_${status}_title`) : t('notifications.order_status_title'),
-    body: known ? t(`notifications.order_${status}_body`, { order: ref }) : t('notifications.order_status_body', { order: ref }),
+    title: known ? t(`ecommerce.notifications.order_${status}_title`) : t('ecommerce.notifications.order_status_title'),
+    body: known ? t(`ecommerce.notifications.order_${status}_body`, { order: ref }) : t('ecommerce.notifications.order_status_body', { order: ref }),
     to: orderId ? localePath(`/account/orders/${orderId}`) : null,
   }
 }
