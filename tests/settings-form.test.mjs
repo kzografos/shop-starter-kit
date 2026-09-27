@@ -7,8 +7,8 @@ import { renderableDefinitions, settingsCards, initialFormValues, patchBody } fr
 
 const D = (o) => ({ type: 'number', default: '1', group: 'g', label_key: 'l', ...o })
 const groups = [
-  { id: 'loyalty', label_key: 'admin.loyalty_settings', order: 20 },
-  { id: 'shipping', label_key: 'admin.shipping_settings', description_key: 'admin.shipping_settings_sub', icon: 'cart', order: 10 },
+  { id: 'loyalty', label_key: 'ecommerce.settings.loyalty_settings', order: 20 },
+  { id: 'shipping', label_key: 'ecommerce.settings.shipping_settings', description_key: 'ecommerce.settings.shipping_settings_sub', icon: 'cart', order: 10 },
 ]
 const definitions = [
   D({ key: 'loyalty_min_redeem', group: 'loyalty', order: 30, default: '500' }),
