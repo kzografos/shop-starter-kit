@@ -28,7 +28,7 @@
             name="i-heroicons-shopping-bag"
             class="w-16 h-16 text-[--color-bark-light] mx-auto mb-4"
           />
-          <p class="text-[--color-bark-light]">{{ $t('account.no_orders') }}</p>
+          <p class="text-[--color-bark-light]">{{ $t('ecommerce.account.no_orders') }}</p>
           <UButton :label="$t('home.shop_now')" :to="localePath('/products')" class="mt-4" />
         </div>
 

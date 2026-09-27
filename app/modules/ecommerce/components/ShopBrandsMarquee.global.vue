@@ -1,7 +1,7 @@
 <template>
   <section class="py-10 bg-cream-pale border-y border-cream">
     <h2 class="font-display text-3xl font-bold text-bark text-center mb-8">
-      {{ $t("home.brands") }}
+      {{ $t("ecommerce.home.brands") }}
     </h2>
 
     <UMarquee

@@ -57,5 +57,5 @@ async function retryPayment() {
   }
 }
 
-useSeoMeta({ title: () => t('seo.payment_cancelled.title') })
+useSeoMeta({ title: () => t('ecommerce.seo.payment_cancelled.title') })
 </script>

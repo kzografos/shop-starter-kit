@@ -7,7 +7,7 @@
       <div class="flex flex-col gap-6">
         <div>
           <h1 class="font-display text-3xl font-bold text-[--color-bark]">
-            {{ $t('account.loyalty') }}
+            {{ $t('ecommerce.account.loyalty') }}
           </h1>
           <p class="text-sm text-[--color-bark-light] mt-1">{{ $t('loyalty.subtitle') }}</p>
         </div>
@@ -36,7 +36,7 @@
                 </div>
                 <p class="text-xs text-white/50 mt-2">
                   {{ Math.max(3000 - loyaltyPoints, 0).toLocaleString() }}
-                  {{ $t('account.points_until_reward') }}
+                  {{ $t('ecommerce.account.points_until_reward') }}
                 </p>
               </div>
             </div>

@@ -259,6 +259,35 @@
       "stock": "Stock",
       "active": "Active",
       "inactive": "Inactive"
+    },
+    "account": {
+      "favourites": "Favourites",
+      "loyalty": "Reward Points",
+      "no_orders": "You have no orders yet",
+      "points_until_reward": "points until next reward",
+      "redeem": "Redeem"
+    },
+    "footer": {
+      "loyalty": "Loyalty Points",
+      "shop": "Shop"
+    },
+    "home": {
+      "brands": "Brands we carry"
+    },
+    "nav": {
+      "brands": "Brands",
+      "products": "Products"
+    },
+    "seo": {
+      "checkout": {
+        "title": "Checkout"
+      },
+      "order_confirmed": {
+        "title": "Order Confirmed"
+      },
+      "payment_cancelled": {
+        "title": "Payment Cancelled"
+      }
     }
   }
 }

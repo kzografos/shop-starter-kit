@@ -4,7 +4,7 @@
     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
       <div class="flex-1">
         <p class="text-xs font-semibold uppercase tracking-widest text-sage mb-2">
-          {{ $t('account.loyalty') }}
+          {{ $t('ecommerce.account.loyalty') }}
         </p>
         <p class="font-display text-5xl font-bold text-white mb-1">
           {{ loyaltyPoints.toLocaleString() }}
@@ -25,7 +25,7 @@
           </div>
           <p class="text-xs text-white/50 mt-2">
             {{ Math.max(3000 - loyaltyPoints, 0).toLocaleString() }}
-            {{ $t('account.points_until_reward') }}
+            {{ $t('ecommerce.account.points_until_reward') }}
           </p>
         </div>
       </div>
@@ -34,7 +34,7 @@
         :to="localePath('/account/loyalty')"
         class="shrink-0 self-start px-5 py-2.5 rounded-xl border border-white/30 text-white text-sm font-medium hover:bg-white/10 transition-colors"
       >
-        {{ $t('account.redeem') }}
+        {{ $t('ecommerce.account.redeem') }}
       </NuxtLink>
     </div>
   </div>

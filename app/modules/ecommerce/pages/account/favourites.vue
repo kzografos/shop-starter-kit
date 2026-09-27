@@ -33,7 +33,7 @@
             :to="localePath('/products')"
             class="mt-6 px-6 py-2.5 rounded-full bg-terracotta text-white text-sm font-semibold hover:bg-terracotta-dark transition-colors"
           >
-            {{ $t('nav.products') }}
+            {{ $t('ecommerce.nav.products') }}
           </NuxtLink>
         </div>
       </div>

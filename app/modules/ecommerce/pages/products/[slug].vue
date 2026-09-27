@@ -7,7 +7,7 @@
           :to="localePath('/products')"
           class="text-[--color-bark-light] hover:text-[--color-bark] transition-colors"
         >
-          {{ $t('nav.products') }}
+          {{ $t('ecommerce.nav.products') }}
         </NuxtLink>
 
         <template v-if="product.category">

@@ -259,6 +259,35 @@
       "stock": "Απόθεμα",
       "active": "Ενεργό",
       "inactive": "Ανενεργό"
+    },
+    "account": {
+      "favourites": "Αγαπημένα",
+      "loyalty": "Πόντοι Ανταμοιβής",
+      "no_orders": "Δεν έχετε παραγγελίες ακόμα",
+      "points_until_reward": "πόντοι μέχρι την επόμενη ανταμοιβή",
+      "redeem": "Εξαργύρωση"
+    },
+    "footer": {
+      "loyalty": "Πόντοι Επιβράβευσης",
+      "shop": "Κατάστημα"
+    },
+    "home": {
+      "brands": "Οι μάρκες μας"
+    },
+    "nav": {
+      "brands": "Μάρκες",
+      "products": "Προϊόντα"
+    },
+    "seo": {
+      "checkout": {
+        "title": "Ολοκλήρωση Αγοράς"
+      },
+      "order_confirmed": {
+        "title": "Επιβεβαίωση Παραγγελίας"
+      },
+      "payment_cancelled": {
+        "title": "Ακύρωση Πληρωμής"
+      }
     }
   }
 }

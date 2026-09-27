@@ -343,5 +343,5 @@ async function placeOrder() {
   }
 }
 
-useSeoMeta({ title: () => t('seo.checkout.title') })
+useSeoMeta({ title: () => t('ecommerce.seo.checkout.title') })
 </script>

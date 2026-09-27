@@ -12,7 +12,7 @@
         <p class="font-display text-2xl font-bold text-[--color-bark]">
           {{ ids.length }}
         </p>
-        <p class="text-xs text-[--color-bark-light] mt-1">{{ $t('account.favourites') }}</p>
+        <p class="text-xs text-[--color-bark-light] mt-1">{{ $t('ecommerce.account.favourites') }}</p>
       </div>
       <div class="text-center px-4">
         <p class="font-display text-2xl font-bold text-[--color-bark]">

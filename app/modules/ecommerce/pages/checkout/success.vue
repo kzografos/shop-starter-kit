@@ -111,5 +111,5 @@ function clearGuestEmail() {
   localStorage.removeItem('guest_checkout_email')
 }
 
-useSeoMeta({ title: () => t('seo.order_confirmed.title') })
+useSeoMeta({ title: () => t('ecommerce.seo.order_confirmed.title') })
 </script>

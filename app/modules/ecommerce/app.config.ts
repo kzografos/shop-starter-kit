@@ -19,8 +19,8 @@ import type {
 export default defineAppConfig({
   // Storefront nav.
   navItems: [
-    { to: '/products', labelKey: 'nav.products', order: 10 },
-    { to: '/brands', labelKey: 'nav.brands', order: 20 },
+    { to: '/products', labelKey: 'ecommerce.nav.products', order: 10 },
+    { to: '/brands', labelKey: 'ecommerce.nav.brands', order: 20 },
   ] satisfies NavItemContribution[],
 
   // Header: search in the centre zone, the cart button in the action cluster.
@@ -50,8 +50,8 @@ export default defineAppConfig({
   // Account sidebar entries and dashboard cards.
   accountItems: [
     { to: '/account/orders', icon: '📦', labelKey: 'account.orders', order: 10 },
-    { to: '/account/favourites', icon: '❤️', labelKey: 'account.favourites', order: 20 },
-    { to: '/account/loyalty', icon: '⭐', labelKey: 'account.loyalty', order: 30 },
+    { to: '/account/favourites', icon: '❤️', labelKey: 'ecommerce.account.favourites', order: 20 },
+    { to: '/account/loyalty', icon: '⭐', labelKey: 'ecommerce.account.loyalty', order: 30 },
   ] satisfies AccountItemContribution[],
   accountCards: [
     { component: 'ShopLoyaltyCard', order: 10 },
@@ -61,12 +61,12 @@ export default defineAppConfig({
   // Footer (E6b): the shop's own column plus the two order/loyalty entries of
   // the account column Core declares.
   footerColumns: [
-    { id: 'shop', labelKey: 'footer.shop', order: 20 },
+    { id: 'shop', labelKey: 'ecommerce.footer.shop', order: 20 },
   ] satisfies FooterColumnContribution[],
   footerItems: [
-    { column: 'shop', to: '/products', labelKey: 'nav.products', order: 10 },
+    { column: 'shop', to: '/products', labelKey: 'ecommerce.nav.products', order: 10 },
     { column: 'account', to: '/account/orders', labelKey: 'account.orders', order: 20 },
-    { column: 'account', to: '/account/loyalty', labelKey: 'footer.loyalty', order: 30 },
+    { column: 'account', to: '/account/loyalty', labelKey: 'ecommerce.footer.loyalty', order: 30 },
   ] satisfies FooterItemContribution[],
 
   // Admin Registry (docs/ADMIN-REGISTRY.md): the shop's sections. The groups
