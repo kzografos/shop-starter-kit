@@ -16,6 +16,9 @@ export default defineNuxtConfig({
   // Flat naming, like the root app and the e-commerce layer: the `Project*`
   // prefix lives in the filenames.
   components: [{ path: './components', pathPrefix: false }],
+  // The project's brand palette (N3): the values behind the --brand-* custom
+  // properties that main.css maps to theme tokens and admin.css reads.
+  css: [fileURLToPath(new URL('./assets/css/brand.css', import.meta.url))],
   // The project's own copy (N1): i18n/<code>.json in this layer, merged with the
   // root's and the modules' messages per locale. The locale codes are the
   // project's LOCALES; how locales are routed stays with the root nuxt.config.

@@ -69,7 +69,7 @@ export default defineNuxtConfig({
     },
   },
 
-  css: ['~/assets/css/brand.css', '~/assets/css/main.css', '~/assets/css/admin.css'],
+  css: ['~/assets/css/main.css', '~/assets/css/admin.css'],
 
   // Components and stores are declared by the layers that own them
   // (app/core, app/modules/*, app/project); the app root holds neither since
