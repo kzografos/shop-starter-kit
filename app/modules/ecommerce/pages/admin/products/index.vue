@@ -14,7 +14,7 @@
       </div>
       <button class="ac-btn-primary" @click="openCreate">
         <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-        {{ $t('admin.add_product') }}
+        {{ $t('ecommerce.admin.add_product') }}
       </button>
     </div>
 
@@ -44,7 +44,7 @@
             </th>
             <th>
               <button class="ac-sort-th" :class="{ active: sortCol === 'stock' }" @click="toggleSort('stock')">
-                {{ $t('admin.stock') }} <SortIcon :col="sortCol" :dir="sortDir" name="stock" />
+                {{ $t('ecommerce.admin.stock') }} <SortIcon :col="sortCol" :dir="sortDir" name="stock" />
               </button>
             </th>
             <th>Κατάσταση</th>
@@ -67,7 +67,7 @@
             <td>
               <span class="ac-badge" :class="p.is_active ? 'ac-badge-sage' : 'ac-badge-red'">
                 <span class="ac-badge-dot" />
-                {{ p.is_active ? $t('admin.active') : $t('admin.inactive') }}
+                {{ p.is_active ? $t('ecommerce.admin.active') : $t('ecommerce.admin.inactive') }}
               </span>
             </td>
             <td>
@@ -109,14 +109,14 @@
     <UModal v-model:open="showCsvUpload">
       <template #content>
         <div style="padding: 24px;">
-          <h3 style="font-family: Fraunces, serif; font-size: 18px; font-weight: 500; margin: 0 0 8px;">{{ $t('admin.import_csv') }}</h3>
+          <h3 style="font-family: Fraunces, serif; font-size: 18px; font-weight: 500; margin: 0 0 8px;">{{ $t('ecommerce.admin.import_csv') }}</h3>
           <p style="font-size: 13px; color: var(--ac-text-muted); margin-bottom: 16px;">
             CSV format: slug, name_el, name_en, price, stock, brand, category_slug
           </p>
           <UInput type="file" accept=".csv" @change="handleCsvUpload" />
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
             <UButton :label="$t('common.cancel')" variant="outline" @click="() => { showCsvUpload = false }" />
-            <UButton :label="$t('admin.import_csv')" :disabled="!csvFile" @click="importCsv" />
+            <UButton :label="$t('ecommerce.admin.import_csv')" :disabled="!csvFile" @click="importCsv" />
           </div>
         </div>
       </template>

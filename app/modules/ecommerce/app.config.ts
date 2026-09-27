@@ -72,10 +72,10 @@ export default defineAppConfig({
   // Admin Registry (docs/ADMIN-REGISTRY.md): the shop's sections. The groups
   // and the Core sections are contributed by app/core/app.config.ts (E7f).
   adminSections: [
-    { id: 'dashboard', path: '/admin', labelKey: 'admin.dashboard', subtitleKey: 'admin.subtitle_dashboard', icon: 'dashboard', capability: 'view:finance', order: 0, activeMatch: 'exact' },
-    { id: 'analytics', path: '/admin/analytics', labelKey: 'admin.analytics', subtitleKey: 'admin.subtitle_analytics', icon: 'chart', capability: 'view:finance', order: 10 },
-    { id: 'products', path: '/admin/products', labelKey: 'admin.products', subtitleKey: 'admin.subtitle_products', icon: 'box', capability: 'view:catalog', order: 20 },
-    { id: 'categories', path: '/admin/categories', labelKey: 'admin.categories', subtitleKey: 'admin.subtitle_categories', icon: 'tag', capability: 'view:catalog', order: 30 },
-    { id: 'orders', path: '/admin/orders', labelKey: 'admin.orders', subtitleKey: 'admin.subtitle_orders', icon: 'cart', capability: 'view:orders', order: 40 },
+    { id: 'dashboard', path: '/admin', labelKey: 'ecommerce.admin.dashboard', subtitleKey: 'ecommerce.admin.subtitle_dashboard', icon: 'dashboard', capability: 'view:finance', order: 0, activeMatch: 'exact' },
+    { id: 'analytics', path: '/admin/analytics', labelKey: 'ecommerce.admin.analytics', subtitleKey: 'ecommerce.admin.subtitle_analytics', icon: 'chart', capability: 'view:finance', order: 10 },
+    { id: 'products', path: '/admin/products', labelKey: 'ecommerce.admin.products', subtitleKey: 'ecommerce.admin.subtitle_products', icon: 'box', capability: 'view:catalog', order: 20 },
+    { id: 'categories', path: '/admin/categories', labelKey: 'ecommerce.admin.categories', subtitleKey: 'ecommerce.admin.subtitle_categories', icon: 'tag', capability: 'view:catalog', order: 30 },
+    { id: 'orders', path: '/admin/orders', labelKey: 'admin.orders', subtitleKey: 'ecommerce.admin.subtitle_orders', icon: 'cart', capability: 'view:orders', order: 40 },
   ] satisfies AdminSectionContribution[],
 })

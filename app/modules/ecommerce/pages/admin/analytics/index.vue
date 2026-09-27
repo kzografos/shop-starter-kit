@@ -27,13 +27,13 @@
     <div class="ac-card ac-chart-card" style="margin-bottom: 20px;">
       <div class="ac-card-head">
         <div>
-          <div class="ac-card-title">{{ $t('admin.revenue') }}</div>
+          <div class="ac-card-title">{{ $t('ecommerce.admin.revenue') }}</div>
           <div class="ac-card-sub">{{ granLabel }}</div>
         </div>
       </div>
       <div style="padding: 16px 20px 20px;">
         <div v-if="pending" style="height: 240px; display: flex; align-items: center; justify-content: center; color: var(--ac-text-faint);">…</div>
-        <div v-else-if="!revData.length" class="ac-empty" style="height: 240px; display: flex; align-items: center; justify-content: center;">{{ $t('admin.no_data') }}</div>
+        <div v-else-if="!revData.length" class="ac-empty" style="height: 240px; display: flex; align-items: center; justify-content: center;">{{ $t('ecommerce.admin.no_data') }}</div>
         <LineChart
           v-else
           :data="revData"
@@ -52,8 +52,8 @@
       <div class="ac-card">
         <div class="ac-card-head">
           <div>
-            <div class="ac-card-title">{{ $t('admin.category_mix') }}</div>
-            <div class="ac-card-sub">{{ $t('admin.by_revenue') }}</div>
+            <div class="ac-card-title">{{ $t('ecommerce.admin.category_mix') }}</div>
+            <div class="ac-card-sub">{{ $t('ecommerce.admin.by_revenue') }}</div>
           </div>
         </div>
         <div class="ac-card-pad">
@@ -62,7 +62,7 @@
             <div class="ac-donut-wrap">
               <svg viewBox="0 0 180 180" width="180" height="180">
                 <path v-for="(arc, i) in catArcs" :key="i" :d="arc.path" :fill="arc.color" />
-                <text x="90" y="86" text-anchor="middle" font-size="11" fill="var(--ac-text-muted)" font-family="DM Sans">{{ $t('admin.revenue') }}</text>
+                <text x="90" y="86" text-anchor="middle" font-size="11" fill="var(--ac-text-muted)" font-family="DM Sans">{{ $t('ecommerce.admin.revenue') }}</text>
                 <text x="90" y="106" text-anchor="middle" font-size="18" font-weight="500" fill="var(--ac-text)" font-family="Fraunces">{{ money(catTotal) }}</text>
               </svg>
             </div>
@@ -75,7 +75,7 @@
               </div>
             </div>
           </template>
-          <div v-else class="ac-empty">{{ $t('admin.no_data') }}</div>
+          <div v-else class="ac-empty">{{ $t('ecommerce.admin.no_data') }}</div>
         </div>
       </div>
 
@@ -83,8 +83,8 @@
       <div class="ac-card">
         <div class="ac-card-head">
           <div>
-            <div class="ac-card-title">{{ $t('admin.brand_mix') }}</div>
-            <div class="ac-card-sub">{{ $t('admin.by_revenue') }}</div>
+            <div class="ac-card-title">{{ $t('ecommerce.admin.brand_mix') }}</div>
+            <div class="ac-card-sub">{{ $t('ecommerce.admin.by_revenue') }}</div>
           </div>
         </div>
         <div style="padding: 4px 20px 16px;">
@@ -98,7 +98,7 @@
               <div class="ac-bar-value">{{ money(b.revenue) }}</div>
             </div>
           </template>
-          <div v-else class="ac-empty">{{ $t('admin.no_data') }}</div>
+          <div v-else class="ac-empty">{{ $t('ecommerce.admin.no_data') }}</div>
         </div>
       </div>
     </div>
@@ -107,13 +107,13 @@
     <div class="ac-card" style="margin-bottom: 20px;">
       <div class="ac-card-head">
         <div>
-          <div class="ac-card-title">{{ $t('admin.top_sellers') }}</div>
+          <div class="ac-card-title">{{ $t('ecommerce.admin.top_sellers') }}</div>
           <div class="ac-card-sub">{{ granLabel }}</div>
         </div>
         <div class="ac-filter-tabs">
-          <button class="ac-filter-tab" :class="{ active: metric === 'units' }" @click="metric = 'units'">{{ $t('admin.metric_units') }}</button>
-          <button class="ac-filter-tab" :class="{ active: metric === 'revenue' }" @click="metric = 'revenue'">{{ $t('admin.metric_revenue') }}</button>
-          <button class="ac-filter-tab" :class="{ active: metric === 'profit' }" @click="metric = 'profit'">{{ $t('admin.metric_profit') }}</button>
+          <button class="ac-filter-tab" :class="{ active: metric === 'units' }" @click="metric = 'units'">{{ $t('ecommerce.admin.metric_units') }}</button>
+          <button class="ac-filter-tab" :class="{ active: metric === 'revenue' }" @click="metric = 'revenue'">{{ $t('ecommerce.admin.metric_revenue') }}</button>
+          <button class="ac-filter-tab" :class="{ active: metric === 'profit' }" @click="metric = 'profit'">{{ $t('ecommerce.admin.metric_profit') }}</button>
         </div>
       </div>
       <div style="padding: 4px 20px 16px;">
@@ -127,10 +127,10 @@
             <div class="ac-bar-track"><div class="ac-bar-fill" :style="{ width: `${metricVal(p) / topMax * 100}%` }" /></div>
             <div class="ac-bar-value">{{ metric === 'units' ? metricVal(p) : money(metricVal(p)) }}</div>
           </div>
-          <p v-if="metric === 'profit' && !topList.length" class="ac-empty">{{ $t('admin.no_cost_data') }}</p>
+          <p v-if="metric === 'profit' && !topList.length" class="ac-empty">{{ $t('ecommerce.admin.no_cost_data') }}</p>
         </template>
         <div v-else class="ac-empty">
-          {{ metric === 'profit' ? $t('admin.no_cost_data') : $t('admin.no_data') }}
+          {{ metric === 'profit' ? $t('ecommerce.admin.no_cost_data') : $t('ecommerce.admin.no_data') }}
         </div>
       </div>
     </div>
@@ -139,10 +139,10 @@
     <div class="ac-card">
       <div class="ac-card-head">
         <div>
-          <div class="ac-card-title">{{ $t('admin.dead_stock') }}</div>
+          <div class="ac-card-title">{{ $t('ecommerce.admin.dead_stock') }}</div>
           <div class="ac-card-sub">
-            {{ $t('admin.dead_stock_sub') }}
-            <template v-if="!pending"> · {{ $t('admin.inventory_value') }}: {{ money(stockRetail) }}<span v-if="stockCost"> · {{ money(stockCost) }} {{ $t('admin.at_cost') }}</span></template>
+            {{ $t('ecommerce.admin.dead_stock_sub') }}
+            <template v-if="!pending"> · {{ $t('ecommerce.admin.inventory_value') }}: {{ money(stockRetail) }}<span v-if="stockCost"> · {{ money(stockCost) }} {{ $t('ecommerce.admin.at_cost') }}</span></template>
           </div>
         </div>
         <span v-if="!pending" class="ac-badge ac-badge-gold">{{ deadStock.length }}</span>
@@ -153,9 +153,9 @@
       <table v-else-if="deadStock.length" class="ac-data">
         <thead>
           <tr>
-            <th>{{ $t('admin.name_el') }}</th>
-            <th style="text-align: right;">{{ $t('admin.stock') }}</th>
-            <th style="text-align: right;">{{ $t('admin.tied_value') }}</th>
+            <th>{{ $t('ecommerce.admin.name_el') }}</th>
+            <th style="text-align: right;">{{ $t('ecommerce.admin.stock') }}</th>
+            <th style="text-align: right;">{{ $t('ecommerce.admin.tied_value') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -170,7 +170,7 @@
           </tr>
         </tbody>
       </table>
-      <div v-else class="ac-empty" style="padding: 24px 0;">{{ $t('admin.no_dead_stock') }} ✓</div>
+      <div v-else class="ac-empty" style="padding: 24px 0;">{{ $t('ecommerce.admin.no_dead_stock') }} ✓</div>
     </div>
   </div>
 </template>
@@ -216,15 +216,15 @@ const kpiCards = computed(() => {
   const s = data.value?.summary
   const marginTxt = s?.margin == null ? '—' : `${(s.margin * 100).toFixed(1)}%`
   return [
-    { label: t('admin.kpi_revenue'), value: money(s?.revenue ?? 0), delta: s?.revenue_change ?? null, sub: t('admin.vs_prev'), info: t('admin.revenue_info'),
+    { label: t('ecommerce.admin.kpi_revenue'), value: money(s?.revenue ?? 0), delta: s?.revenue_change ?? null, sub: t('ecommerce.admin.vs_prev'), info: t('ecommerce.admin.revenue_info'),
       iconBg: 'rgba(201,123,90,0.12)', iconColor: '#C97B5A', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7a7 7 0 1 0 0 10"/><path d="M3 10h10M3 14h10"/></svg>' },
-    { label: t('admin.kpi_orders'), value: num(s?.orders ?? 0), delta: s?.orders_change ?? null, sub: t('admin.vs_prev'), info: '',
+    { label: t('ecommerce.admin.kpi_orders'), value: num(s?.orders ?? 0), delta: s?.orders_change ?? null, sub: t('ecommerce.admin.vs_prev'), info: '',
       iconBg: 'rgba(168,184,154,0.15)', iconColor: '#A8B89A', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2 12h12l2-8H7"/><circle cx="9" cy="20" r="1.25"/><circle cx="18" cy="20" r="1.25"/></svg>' },
-    { label: t('admin.kpi_aov'), value: money(s?.aov ?? 0), delta: s?.aov_change ?? null, sub: t('admin.vs_prev'), info: '',
+    { label: t('ecommerce.admin.kpi_aov'), value: money(s?.aov ?? 0), delta: s?.aov_change ?? null, sub: t('ecommerce.admin.vs_prev'), info: '',
       iconBg: 'rgba(90,143,201,0.12)', iconColor: '#5A8FC9', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h6v6"/></svg>' },
-    { label: t('admin.kpi_units'), value: num(s?.units ?? 0), delta: s?.units_change ?? null, sub: t('admin.vs_prev'), info: '',
+    { label: t('ecommerce.admin.kpi_units'), value: num(s?.units ?? 0), delta: s?.units_change ?? null, sub: t('ecommerce.admin.vs_prev'), info: '',
       iconBg: 'rgba(212,162,76,0.15)', iconColor: '#D4A24C', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5"/></svg>' },
-    { label: t('admin.kpi_profit'), value: `${money(s?.profit ?? 0)} · ${marginTxt}`, delta: s?.profit_change ?? null, sub: t('admin.vs_prev'), info: t('admin.profit_info'),
+    { label: t('ecommerce.admin.kpi_profit'), value: `${money(s?.profit ?? 0)} · ${marginTxt}`, delta: s?.profit_change ?? null, sub: t('ecommerce.admin.vs_prev'), info: t('ecommerce.admin.profit_info'),
       iconBg: 'rgba(107,174,126,0.15)', iconColor: '#6BAE7E', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' },
   ]
 })
@@ -240,8 +240,8 @@ const revData = computed(() => {
   })
 })
 const revCategories = computed(() => {
-  const base: Record<string, { name: string; color: string }> = { current: { name: t('admin.revenue'), color: '#C97B5A' } }
-  if (data.value?.series?.prevRevenue) base.previous = { name: t('admin.prev_period'), color: '#9CA3AF' }
+  const base: Record<string, { name: string; color: string }> = { current: { name: t('ecommerce.admin.revenue'), color: '#C97B5A' } }
+  if (data.value?.series?.prevRevenue) base.previous = { name: t('ecommerce.admin.prev_period'), color: '#9CA3AF' }
   return base
 })
 function xFormatter(_: number | Date, i?: number) {

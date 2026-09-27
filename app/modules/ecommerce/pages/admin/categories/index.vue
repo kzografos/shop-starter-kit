@@ -4,12 +4,12 @@
     <div class="ac-table-toolbar">
       <div class="ac-table-toolbar-left">
         <div style="color: var(--ac-text-muted); font-size: 14px;">
-          {{ cats.length }} {{ $t('admin.categories').toLowerCase() }}
+          {{ cats.length }} {{ $t('ecommerce.admin.categories').toLowerCase() }}
         </div>
       </div>
       <button class="ac-btn-primary" @click="openCreate()">
         <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
-        {{ $t('admin.add_category') }}
+        {{ $t('ecommerce.admin.add_category') }}
       </button>
     </div>
 
@@ -26,12 +26,12 @@
           <div style="flex: 1; min-width: 0;">
             <div style="font-weight: 600;">{{ name(parent) }}</div>
             <div class="ac-muted" style="font-size: 12px; margin-top: 2px;">
-              /{{ parent.slug }} · {{ parent._count.products }} {{ $t('admin.products').toLowerCase() }} · {{ parent._count.children }} {{ $t('admin.subcategories') }}
+              /{{ parent.slug }} · {{ parent._count.products }} {{ $t('ecommerce.admin.products').toLowerCase() }} · {{ parent._count.children }} {{ $t('ecommerce.admin.subcategories') }}
             </div>
           </div>
           <button class="ac-filter-btn" @click="openCreate(parent.id)">
             <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
-            {{ $t('admin.subcategory') }}
+            {{ $t('ecommerce.admin.subcategory') }}
           </button>
           <div class="ac-row-actions" style="opacity: 1;">
             <button class="ac-row-action-btn" :title="$t('common.edit')" @click="openEdit(parent)">
@@ -53,7 +53,7 @@
             <div style="flex: 1; min-width: 0;">
               <div style="font-size: 14px;">{{ name(child) }}</div>
               <div class="ac-muted" style="font-size: 12px; margin-top: 2px;">
-                /{{ child.slug }} · {{ child._count.products }} {{ $t('admin.products').toLowerCase() }}
+                /{{ child.slug }} · {{ child._count.products }} {{ $t('ecommerce.admin.products').toLowerCase() }}
               </div>
             </div>
             <div class="ac-row-actions" style="opacity: 1;">
@@ -80,7 +80,7 @@
           <!-- Header -->
           <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--ac-card-border); flex-shrink: 0;">
             <h3 style="font-family: Fraunces, serif; font-size: 19px; font-weight: 500; margin: 0;">
-              {{ editing ? $t('admin.edit_category') : $t('admin.new_category') }}
+              {{ editing ? $t('ecommerce.admin.edit_category') : $t('ecommerce.admin.new_category') }}
             </h3>
             <button class="ac-drawer-close" :aria-label="$t('common.cancel')" @click="modalOpen = false">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
@@ -91,27 +91,27 @@
           <div style="flex: 1; overflow-y: auto; padding: 24px;">
             <form id="category-drawer-form" style="display: flex; flex-direction: column; gap: 16px;" @submit.prevent="save">
               <label class="acf">
-                <span>{{ $t('admin.name_el') }} *</span>
+                <span>{{ $t('ecommerce.admin.name_el') }} *</span>
                 <input v-model="form.name_el" type="text" />
               </label>
               <label class="acf">
-                <span>{{ $t('admin.name_en') }} *</span>
+                <span>{{ $t('ecommerce.admin.name_en') }} *</span>
                 <input v-model="form.name_en" type="text" />
               </label>
               <label class="acf">
                 <span>Slug</span>
                 <input v-model="form.slug" type="text" :disabled="editing" @input="slugTouched = true" />
-                <span class="acf-hint">{{ editing ? $t('admin.slug_locked') : $t('admin.slug_help') }}</span>
+                <span class="acf-hint">{{ editing ? $t('ecommerce.admin.slug_locked') : $t('ecommerce.admin.slug_help') }}</span>
               </label>
               <label class="acf">
-                <span>{{ $t('admin.parent_category') }}</span>
+                <span>{{ $t('ecommerce.admin.parent_category') }}</span>
                 <select v-model="form.parent_id" :disabled="parentDisabled">
                   <option v-for="opt in parentOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                 </select>
-                <span v-if="parentDisabled" class="acf-hint">{{ $t('admin.parent_locked') }}</span>
+                <span v-if="parentDisabled" class="acf-hint">{{ $t('ecommerce.admin.parent_locked') }}</span>
               </label>
               <label class="acf">
-                <span>{{ $t('admin.sort_order') }}</span>
+                <span>{{ $t('ecommerce.admin.sort_order') }}</span>
                 <input v-model.number="form.sort_order" type="number" min="0" />
               </label>
 
@@ -193,7 +193,7 @@ function slugify(s: string) {
 }
 
 const parentOptions = computed(() => [
-  { label: t('admin.no_parent'), value: '' },
+  { label: t('ecommerce.admin.no_parent'), value: '' },
   ...parents.value
     .filter((p) => p.id !== form.id) // can't parent itself
     .map((p) => ({ label: name(p), value: p.id })),
@@ -238,7 +238,7 @@ async function save() {
   if (saving.value) return
   error.value = ''
   if (!form.name_el.trim() || !form.name_en.trim() || !form.slug.trim()) {
-    error.value = t('admin.category_required')
+    error.value = t('ecommerce.admin.category_required')
     return
   }
   saving.value = true
@@ -268,7 +268,7 @@ async function save() {
 }
 
 async function remove(cat: AdminCategory) {
-  if (!confirm(`${t('admin.delete_category_confirm')} "${name(cat)}"?`)) return
+  if (!confirm(`${t('ecommerce.admin.delete_category_confirm')} "${name(cat)}"?`)) return
   try {
     await api(`/admin/categories/${cat.id}`, { method: 'DELETE' })
     toast.add({ title: t('admin.deleted'), color: 'success', icon: 'i-heroicons-check-circle' })

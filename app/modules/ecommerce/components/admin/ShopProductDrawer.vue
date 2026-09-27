@@ -9,7 +9,7 @@
         <!-- Header -->
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--ac-card-border); flex-shrink: 0;">
           <h3 style="font-family: Fraunces, serif; font-size: 19px; font-weight: 500; margin: 0;">
-            {{ editing ? $t('admin.edit_product') : $t('admin.new_product') }}
+            {{ editing ? $t('ecommerce.admin.edit_product') : $t('ecommerce.admin.new_product') }}
           </h3>
           <button class="ac-drawer-close" :aria-label="$t('common.cancel')" @click="open = false">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
@@ -20,11 +20,11 @@
         <div style="flex: 1; overflow-y: auto; padding: 24px;">
           <form id="product-drawer-form" style="display: flex; flex-direction: column; gap: 16px;" @submit.prevent="save">
             <label class="acf">
-              <span>{{ $t('admin.name_el') }} *</span>
+              <span>{{ $t('ecommerce.admin.name_el') }} *</span>
               <input v-model="form.name_el" type="text" />
             </label>
             <label class="acf">
-              <span>{{ $t('admin.name_en') }} *</span>
+              <span>{{ $t('ecommerce.admin.name_en') }} *</span>
               <input v-model="form.name_en" type="text" />
             </label>
             <label class="acf">
@@ -32,34 +32,34 @@
               <input v-model="form.slug" type="text" placeholder="example-product-name" @input="slugTouched = true" />
             </label>
             <label class="acf">
-              <span>{{ $t('admin.description_el') }}</span>
+              <span>{{ $t('ecommerce.admin.description_el') }}</span>
               <textarea v-model="form.description_el" rows="2" />
             </label>
             <label class="acf">
-              <span>{{ $t('admin.description_en') }}</span>
+              <span>{{ $t('ecommerce.admin.description_en') }}</span>
               <textarea v-model="form.description_en" rows="2" />
             </label>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <label class="acf">
-                <span>{{ $t('admin.price') }} ({{ currencySymbol }}) *</span>
+                <span>{{ $t('ecommerce.admin.price') }} ({{ currencySymbol }}) *</span>
                 <input v-model.number="form.price" type="number" step="0.01" min="0" />
               </label>
               <label class="acf">
-                <span>{{ $t('admin.compare_at_price') }} ({{ currencySymbol }})</span>
+                <span>{{ $t('ecommerce.admin.compare_at_price') }} ({{ currencySymbol }})</span>
                 <input v-model.number="form.compare_at_price" type="number" step="0.01" min="0" />
               </label>
               <label class="acf">
-                <span>{{ $t('admin.cost') }} ({{ currencySymbol }})</span>
+                <span>{{ $t('ecommerce.admin.cost') }} ({{ currencySymbol }})</span>
                 <input v-model.number="form.cost" type="number" step="0.01" min="0" />
-                <span class="acf-hint">{{ $t('admin.cost_hint') }}</span>
+                <span class="acf-hint">{{ $t('ecommerce.admin.cost_hint') }}</span>
               </label>
               <label class="acf">
-                <span>{{ $t('admin.stock') }} *</span>
+                <span>{{ $t('ecommerce.admin.stock') }} *</span>
                 <input v-model.number="form.stock" type="number" min="0" />
               </label>
               <label class="acf">
-                <span>{{ $t('admin.category') }}</span>
+                <span>{{ $t('ecommerce.admin.category') }}</span>
                 <select v-model="form.category_id">
                   <option :value="null">—</option>
                   <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
@@ -73,31 +73,31 @@
 
             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
               <input v-model="form.is_active" type="checkbox" style="width: 18px; height: 18px; accent-color: var(--ac-terracotta);" >
-              <span style="font-size: 14px; color: var(--ac-text);">{{ $t('admin.active') }}</span>
+              <span style="font-size: 14px; color: var(--ac-text);">{{ $t('ecommerce.admin.active') }}</span>
             </label>
 
             <!-- Images -->
             <div>
-              <span style="display: block; font-size: 13px; font-weight: 500; margin-bottom: 8px;">{{ $t('admin.photos') }}</span>
+              <span style="display: block; font-size: 13px; font-weight: 500; margin-bottom: 8px;">{{ $t('ecommerce.admin.photos') }}</span>
               <!-- `form.images` order is the display order; index 0 is the primary image. -->
               <div v-if="form.images.length" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
                 <div v-for="(ref, idx) in form.images" :key="ref" class="ac-img-item" :class="{ 'is-busy': imagesBusy }">
                   <div class="ac-img-cell">
                     <img v-if="previewUrls[idx]" :src="previewUrls[idx]" :alt="`Image ${idx + 1}`" >
                     <div v-else class="ac-img-fallback">{{ ref }}</div>
-                    <span v-if="idx === 0" class="ac-img-primary">{{ $t('admin.primary_image') }}</span>
+                    <span v-if="idx === 0" class="ac-img-primary">{{ $t('ecommerce.admin.primary_image') }}</span>
                   </div>
                   <div class="ac-img-actions">
-                    <button type="button" class="ac-img-action" :title="$t('admin.move_left')" :aria-label="$t('admin.move_left')" :disabled="imagesBusy || idx === 0" @click="moveImage(idx, idx - 1)">
+                    <button type="button" class="ac-img-action" :title="$t('ecommerce.admin.move_left')" :aria-label="$t('ecommerce.admin.move_left')" :disabled="imagesBusy || idx === 0" @click="moveImage(idx, idx - 1)">
                       <UIcon name="i-heroicons-chevron-left" class="w-4 h-4" />
                     </button>
-                    <button type="button" class="ac-img-action" :title="$t('admin.set_primary')" :aria-label="$t('admin.set_primary')" :disabled="imagesBusy || idx === 0" @click="setPrimary(idx)">
+                    <button type="button" class="ac-img-action" :title="$t('ecommerce.admin.set_primary')" :aria-label="$t('ecommerce.admin.set_primary')" :disabled="imagesBusy || idx === 0" @click="setPrimary(idx)">
                       <UIcon name="i-heroicons-star" class="w-4 h-4" />
                     </button>
-                    <button type="button" class="ac-img-action" :title="$t('admin.move_right')" :aria-label="$t('admin.move_right')" :disabled="imagesBusy || idx === form.images.length - 1" @click="moveImage(idx, idx + 1)">
+                    <button type="button" class="ac-img-action" :title="$t('ecommerce.admin.move_right')" :aria-label="$t('ecommerce.admin.move_right')" :disabled="imagesBusy || idx === form.images.length - 1" @click="moveImage(idx, idx + 1)">
                       <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
                     </button>
-                    <button type="button" class="ac-img-action is-danger" :title="$t('admin.remove_image')" :aria-label="$t('admin.remove_image')" :disabled="imagesBusy" @click="removeImage(idx)">
+                    <button type="button" class="ac-img-action is-danger" :title="$t('ecommerce.admin.remove_image')" :aria-label="$t('ecommerce.admin.remove_image')" :disabled="imagesBusy" @click="removeImage(idx)">
                       <UIcon name="i-heroicons-trash" class="w-4 h-4" />
                     </button>
                   </div>
@@ -114,7 +114,7 @@
                 @drop.prevent="onDrop"
               >
                 <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
-                <div style="font-size: 14px; font-weight: 500; margin-top: 8px;">{{ uploading ? $t('admin.uploading') : $t('admin.drop_or_click') }}</div>
+                <div style="font-size: 14px; font-weight: 500; margin-top: 8px;">{{ uploading ? $t('ecommerce.admin.uploading') : $t('ecommerce.admin.drop_or_click') }}</div>
                 <div class="acf-hint">JPEG, PNG, WebP or GIF (max 5MB)</div>
               </div>
               <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display: none;" @change="onPick" >
@@ -278,7 +278,7 @@ async function uploadList(files: FileList | File[]) {
       }
     }
   } catch {
-    uploadError.value = t('admin.upload_failed')
+    uploadError.value = t('ecommerce.admin.upload_failed')
   } finally {
     uploading.value = false
     imagesBusy.value = false
@@ -305,7 +305,7 @@ async function moveImage(from: number, to: number) {
   try {
     applyImages(await api<ImagesPayload>(`${imagesBase()}/order`, { method: 'PATCH', body: { images } }))
   } catch {
-    uploadError.value = t('admin.image_update_failed')
+    uploadError.value = t('ecommerce.admin.image_update_failed')
   } finally {
     imagesBusy.value = false
   }
@@ -327,7 +327,7 @@ function onDrop(e: DragEvent) {
 }
 async function removeImage(idx: number) {
   if (imagesBusy.value) return
-  if (!confirm(t('admin.remove_image_confirm'))) return
+  if (!confirm(t('ecommerce.admin.remove_image_confirm'))) return
   if (!editing.value) {
     form.images.splice(idx, 1)
     previewUrls.value.splice(idx, 1)
@@ -342,7 +342,7 @@ async function removeImage(idx: number) {
     if (ref === undefined) return
     applyImages(await api<ImagesPayload>(`${imagesBase()}/${encodeURIComponent(ref)}`, { method: 'DELETE' }))
   } catch {
-    uploadError.value = t('admin.image_update_failed')
+    uploadError.value = t('ecommerce.admin.image_update_failed')
   } finally {
     imagesBusy.value = false
   }
@@ -352,7 +352,7 @@ async function save() {
   if (saving.value) return
   error.value = ''
   if (!form.name_el.trim() || !form.name_en.trim() || !form.slug.trim()) {
-    error.value = t('admin.product_required')
+    error.value = t('ecommerce.admin.product_required')
     return
   }
   saving.value = true
