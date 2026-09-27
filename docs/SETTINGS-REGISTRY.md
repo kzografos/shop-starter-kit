@@ -51,7 +51,7 @@ Kept out on purpose: booleans/enums/select options (no consumer), per-setting ca
 | `settings/settings-admin.controller.ts` — `GET`/`PATCH /admin/settings` (`manage:settings`) | Core | `{ groups, definitions, values }` / validated writes |
 | `orders/pricing-settings.ts` + `pricing-settings.service.ts` | orders (shop) | definitions, groups, defaults, constraints; `loadPricing()` typed view for the checkout |
 | `app/utils/settings-form.ts`, `app/pages/admin/settings/index.vue` | Core | render whatever the API describes |
-| i18n keys named by definitions | the contributing module (today in the shared `admin.*` namespace, until the per-layer split) | labels, hints, group titles |
+| i18n keys named by definitions | the contributing module, in its own namespace and its own locale files (e-commerce: `ecommerce.settings.*` in `app/modules/ecommerce/i18n/`, N6d) | labels, hints, group titles |
 
 Direction: orders → Core (registration through the exported `SettingsService`); Core imports nothing from orders. `verify-boundaries` stays at 0. The public controller moved from `orders/pricing-settings.controller.ts` to Core: same path, same response shape, now a registry rule instead of a list.
 
@@ -60,12 +60,13 @@ Direction: orders → Core (registration through the exported `SettingsService`)
 1. Describe it next to the module's other definitions (defaults, constraints, i18n keys, `public` if the storefront needs it):
    ```ts
    export const MY_SETTINGS: readonly SettingDefinition[] = [
-     { key: 'pickup_lead_hours', type: 'number', default: '2', group: 'fulfilment', labelKey: 'admin.pickup_lead_hours', order: 10, min: 0, step: 1, public: true },
+     { key: 'pickup_lead_hours', type: 'number', default: '2', group: 'fulfilment', labelKey: 'ecommerce.settings.pickup_lead_hours', order: 10, min: 0, step: 1, public: true },
    ]
-   export const MY_GROUPS: readonly SettingGroupDefinition[] = [{ id: 'fulfilment', labelKey: 'admin.fulfilment_settings', icon: 'box', order: 30 }]
+   export const MY_GROUPS: readonly SettingGroupDefinition[] = [{ id: 'fulfilment', labelKey: 'ecommerce.settings.fulfilment_settings', icon: 'box', order: 30 }]
    ```
+   The `labelKey`/`descriptionKey` values are i18n keys in the module's own namespace (`<module>.settings.*`), never in a Core namespace such as `admin.*` (DEPENDENCY-RULES §5.8).
 2. Register at boot from a provider's `onModuleInit`: `this.settings.defineGroups(MY_GROUPS); this.settings.define(MY_SETTINGS)`. An incomplete definition, a default outside its own constraints, or a duplicate key/group id fails boot with the reason.
-3. Add the i18n keys in both locales.
+3. Add the i18n keys in both locales, in the module layer's own files (`app/modules/<module>/i18n/{el,en}.json`).
 4. Read the value through `SettingsService.getAll()` (or your own typed view like `loadPricing()`); it is present even before anyone saves the form.
 
 Nothing else: the admin form renders the new card/field, the write path validates it, the public read serves it if `public`.
@@ -102,6 +103,6 @@ Owned by the backend, from the definition: type (`number` must be finite; `strin
 ## Deferred
 
 - Boolean/select setting types and per-setting capabilities — add to the contract when a consumer exists.
-- Moving the pricing i18n keys out of the shared `admin.*` namespace — with the per-layer i18n split.
+- ~~Moving the pricing i18n keys out of the shared `admin.*` namespace — with the per-layer i18n split.~~ Done (N6d): the twelve pricing keys are `ecommerce.settings.*` in the e-commerce locale files, named by `modules/ecommerce/orders/pricing-settings.ts`.
 - Migrating the settings page from raw `$fetch` to `useApi()` — the project-wide `useApi` migration milestone.
 - A Core-owned public settings composable on the frontend — today the checkout reads `GET /settings` directly, as before.

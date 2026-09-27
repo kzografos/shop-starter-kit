@@ -80,7 +80,7 @@ See `docs/MODULE-DEVELOPMENT-GUIDE.md` for the full contract and checklist.
 ## Configuration rules
 
 - Secrets and host-specific values (database/Redis URLs, JWT secrets, provider API keys, storage/email/payment credentials) belong in environment variables only.
-- Project identity (name, slug, locales, default locale, currency, branding, theme, enabled modules) belongs in project configuration (`project.config.ts`, once it exists; `app/utils/business.ts` + `brand.css` until then).
+- Project identity (name, slug, locales, default locale, currency, branding, theme, enabled modules) belongs in project configuration: `app/project/project.config.ts` (business identity, brand assets, locales, region/currency) and the Project layer's `app/project/assets/css/brand.css` (brand palette values). Enabled modules are declared in `modules.json`. The Tailwind colour scales, fonts and Nuxt UI primary colour still live in the root composition; moving them to the project is deferred.
 - Module-specific configuration belongs to the module: its Joi env fragment, its static options under the project config, its runtime-editable keys in the Settings Registry.
 - Core-only boot must not require optional provider credentials (Stripe, MinIO/storage, Google OAuth). Read env only through `ConfigService`, never `process.env` at import time.
 

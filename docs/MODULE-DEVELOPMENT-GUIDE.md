@@ -55,7 +55,7 @@ Conventions:
 
 - `<id>` is lowercase kebab (`ecommerce`, `booking`). Sub-domains likewise (`catalog`, `orders`).
 - Component prefix is the module's PascalCase id (`Shop`, `Booking`) — set in the layer's `nuxt.config.ts`; never `pathPrefix: false`.
-- i18n namespaces start with the module id or a domain noun the module owns (`products.*`, `checkout.*`, `booking.*`). Never write into `common.*`, `auth.*`, `admin.*` shell keys.
+- i18n namespaces start with the module id or a domain noun the module owns (`products.*`, `checkout.*`, `booking.*`). A module never adds keys to a Core namespace (`common.*`, `auth.*`, `admin.*`, `account.*`, `nav.*`, `footer.*`, `home.*`, `seo.*`, `notifications.*`; DEPENDENCY-RULES §5.8). Text a module contributes to a Core surface lives under the module id and that surface: for e-commerce `ecommerce.<area>.*` (`ecommerce.admin.*`, `ecommerce.account.*`, `ecommerce.nav.*`, `ecommerce.footer.*`, `ecommerce.home.*`, `ecommerce.seo.*`, `ecommerce.notifications.*`, `ecommerce.settings.*`). Reading Core vocabulary (`common.save`, `nav.home`) is allowed; adding to it is not.
 - Cache keys: `<id>:<entity>:<key>:<field>`. Expose `invalidate()` per entity.
 
 ---
@@ -89,9 +89,9 @@ Frontend side: the layer path (`app/modules/<id>`) is added to `extends` by the 
 
 ```ts
 // <module>/my-settings.ts — the only place the setting is described
-export const MY_GROUPS: readonly SettingGroupDefinition[] = [{ id: 'fulfilment', labelKey: 'admin.fulfilment_settings', icon: 'box', order: 30 }]
+export const MY_GROUPS: readonly SettingGroupDefinition[] = [{ id: 'fulfilment', labelKey: 'ecommerce.settings.fulfilment_settings', icon: 'box', order: 30 }]
 export const MY_SETTINGS: readonly SettingDefinition[] = [
-  { key: 'pickup_lead_hours', type: 'number', default: '2', group: 'fulfilment', labelKey: 'admin.pickup_lead_hours', order: 10, min: 0, step: 1, public: true },
+  { key: 'pickup_lead_hours', type: 'number', default: '2', group: 'fulfilment', labelKey: 'ecommerce.settings.pickup_lead_hours', order: 10, min: 0, step: 1, public: true },
 ]
 // a provider's onModuleInit: this.settings.defineGroups(MY_GROUPS); this.settings.define(MY_SETTINGS)
 ```
@@ -99,13 +99,14 @@ export const MY_SETTINGS: readonly SettingDefinition[] = [
 - `public: true` exposes the key on `GET /settings`; use it only for values the storefront must display (prices, thresholds). Secrets are never settings.
 - `default` is the one authoritative default: `SettingsService.getAll()` applies it when no row exists, so nothing is seeded. Never overwrite a stored row.
 - `min`/`max`/`editable`/`type` are enforced by Core on `PATCH /admin/settings`; the admin form renders the card and fields from the definition (label/hint i18n keys, unit, min/step) — do not touch `app/pages/admin/settings/index.vue`.
+- The label/hint keys belong to the module: `<module>.settings.*`, defined in the module layer's own locale files (e-commerce: `ecommerce.settings.*`).
 - Read through the Core `SettingsService` (`getAll()`), or your own typed view like `PricingSettingsService.loadPricing()`; never `prisma.setting` directly.
 
 ### 3.4 Admin Registry contributions (`app.config.ts`, implemented — see `docs/ADMIN-REGISTRY.md`)
 
 ```ts
 adminSections: [
-  { id: 'products', path: '/admin/products', labelKey: 'admin.products', subtitleKey: 'admin.subtitle_products', icon: 'box', capability: 'view:catalog', order: 20, group: 'main' },
+  { id: 'products', path: '/admin/products', labelKey: 'ecommerce.admin.products', subtitleKey: 'ecommerce.admin.subtitle_products', icon: 'box', capability: 'view:catalog', order: 20, group: 'main' },
 ] satisfies AdminSectionContribution[]
 ```
 
