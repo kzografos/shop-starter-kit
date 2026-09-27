@@ -53,6 +53,8 @@ export interface ProjectIdentityContribution {
   legalName: string
   tagline: string
   favicon: string
+  /** Home-screen icon path (`<link rel="apple-touch-icon">`). */
+  appleTouchIcon: string
   ogImage: string
   city: string
   country: string

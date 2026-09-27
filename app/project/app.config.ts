@@ -16,6 +16,7 @@ export default defineAppConfig({
     legalName: BUSINESS.legalName,
     tagline: BUSINESS.tagline,
     favicon: BUSINESS.brand.favicon,
+    appleTouchIcon: BUSINESS.brand.appleTouchIcon,
     ogImage: BUSINESS.brand.ogImage,
     city: BUSINESS.address.city,
     country: BUSINESS.address.countryName,

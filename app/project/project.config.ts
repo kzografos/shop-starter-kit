@@ -10,6 +10,7 @@ export const BUSINESS = {
     logoInverted: null as string | null,
     wordmarkAccent: 'Store',              // suffix of `name` rendered in accent colour; '' = none
     favicon: '/favicon.svg',              // browser-tab icon (<link rel=icon>); swap to rebrand
+    appleTouchIcon: '/apple-touch-icon.png', // iOS home-screen icon (<link rel=apple-touch-icon>)
     ogImage: '/og-image.png',             // social share card; app.vue resolves it to an absolute URL
     social: { instagram: null, facebook: null, tiktok: null } as Record<string, string | null>,
     whatsappEnabled: true,
