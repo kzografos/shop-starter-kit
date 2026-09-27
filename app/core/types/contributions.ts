@@ -56,6 +56,9 @@ export interface ProjectIdentityContribution {
   /** Home-screen icon path (`<link rel="apple-touch-icon">`). */
   appleTouchIcon: string
   ogImage: string
+  /** Pixel size of the `ogImage` share card (`og:image:width` / `og:image:height`). */
+  ogImageWidth: number
+  ogImageHeight: number
   city: string
   country: string
   /** i18n keys carrying the project's footer copy. */

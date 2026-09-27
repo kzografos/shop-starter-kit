@@ -18,7 +18,8 @@ const ogImageUrl = `${base}${project.ogImage}`
 
 // Global SEO defaults — pages that set their own title override the template body.
 // To rebrand: swap the icon and share-card files in app/project/public/ and the
-// brand.favicon / brand.appleTouchIcon / brand.ogImage paths in app/project/project.config.ts.
+// brand.favicon / brand.appleTouchIcon / brand.ogImage paths (and the share card's
+// brand.ogImageWidth / brand.ogImageHeight) in app/project/project.config.ts.
 useHead({
   titleTemplate: (title) => (title ? `${title} · ${project.name}` : project.legalName),
   link: [
@@ -34,8 +35,8 @@ useSeoMeta({
   description: () => project.tagline,
   ogTitle: project.legalName,
   ogImage: ogImageUrl,
-  ogImageWidth: 1200,
-  ogImageHeight: 630,
+  ogImageWidth: project.ogImageWidth,
+  ogImageHeight: project.ogImageHeight,
   ogImageAlt: project.legalName,
   twitterCard: 'summary_large_image',
   twitterTitle: project.legalName,

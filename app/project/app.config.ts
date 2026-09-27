@@ -18,6 +18,8 @@ export default defineAppConfig({
     favicon: BUSINESS.brand.favicon,
     appleTouchIcon: BUSINESS.brand.appleTouchIcon,
     ogImage: BUSINESS.brand.ogImage,
+    ogImageWidth: BUSINESS.brand.ogImageWidth,
+    ogImageHeight: BUSINESS.brand.ogImageHeight,
     city: BUSINESS.address.city,
     country: BUSINESS.address.countryName,
     // Which i18n keys carry this project's footer copy (E6b). The keys live in

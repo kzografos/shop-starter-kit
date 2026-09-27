@@ -12,6 +12,8 @@ export const BUSINESS = {
     favicon: '/favicon.svg',              // browser-tab icon (<link rel=icon>); swap to rebrand
     appleTouchIcon: '/apple-touch-icon.png', // iOS home-screen icon (<link rel=apple-touch-icon>)
     ogImage: '/og-image.png',             // social share card; app.vue resolves it to an absolute URL
+    ogImageWidth: 1200,                   // share card pixel size — keep in step with the file
+    ogImageHeight: 630,
     social: { instagram: null, facebook: null, tiktok: null } as Record<string, string | null>,
     whatsappEnabled: true,
   },
