@@ -207,21 +207,8 @@
           </button>
         </p>
 
-        <!-- Loyalty info box -->
-        <div
-          class="mt-6 flex items-start gap-3 p-4 rounded-xl bg-[--color-surface-card] border border-[--color-border-warm] text-sm text-[--color-bark-light]"
-        >
-          <UIcon name="i-heroicons-gift" class="w-5 h-5 text-terracotta shrink-0" />
-          <span>{{ $t('login.loyalty_note') }}</span>
-        </div>
-
-        <NuxtLink
-          :to="localePath('/products')"
-          class="flex items-center justify-center gap-1.5 text-sm text-[--color-bark-light] hover:text-[--color-bark] transition-colors mt-5 mb-2"
-        >
-          <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
-          {{ $t('login.continue_browsing') }}
-        </NuxtLink>
+        <!-- Module extras below the form — contributed through app.config `loginExtras` -->
+        <component :is="extra.component" v-for="extra in loginExtras" :key="extra.component" />
       </div>
     </div>
   </div>
@@ -232,6 +219,9 @@ definePageMeta({ middleware: 'guest', layout: false })
 
 // The brand mark is the project's, contributed through `app.config.brand`.
 const brand = computed(() => useAppConfig().brand)
+const loginExtras = computed(() =>
+  [...(useAppConfig().loginExtras ?? [])].sort((a, b) => a.order - b.order),
+)
 
 const { t, locale: currentLocale, setLocale } = useI18n()
 const api = useApi()

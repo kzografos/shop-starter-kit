@@ -124,6 +124,17 @@ export interface AccountCardContribution {
 }
 
 /**
+ * Component rendered on the login/register page below the form (B3). A module
+ * contributes what it offers a signed-out visitor there — the shop its loyalty
+ * note and the way back to browsing — so the Core auth page names neither; a
+ * disabled module contributes nothing.
+ */
+export interface LoginExtraContribution {
+  component: string
+  order: number
+}
+
+/**
  * Section rendered on the project's home page, between the hero and the closing
  * banner. A module contributes what it has to show there (E8d) instead of the
  * page naming it, so the home page holds no module knowledge and a disabled
@@ -217,6 +228,7 @@ declare module 'nuxt/schema' {
     footerItems?: FooterItemContribution[]
     accountItems?: AccountItemContribution[]
     accountCards?: AccountCardContribution[]
+    loginExtras?: LoginExtraContribution[]
     homeSections?: HomeSectionContribution[]
     homeBannerItems?: HomeBannerItemContribution[]
     adminGroups?: AdminGroupContribution[]

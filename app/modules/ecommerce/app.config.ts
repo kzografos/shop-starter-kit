@@ -9,6 +9,7 @@ import type {
   HeaderActionContribution,
   HomeBannerItemContribution,
   HomeSectionContribution,
+  LoginExtraContribution,
   NavItemContribution,
 } from '#core/types/contributions'
 
@@ -58,6 +59,11 @@ export default defineAppConfig({
     { component: 'ShopLoyaltyCard', order: 10 },
     { component: 'ShopAccountStats', order: 20 },
   ] satisfies AccountCardContribution[],
+
+  // Login page (B3): the loyalty note and the continue-to-products link below the form.
+  loginExtras: [
+    { component: 'ShopLoginExtras', order: 10 },
+  ] satisfies LoginExtraContribution[],
 
   // Footer (E6b): the shop's own column plus the two order/loyalty entries of
   // the account column Core declares.
