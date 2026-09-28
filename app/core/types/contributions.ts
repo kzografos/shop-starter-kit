@@ -135,6 +135,19 @@ export interface LoginExtraContribution {
 }
 
 /**
+ * One line of the login page's feature list, in the desktop side panel (B3b).
+ * A module states what signing in gives the visitor there — the shop its
+ * orders, loyalty points and reorder — as data the Core page renders in its
+ * own list markup; `icon` is the leading icon name. A disabled module
+ * contributes nothing and the list is not rendered.
+ */
+export interface LoginFeatureContribution {
+  icon: string
+  labelKey: string
+  order: number
+}
+
+/**
  * Section rendered on the project's home page, between the hero and the closing
  * banner. A module contributes what it has to show there (E8d) instead of the
  * page naming it, so the home page holds no module knowledge and a disabled
@@ -229,6 +242,7 @@ declare module 'nuxt/schema' {
     accountItems?: AccountItemContribution[]
     accountCards?: AccountCardContribution[]
     loginExtras?: LoginExtraContribution[]
+    loginFeatures?: LoginFeatureContribution[]
     homeSections?: HomeSectionContribution[]
     homeBannerItems?: HomeBannerItemContribution[]
     adminGroups?: AdminGroupContribution[]

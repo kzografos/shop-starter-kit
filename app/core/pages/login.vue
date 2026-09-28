@@ -46,18 +46,11 @@
         </p>
       </div>
 
-      <ul class="space-y-4 text-[--color-bark] text-sm max-w-xs w-full">
-        <li class="flex items-center gap-3">
-          <UIcon name="i-heroicons-shopping-bag" class="w-5 h-5 text-terracotta shrink-0" />
-          <span>{{ $t('login.feature_orders') }}</span>
-        </li>
-        <li class="flex items-center gap-3">
-          <UIcon name="i-heroicons-star" class="w-5 h-5 text-terracotta shrink-0" />
-          <span>{{ $t('login.feature_points') }}</span>
-        </li>
-        <li class="flex items-center gap-3">
-          <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 text-terracotta shrink-0" />
-          <span>{{ $t('login.feature_reorder') }}</span>
+      <!-- Feature list — contributed through app.config `loginFeatures` -->
+      <ul v-if="loginFeatures.length" class="space-y-4 text-[--color-bark] text-sm max-w-xs w-full">
+        <li v-for="feature in loginFeatures" :key="feature.labelKey" class="flex items-center gap-3">
+          <UIcon :name="feature.icon" class="w-5 h-5 text-terracotta shrink-0" />
+          <span>{{ $t(feature.labelKey) }}</span>
         </li>
       </ul>
     </div>
@@ -221,6 +214,9 @@ definePageMeta({ middleware: 'guest', layout: false })
 const brand = computed(() => useAppConfig().brand)
 const loginExtras = computed(() =>
   [...(useAppConfig().loginExtras ?? [])].sort((a, b) => a.order - b.order),
+)
+const loginFeatures = computed(() =>
+  [...(useAppConfig().loginFeatures ?? [])].sort((a, b) => a.order - b.order),
 )
 
 const { t, locale: currentLocale, setLocale } = useI18n()

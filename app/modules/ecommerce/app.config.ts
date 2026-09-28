@@ -10,6 +10,7 @@ import type {
   HomeBannerItemContribution,
   HomeSectionContribution,
   LoginExtraContribution,
+  LoginFeatureContribution,
   NavItemContribution,
 } from '#core/types/contributions'
 
@@ -64,6 +65,13 @@ export default defineAppConfig({
   loginExtras: [
     { component: 'ShopLoginExtras', order: 10 },
   ] satisfies LoginExtraContribution[],
+
+  // Login page side panel (B3b): what signing in gives a shop customer.
+  loginFeatures: [
+    { icon: 'i-heroicons-shopping-bag', labelKey: 'login.feature_orders', order: 10 },
+    { icon: 'i-heroicons-star', labelKey: 'login.feature_points', order: 20 },
+    { icon: 'i-heroicons-arrow-path', labelKey: 'login.feature_reorder', order: 30 },
+  ] satisfies LoginFeatureContribution[],
 
   // Footer (E6b): the shop's own column plus the two order/loyalty entries of
   // the account column Core declares.
