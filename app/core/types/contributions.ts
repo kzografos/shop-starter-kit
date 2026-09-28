@@ -190,6 +190,24 @@ export interface AdminGroupContribution {
   labelKey?: string
 }
 
+/**
+ * A column of the admin customer list, between Email and Joined. The value is
+ * a field a module adds to each `/admin/customers` row through the backend's
+ * UserExtensionsRegistry; Core reads it by `field` (a dotted path on the
+ * snake_cased row, e.g. `stats.total`) and never names it. A disabled module
+ * contributes no column and its fields are absent from the payload.
+ */
+export interface AdminCustomerColumnContribution {
+  id: string
+  /** i18n key of the column header. */
+  labelKey: string
+  /** Dotted path of the value on the row; a missing value renders `—`. */
+  field: string
+  order: number
+  /** Numeric values use the admin shell's monospace cell. */
+  numeric?: boolean
+}
+
 declare module 'nuxt/schema' {
   interface CustomAppConfig {
     navItems?: NavItemContribution[]
@@ -203,5 +221,6 @@ declare module 'nuxt/schema' {
     homeBannerItems?: HomeBannerItemContribution[]
     adminGroups?: AdminGroupContribution[]
     adminSections?: AdminSectionContribution[]
+    adminCustomerColumns?: AdminCustomerColumnContribution[]
   }
 }

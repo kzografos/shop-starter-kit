@@ -22,20 +22,18 @@
           <tr>
             <th style="width: 28%;">{{ $t('admin.customer_name') }}</th>
             <th>Email</th>
-            <th>{{ $t('admin.orders') }}</th>
-            <th>{{ $t('admin.loyalty_points_short') }}</th>
+            <th v-for="col in columns" :key="col.id">{{ $t(col.labelKey) }}</th>
             <th>{{ $t('admin.joined') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!customers.length">
-            <td colspan="5" class="ac-empty">{{ $t('admin.no_customers') }}</td>
+            <td :colspan="3 + columns.length" class="ac-empty">{{ $t('admin.no_customers') }}</td>
           </tr>
           <tr v-for="c in customers" :key="c.id">
             <td style="font-weight: 500;">{{ c.full_name || '—' }}</td>
             <td class="ac-muted">{{ c.email }}</td>
-            <td class="ac-mono">{{ c._count.orders }}</td>
-            <td class="ac-mono">{{ c.loyalty_points }}</td>
+            <td v-for="col in columns" :key="col.id" :class="col.numeric ? 'ac-mono' : undefined">{{ cell(c, col.field) }}</td>
             <td class="ac-muted">{{ formatDate(c.created_at) }}</td>
           </tr>
         </tbody>
@@ -76,11 +74,23 @@ interface CustomerRow {
   id: string
   email: string
   full_name: string | null
-  loyalty_points: number
   created_at: string
-  _count: { orders: number }
+  /** Module-registered user extension fields, snake_cased on the wire. */
+  [extension: string]: unknown
 }
 interface Resp { customers: CustomerRow[]; total: number; page: number; totalPages: number }
+
+// Columns modules contribute through app.config (`adminCustomerColumns`),
+// rendered between Email and Joined; Core never names their fields.
+const appConfig = useAppConfig()
+const columns = computed(() =>
+  [...(appConfig.adminCustomerColumns ?? [])].sort((a, b) => a.order - b.order),
+)
+
+function cell(row: CustomerRow, field: string) {
+  const value = field.split('.').reduce<unknown>((v, k) => (v && typeof v === 'object' ? (v as Record<string, unknown>)[k] : undefined), row)
+  return value === undefined || value === null || value === '' ? '—' : String(value)
+}
 
 const { data, pending, refresh } = useAsyncData('admin-customers', () =>
   api<Resp>(`/admin/customers`, {

@@ -1,6 +1,7 @@
 import type {
   AccountCardContribution,
   AccountItemContribution,
+  AdminCustomerColumnContribution,
   AdminSectionContribution,
   FooterColumnContribution,
   FooterItemContribution,
@@ -78,4 +79,11 @@ export default defineAppConfig({
     { id: 'categories', path: '/admin/categories', labelKey: 'ecommerce.admin.categories', subtitleKey: 'ecommerce.admin.subtitle_categories', icon: 'tag', capability: 'view:catalog', order: 30 },
     { id: 'orders', path: '/admin/orders', labelKey: 'admin.orders', subtitleKey: 'ecommerce.admin.subtitle_orders', icon: 'cart', capability: 'view:orders', order: 40 },
   ] satisfies AdminSectionContribution[],
+
+  // Admin customer list (B2): the order count and loyalty balance the orders
+  // and loyalty user extensions add to each /admin/customers row.
+  adminCustomerColumns: [
+    { id: 'orders', labelKey: 'admin.orders', field: '_count.orders', order: 10, numeric: true },
+    { id: 'loyalty', labelKey: 'admin.loyalty_points_short', field: 'loyalty_points', order: 20, numeric: true },
+  ] satisfies AdminCustomerColumnContribution[],
 })
