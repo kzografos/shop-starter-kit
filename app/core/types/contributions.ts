@@ -206,6 +206,27 @@ export interface AdminSectionContribution {
   enabled?: boolean
 }
 
+/**
+ * A staff role the admin staff page offers and describes (B4). `role` is the
+ * value stored in `users.role`: Core contributes its owner (`admin`), a module
+ * the presets its backend registers with the permission registry, so a
+ * disabled module's roles leave the page as the backend stops accepting them.
+ *
+ * `order` is the canonical order, the one the access legend shows. The role
+ * dropdown lists the same entries in reverse — least-privileged first — and
+ * its first option is the default role of a new staff member. `badge` names
+ * the admin shell's badge colour (`ac-badge-<badge>`); omitted = blue.
+ */
+export interface StaffRoleContribution {
+  role: string
+  /** i18n key of the role name. */
+  labelKey: string
+  /** i18n key of what the role can access (the legend line). */
+  descriptionKey: string
+  badge?: string
+  order: number
+}
+
 /** A sidebar group; the first group renders without a label. */
 export interface AdminGroupContribution {
   id: string
@@ -248,5 +269,6 @@ declare module 'nuxt/schema' {
     adminGroups?: AdminGroupContribution[]
     adminSections?: AdminSectionContribution[]
     adminCustomerColumns?: AdminCustomerColumnContribution[]
+    staffRoles?: StaffRoleContribution[]
   }
 }

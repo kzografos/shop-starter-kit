@@ -12,6 +12,7 @@ import type {
   LoginExtraContribution,
   LoginFeatureContribution,
   NavItemContribution,
+  StaffRoleContribution,
 } from '#core/types/contributions'
 
 // The shop's contributions to the Core registries (E8b, the deferred E5d).
@@ -100,4 +101,11 @@ export default defineAppConfig({
     { id: 'orders', labelKey: 'admin.orders', field: '_count.orders', order: 10, numeric: true },
     { id: 'loyalty', labelKey: 'admin.loyalty_points_short', field: 'loyalty_points', order: 20, numeric: true },
   ] satisfies AdminCustomerColumnContribution[],
+
+  // Staff roles (B4): the presets EcommercePermissions registers on the
+  // backend, as the staff page names and describes them.
+  staffRoles: [
+    { role: 'accountant', labelKey: 'admin.role_accountant', descriptionKey: 'admin.role_accountant_desc', badge: 'sage', order: 20 },
+    { role: 'stock_manager', labelKey: 'admin.role_stock_manager', descriptionKey: 'admin.role_stock_manager_desc', badge: 'blue', order: 30 },
+  ] satisfies StaffRoleContribution[],
 })

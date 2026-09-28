@@ -5,6 +5,7 @@ import type {
   FooterColumnContribution,
   FooterItemContribution,
   HeaderActionContribution,
+  StaffRoleContribution,
 } from '#core/types/contributions'
 
 // Core's own contributions to the registries it renders (E7f). Nuxt merges
@@ -49,4 +50,9 @@ export default defineAppConfig({
     { id: 'staff', path: '/admin/staff', labelKey: 'admin.staff', subtitleKey: 'admin.subtitle_staff', icon: 'staff', capability: 'manage:staff', order: 80, group: 'workspace' },
     { id: 'settings', path: '/admin/settings', labelKey: 'admin.settings', subtitleKey: 'admin.subtitle_settings', icon: 'settings', capability: 'manage:settings', order: 90, group: 'workspace' },
   ] satisfies AdminSectionContribution[],
+
+  // Staff roles (B4): Core's own is the owner, first in the access legend.
+  staffRoles: [
+    { role: 'admin', labelKey: 'admin.role_owner', descriptionKey: 'admin.role_owner_desc', badge: 'gold', order: 10 },
+  ] satisfies StaffRoleContribution[],
 })

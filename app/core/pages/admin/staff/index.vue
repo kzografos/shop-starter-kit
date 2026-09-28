@@ -61,9 +61,7 @@
     <div class="ac-card" style="margin-top: 16px; padding: 16px 20px;">
       <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">{{ $t('admin.role_access_title') }}</div>
       <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--ac-text-muted);">
-        <div>· <strong style="color: var(--ac-text);">{{ $t('admin.role_owner') }}</strong> — {{ $t('admin.role_owner_desc') }}</div>
-        <div>· <strong style="color: var(--ac-text);">{{ $t('admin.role_accountant') }}</strong> — {{ $t('admin.role_accountant_desc') }}</div>
-        <div>· <strong style="color: var(--ac-text);">{{ $t('admin.role_stock_manager') }}</strong> — {{ $t('admin.role_stock_manager_desc') }}</div>
+        <div v-for="r in staffRoles" :key="r.role">· <strong style="color: var(--ac-text);">{{ $t(r.labelKey) }}</strong> — {{ $t(r.descriptionKey) }}</div>
       </div>
     </div>
 
@@ -141,21 +139,23 @@ const { data, pending, refresh } = useAsyncData('admin-staff', () =>
 )
 const staff = computed(() => data.value ?? [])
 
-const roleOptions = [
-  { value: 'STOCK_MANAGER', label: t('admin.role_stock_manager') },
-  { value: 'ACCOUNTANT', label: t('admin.role_accountant') },
-  { value: 'ADMIN', label: t('admin.role_owner') },
-]
+// Staff roles come from app.config `staffRoles` (Core's owner + module presets),
+// in legend order; the dropdown lists them in reverse, least-privileged first,
+// and its first option is the default. The form sends the role uppercase.
+const staffRoles = computed(() =>
+  [...(useAppConfig().staffRoles ?? [])].sort((a, b) => a.order - b.order),
+)
+const roleOptions = computed(() =>
+  [...staffRoles.value].reverse().map((r) => ({ value: r.role.toUpperCase(), label: t(r.labelKey) })),
+)
+const defaultRole = computed(() => roleOptions.value[0]?.value ?? '')
 function roleLabel(role: string) {
-  if (role === 'admin') return t('admin.role_owner')
-  if (role === 'accountant') return t('admin.role_accountant')
-  if (role === 'stock_manager') return t('admin.role_stock_manager')
-  return role
+  const r = staffRoles.value.find((x) => x.role === role)
+  return r ? t(r.labelKey) : role
 }
 function roleBadge(role: string) {
-  if (role === 'admin') return 'ac-badge-gold'
-  if (role === 'accountant') return 'ac-badge-sage'
-  return 'ac-badge-blue'
+  const r = staffRoles.value.find((x) => x.role === role)
+  return `ac-badge-${r?.badge ?? 'blue'}`
 }
 
 // ── Drawer ──
@@ -163,10 +163,10 @@ const drawerOpen = ref(false)
 const editing = ref(false)
 const saving = ref(false)
 const error = ref('')
-const form = reactive({ id: '', email: '', fullName: '', role: 'STOCK_MANAGER', password: '' })
+const form = reactive({ id: '', email: '', fullName: '', role: defaultRole.value, password: '' })
 
 function resetForm() {
-  form.id = ''; form.email = ''; form.fullName = ''; form.role = 'STOCK_MANAGER'; form.password = ''
+  form.id = ''; form.email = ''; form.fullName = ''; form.role = defaultRole.value; form.password = ''
   error.value = ''
 }
 function openCreate() { resetForm(); editing.value = false; drawerOpen.value = true }

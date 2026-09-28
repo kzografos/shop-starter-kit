@@ -30,6 +30,7 @@ export class StaffService {
   }
 
   async create(dto: CreateStaffDto) {
+    this.assertStaffRole(dto.role)
     const email = dto.email.trim().toLowerCase()
     const existing = await this.prisma.user.findUnique({ where: { email } })
     if (existing) throw new ConflictException('A user with this email already exists')
@@ -42,6 +43,7 @@ export class StaffService {
   }
 
   async updateRole(id: string, dto: UpdateStaffRoleDto, actingUserId: string) {
+    this.assertStaffRole(dto.role)
     if (id === actingUserId) throw new BadRequestException('You cannot change your own role')
     const target = await this.prisma.user.findUnique({ where: { id }, select: { role: true } })
     if (!target) throw new NotFoundException('Staff member not found')
@@ -65,6 +67,16 @@ export class StaffService {
     await this.guardLastOwner(id, target.role, MEMBER_ROLE)
     await this.prisma.user.update({ where: { id }, data: { role: MEMBER_ROLE } })
     return { ok: true }
+  }
+
+  /**
+   * A staff role must be registered: the owner or a preset an enabled module
+   * defined. Checked before anything else, where the DTO's fixed list used to
+   * reject it, with the same 400 and wording.
+   */
+  private assertStaffRole(role: string) {
+    const roles = this.permissions.staffRoles()
+    if (!roles.includes(role)) throw new BadRequestException(`role must be one of the following values: ${roles.join(', ')}`)
   }
 
   /** Block demoting/removing the final remaining owner so the shop is never locked out. */
