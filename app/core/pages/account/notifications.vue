@@ -41,7 +41,6 @@
         <div v-else-if="page && page.total === 0" class="text-center py-20" data-state="empty">
           <UIcon name="i-heroicons-bell-slash" class="w-16 h-16 text-[--color-bark-light] mx-auto mb-4" />
           <p class="text-[--color-bark-light]">{{ $t('notifications.empty') }}</p>
-          <UButton :label="$t('account.orders')" :to="localePath('/account/orders')" variant="outline" class="mt-4" />
         </div>
 
         <template v-else-if="page">
@@ -153,7 +152,6 @@ definePageMeta({ middleware: 'auth' })
 const NuxtLink = resolveComponent('NuxtLink')
 const route = useRoute()
 const router = useRouter()
-const localePath = useLocalePath()
 const { t, locale } = useI18n()
 const toast = useToast()
 const { fetchPage, markRead, markAllRead, describe } = useCustomerNotifications()
