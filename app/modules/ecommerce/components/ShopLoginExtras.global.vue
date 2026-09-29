@@ -4,7 +4,7 @@
     class="mt-6 flex items-start gap-3 p-4 rounded-xl bg-[--color-surface-card] border border-[--color-border-warm] text-sm text-[--color-bark-light]"
   >
     <UIcon name="i-heroicons-gift" class="w-5 h-5 text-terracotta shrink-0" />
-    <span>{{ $t('login.loyalty_note') }}</span>
+    <span>{{ $t('ecommerce.login.loyalty_note') }}</span>
   </div>
 
   <NuxtLink
@@ -12,7 +12,7 @@
     class="flex items-center justify-center gap-1.5 text-sm text-[--color-bark-light] hover:text-[--color-bark] transition-colors mt-5 mb-2"
   >
     <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
-    {{ $t('login.continue_browsing') }}
+    {{ $t('ecommerce.login.continue_browsing') }}
   </NuxtLink>
 </template>
 

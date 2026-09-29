@@ -234,14 +234,26 @@
       "import_csv": "Import CSV",
       "stock": "Stock",
       "active": "Active",
-      "inactive": "Inactive"
+      "inactive": "Inactive",
+      "orders": "Orders",
+      "loyalty_points_short": "Points",
+      "low_stock_title": "Low stock",
+      "out_of_stock_title": "Out of stock",
+      "low_stock_msg": "{name} is running low — {stock} left",
+      "out_of_stock_msg": "{name} is out of stock",
+      "view_product": "View product",
+      "role_accountant": "Accountant",
+      "role_stock_manager": "Stock Manager",
+      "role_accountant_desc": "View-only finance: dashboard, analytics and orders. No editing.",
+      "role_stock_manager_desc": "Products, categories and low-stock alerts only. No revenue, orders or customers."
     },
     "account": {
       "favourites": "Favourites",
       "loyalty": "Reward Points",
       "no_orders": "You have no orders yet",
       "points_until_reward": "points until next reward",
-      "redeem": "Redeem"
+      "redeem": "Redeem",
+      "orders": "Orders"
     },
     "footer": {
       "loyalty": "Loyalty Points",
@@ -256,7 +268,8 @@
       "view_all": "View all",
       "deals_eyebrow": "Limited-time offers",
       "deals_title": "Deals & Discounts",
-      "deals_all": "View all deals"
+      "deals_all": "View all deals",
+      "shop_now": "Shop Now"
     },
     "nav": {
       "brands": "Brands",
@@ -300,6 +313,13 @@
       "loyalty_redeem_hint": "e.g. 100 = 100 points redeem for €1 off.",
       "loyalty_min_redeem": "Minimum points to redeem",
       "loyalty_min_hint": "Smallest number of points a customer can redeem."
+    },
+    "login": {
+      "feature_orders": "Track your orders",
+      "feature_points": "Redeem your loyalty points",
+      "feature_reorder": "Quickly reorder your favourites",
+      "loyalty_note": "Earn points with every purchase — redeem them for discounts",
+      "continue_browsing": "Continue without signing in"
     }
   }
 }

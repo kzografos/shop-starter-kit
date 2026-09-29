@@ -7,7 +7,7 @@
       <div class="flex flex-col gap-6">
         <div>
           <h1 class="font-display text-3xl font-bold text-[--color-bark]">
-            {{ $t('account.orders') }}
+            {{ $t('ecommerce.account.orders') }}
           </h1>
           <p class="text-sm text-[--color-bark-light] mt-1">{{ $t('orders.subtitle') }}</p>
         </div>
@@ -29,7 +29,7 @@
             class="w-16 h-16 text-[--color-bark-light] mx-auto mb-4"
           />
           <p class="text-[--color-bark-light]">{{ $t('ecommerce.account.no_orders') }}</p>
-          <UButton :label="$t('home.shop_now')" :to="localePath('/products')" class="mt-4" />
+          <UButton :label="$t('ecommerce.home.shop_now')" :to="localePath('/products')" class="mt-4" />
         </div>
 
         <!-- Orders list -->

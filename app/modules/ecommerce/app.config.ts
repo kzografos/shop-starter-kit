@@ -53,7 +53,7 @@ export default defineAppConfig({
 
   // Account sidebar entries and dashboard cards.
   accountItems: [
-    { to: '/account/orders', icon: '📦', labelKey: 'account.orders', order: 10 },
+    { to: '/account/orders', icon: '📦', labelKey: 'ecommerce.account.orders', order: 10 },
     { to: '/account/favourites', icon: '❤️', labelKey: 'ecommerce.account.favourites', order: 20 },
     { to: '/account/loyalty', icon: '⭐', labelKey: 'ecommerce.account.loyalty', order: 30 },
   ] satisfies AccountItemContribution[],
@@ -69,9 +69,9 @@ export default defineAppConfig({
 
   // Login page side panel (B3b): what signing in gives a shop customer.
   loginFeatures: [
-    { icon: 'i-heroicons-shopping-bag', labelKey: 'login.feature_orders', order: 10 },
-    { icon: 'i-heroicons-star', labelKey: 'login.feature_points', order: 20 },
-    { icon: 'i-heroicons-arrow-path', labelKey: 'login.feature_reorder', order: 30 },
+    { icon: 'i-heroicons-shopping-bag', labelKey: 'ecommerce.login.feature_orders', order: 10 },
+    { icon: 'i-heroicons-star', labelKey: 'ecommerce.login.feature_points', order: 20 },
+    { icon: 'i-heroicons-arrow-path', labelKey: 'ecommerce.login.feature_reorder', order: 30 },
   ] satisfies LoginFeatureContribution[],
 
   // Footer (E6b): the shop's own column plus the two order/loyalty entries of
@@ -81,7 +81,7 @@ export default defineAppConfig({
   ] satisfies FooterColumnContribution[],
   footerItems: [
     { column: 'shop', to: '/products', labelKey: 'ecommerce.nav.products', order: 10 },
-    { column: 'account', to: '/account/orders', labelKey: 'account.orders', order: 20 },
+    { column: 'account', to: '/account/orders', labelKey: 'ecommerce.account.orders', order: 20 },
     { column: 'account', to: '/account/loyalty', labelKey: 'ecommerce.footer.loyalty', order: 30 },
   ] satisfies FooterItemContribution[],
 
@@ -92,20 +92,20 @@ export default defineAppConfig({
     { id: 'analytics', path: '/admin/analytics', labelKey: 'ecommerce.admin.analytics', subtitleKey: 'ecommerce.admin.subtitle_analytics', icon: 'chart', capability: 'view:finance', order: 10 },
     { id: 'products', path: '/admin/products', labelKey: 'ecommerce.admin.products', subtitleKey: 'ecommerce.admin.subtitle_products', icon: 'box', capability: 'view:catalog', order: 20 },
     { id: 'categories', path: '/admin/categories', labelKey: 'ecommerce.admin.categories', subtitleKey: 'ecommerce.admin.subtitle_categories', icon: 'tag', capability: 'view:catalog', order: 30 },
-    { id: 'orders', path: '/admin/orders', labelKey: 'admin.orders', subtitleKey: 'ecommerce.admin.subtitle_orders', icon: 'cart', capability: 'view:orders', order: 40 },
+    { id: 'orders', path: '/admin/orders', labelKey: 'ecommerce.admin.orders', subtitleKey: 'ecommerce.admin.subtitle_orders', icon: 'cart', capability: 'view:orders', order: 40 },
   ] satisfies AdminSectionContribution[],
 
   // Admin customer list (B2): the order count and loyalty balance the orders
   // and loyalty user extensions add to each /admin/customers row.
   adminCustomerColumns: [
-    { id: 'orders', labelKey: 'admin.orders', field: '_count.orders', order: 10, numeric: true },
-    { id: 'loyalty', labelKey: 'admin.loyalty_points_short', field: 'loyalty_points', order: 20, numeric: true },
+    { id: 'orders', labelKey: 'ecommerce.admin.orders', field: '_count.orders', order: 10, numeric: true },
+    { id: 'loyalty', labelKey: 'ecommerce.admin.loyalty_points_short', field: 'loyalty_points', order: 20, numeric: true },
   ] satisfies AdminCustomerColumnContribution[],
 
   // Staff roles (B4): the presets EcommercePermissions registers on the
   // backend, as the staff page names and describes them.
   staffRoles: [
-    { role: 'accountant', labelKey: 'admin.role_accountant', descriptionKey: 'admin.role_accountant_desc', badge: 'sage', order: 20 },
-    { role: 'stock_manager', labelKey: 'admin.role_stock_manager', descriptionKey: 'admin.role_stock_manager_desc', badge: 'blue', order: 30 },
+    { role: 'accountant', labelKey: 'ecommerce.admin.role_accountant', descriptionKey: 'ecommerce.admin.role_accountant_desc', badge: 'sage', order: 20 },
+    { role: 'stock_manager', labelKey: 'ecommerce.admin.role_stock_manager', descriptionKey: 'ecommerce.admin.role_stock_manager_desc', badge: 'blue', order: 30 },
   ] satisfies StaffRoleContribution[],
 })

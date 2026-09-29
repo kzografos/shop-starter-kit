@@ -24,59 +24,59 @@ test('before the shop registers, stock rows get the generic line: no tone (defau
 test('registered as plugins/stock-notifications.ts does, the inbox rows route through the shop presenters', () => {
   registerNotificationPresenter('low_stock', lowStockPresenter)
   registerNotificationPresenter('out_of_stock', outOfStockPresenter)
-  assert.equal(describeNotification(row('low_stock'), en).title, 'admin.low_stock_title')
-  assert.equal(describeNotification(row('out_of_stock'), en).title, 'admin.out_of_stock_title')
+  assert.equal(describeNotification(row('low_stock'), en).title, 'ecommerce.admin.low_stock_title')
+  assert.equal(describeNotification(row('out_of_stock'), en).title, 'ecommerce.admin.out_of_stock_title')
 })
 
 test('low_stock in English: English name, stock level, warning tone, localised product action', () => {
   assert.deepEqual(describeNotification(row('low_stock'), en), {
-    title: 'admin.low_stock_title',
-    body: 'admin.low_stock_msg|{"name":"Dog food","stock":3}',
+    title: 'ecommerce.admin.low_stock_title',
+    body: 'ecommerce.admin.low_stock_msg|{"name":"Dog food","stock":3}',
     tone: 'warning',
     to: `/en/admin/products?edit=${PRODUCT}`,
-    actionLabel: 'admin.view_product',
+    actionLabel: 'ecommerce.admin.view_product',
   })
 })
 
 test('low_stock in Greek: Greek name, unprefixed product action', () => {
   assert.deepEqual(describeNotification(row('low_stock'), el), {
-    title: 'admin.low_stock_title',
-    body: 'admin.low_stock_msg|{"name":"Τροφή σκύλου","stock":3}',
+    title: 'ecommerce.admin.low_stock_title',
+    body: 'ecommerce.admin.low_stock_msg|{"name":"Τροφή σκύλου","stock":3}',
     tone: 'warning',
     to: `/admin/products?edit=${PRODUCT}`,
-    actionLabel: 'admin.view_product',
+    actionLabel: 'ecommerce.admin.view_product',
   })
 })
 
 test('out_of_stock in English: name only, danger tone', () => {
   assert.deepEqual(describeNotification(row('out_of_stock', { stock: 0 }), en), {
-    title: 'admin.out_of_stock_title',
-    body: 'admin.out_of_stock_msg|{"name":"Dog food"}',
+    title: 'ecommerce.admin.out_of_stock_title',
+    body: 'ecommerce.admin.out_of_stock_msg|{"name":"Dog food"}',
     tone: 'danger',
     to: `/en/admin/products?edit=${PRODUCT}`,
-    actionLabel: 'admin.view_product',
+    actionLabel: 'ecommerce.admin.view_product',
   })
 })
 
 test('out_of_stock in Greek', () => {
   assert.deepEqual(describeNotification(row('out_of_stock', { stock: 0 }), el), {
-    title: 'admin.out_of_stock_title',
-    body: 'admin.out_of_stock_msg|{"name":"Τροφή σκύλου"}',
+    title: 'ecommerce.admin.out_of_stock_title',
+    body: 'ecommerce.admin.out_of_stock_msg|{"name":"Τροφή σκύλου"}',
     tone: 'danger',
     to: `/admin/products?edit=${PRODUCT}`,
-    actionLabel: 'admin.view_product',
+    actionLabel: 'ecommerce.admin.view_product',
   })
 })
 
 test('a missing name in the active locale falls back to the other one, then to —', () => {
-  assert.equal(describeNotification(row('low_stock', { meta: { name_el: 'Τροφή σκύλου' } }), en).body, 'admin.low_stock_msg|{"name":"Τροφή σκύλου","stock":3}')
-  assert.equal(describeNotification(row('low_stock', { meta: { name_en: 'Dog food' } }), el).body, 'admin.low_stock_msg|{"name":"Dog food","stock":3}')
-  assert.equal(describeNotification(row('low_stock', { meta: null }), en).body, 'admin.low_stock_msg|{"name":"—","stock":3}')
-  assert.equal(describeNotification(row('out_of_stock', { meta: {} }), el).body, 'admin.out_of_stock_msg|{"name":"—"}')
+  assert.equal(describeNotification(row('low_stock', { meta: { name_el: 'Τροφή σκύλου' } }), en).body, 'ecommerce.admin.low_stock_msg|{"name":"Τροφή σκύλου","stock":3}')
+  assert.equal(describeNotification(row('low_stock', { meta: { name_en: 'Dog food' } }), el).body, 'ecommerce.admin.low_stock_msg|{"name":"Dog food","stock":3}')
+  assert.equal(describeNotification(row('low_stock', { meta: null }), en).body, 'ecommerce.admin.low_stock_msg|{"name":"—","stock":3}')
+  assert.equal(describeNotification(row('out_of_stock', { meta: {} }), el).body, 'ecommerce.admin.out_of_stock_msg|{"name":"—"}')
 })
 
 test('a missing stock level reads as 0', () => {
-  assert.equal(describeNotification(row('low_stock', { stock: null }), en).body, 'admin.low_stock_msg|{"name":"Dog food","stock":0}')
+  assert.equal(describeNotification(row('low_stock', { stock: null }), en).body, 'ecommerce.admin.low_stock_msg|{"name":"Dog food","stock":0}')
 })
 
 test('no product_id: no destination and no action label, tone kept', () => {
