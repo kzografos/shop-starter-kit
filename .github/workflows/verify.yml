@@ -69,3 +69,37 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      # The same frontend with every application module switched off: Core and
+      # the project must build on their own (the backend proves the same in
+      # verify-module-composition). The checkout is disposable, so modules.json
+      # is edited in place and never restored.
+      - name: Disable every application module (CI checkout only)
+        run: |
+          node -e "
+          const fs = require('fs')
+          const registry = JSON.parse(fs.readFileSync('modules.json', 'utf8'))
+          if (!registry.modules.some((m) => m.enabled)) {
+            console.error('modules.json enables no module: the disabled build would prove nothing')
+            process.exit(1)
+          }
+          for (const m of registry.modules) m.enabled = false
+          fs.writeFileSync('modules.json', JSON.stringify(registry, null, 2) + '\n')
+          for (const m of registry.modules) console.log(m.id + ': enabled=' + m.enabled)
+          "
+
+      # The route table proves the modules really left the build: Core and
+      # project routes present (so a changed output format fails, not passes),
+      # the e-commerce routes absent.
+      - name: Build with every module disabled
+        run: |
+          pnpm build
+          routes=.output/server/chunks/build/server.mjs
+          test -f "$routes" || { echo "::error::$routes not found: cannot read the route table"; exit 1; }
+          for name in login___el admin-notifications___el about___el; do
+            grep -q "name: \"$name\"" "$routes" || { echo "::error::route $name not found in $routes: Core/project did not build or the route table format changed"; exit 1; }
+          done
+          for name in products___el checkout___el admin-products___el; do
+            if grep -q "name: \"$name\"" "$routes"; then echo "::error::e-commerce route $name is still in the build: the modules were not disabled"; exit 1; fi
+          done
+          echo "route table: Core and project routes present, e-commerce routes absent"
