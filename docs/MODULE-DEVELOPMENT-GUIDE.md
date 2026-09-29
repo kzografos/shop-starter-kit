@@ -33,7 +33,7 @@ backend/src/modules/<id>/
 │   ├── <name>.controller.ts
 │   ├── <name>.service.ts
 │   └── dto/
-├── events/                   # event names + payload types this module emits
+├── events.ts                 # typed map of the events this module emits (planned — §3.6)
 ├── mail/                     # template functions (return { subject, html })
 └── README.md                 # what it does, what it contributes, what env it needs
 
@@ -89,7 +89,7 @@ Checks, all part of `cd backend && npm run verify` and of CI: `verify:modules` (
 
 ### 3.2 Permission Registry contributions
 
-- Capabilities: `{ id: 'view:catalog', descriptionKey: 'ecommerce.caps.view_catalog' }`. Naming `verb:noun`, verbs `view` | `manage`. Ids are global; a duplicate across modules fails boot.
+- Capabilities are ids only: `'view:catalog'`, registered as a list with `defineCapabilities(ids, { order })`. There is no description or label per capability; what a role may do is described per role, by your `staffRoles[]` contribution (§3.5). Naming `verb:noun`, verbs `view` | `manage`. Ids are global; a duplicate across modules fails boot.
 - Role presets: `{ role: 'stock_manager', capabilities: ['view:catalog', 'manage:catalog', 'manage:inventory', 'view:notifications', 'manage:media'] }`. Roles are lowercase strings stored as-is in `users.role`; adding one is a registration, never a schema change. `admin` (owner) and `customer` (member) are Core; do not redefine them. A preset may include Core capabilities (here the admin inbox and image upload) so the role gets the Core surfaces it needs; `accountant` carries none of them.
 - Register capabilities from the sub-domain that owns them (`<sub-domain>-permissions.ts`, one `order` value per registrar) and role presets from the module **root** registrar (`modules/ecommerce/ecommerce-permissions.ts` → `EcommercePermissions`, provided by `ecommerce.module.ts`): a preset spans several sub-domains' capabilities, so it belongs to the module as a whole. The registry validates preset → capability references at bootstrap; registration order never changes outputs.
 - Guard your controllers with your own capabilities. Never guard with another module's. Core controllers are guarded only by Core capabilities (`view:notifications`, `manage:media`, …) — if a Core endpoint should be reachable by your role, add the Core capability to your preset rather than re-guarding the endpoint.
@@ -148,8 +148,9 @@ Declare each list with `satisfies <Contract>[]` so a wrong entry fails type-chec
 
 ### 3.6 Events
 
-- Declare emitted events in `events/index.ts`: `export const OrderPaid = defineEvent<{ orderId: string; userId: string | null; total: number }>('order.paid')`.
-- Emit through the Core event bus. Subscribe to Core identity events (`user.registered`, `user.authenticated`, `user.password_reset`) and to other modules' **exported** events only.
+- **Today:** the Core event bus (`backend/src/core/events/`, `CoreEventBus`) carries one Core event, `user.authenticated`, typed in `CoreEventMap` (`core-event.types.ts`). Subscribe from a provider's `onModuleInit` with `events.on('user.authenticated', <ClassName>.name, handler)`, as `orders/guest-order-linker.service.ts` does. No module emits on the bus yet, and there is no module event declaration mechanism yet.
+- **Event Registry — deferred** until a second bus event exists ([EVENT-REGISTRY.md](EVENT-REGISTRY.md) §3.2). Planned design (§6.1): each owner declares its own typed map — Core `user.authenticated` (plus `user.registered` / `user.password_reset` once a consumer exists), a module its own names and payload types in `modules/<id>/events.ts` (e-commerce: `order.placed`, `order.status_changed`, `order.paid`, `product.stock_changed`); the composition root merges the maps; Core subscribes to nothing from modules. Do not add module events to `CoreEventMap`: a module's first bus event is the trigger to implement the merged map. The order-status and stock-alert notification producers stay direct calls until a second consumer appears (§6.2).
+- Subscribe only to Core events and, once they exist, to other modules' **exported** events.
 - Handlers must be idempotent and must not throw on business failure — log and continue (E14). Anything that must be durable uses the `ProcessedEvent` pattern inside a transaction.
 
 ### 3.7 Environment
