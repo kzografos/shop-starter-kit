@@ -38,3 +38,11 @@ export const modules: ModuleDescriptor[] = registry.modules
  * `extends` priority order.
  */
 export const enabledModuleLayers: string[] = modules.filter((m) => m.enabled).map((m) => m.nuxtLayer)
+
+/**
+ * Nuxt modules the enabled application modules need (`nuxtModules`), in
+ * registry order, each once. The root config installs them among its own, so a
+ * disabled module's Nuxt modules are not installed at all.
+ */
+export const enabledModuleNuxtModules: string[] =
+  [...new Set(modules.filter((m) => m.enabled).flatMap((m) => m.nuxtModules ?? []))]

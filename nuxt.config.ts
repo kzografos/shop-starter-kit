@@ -1,4 +1,4 @@
-import { enabledModuleLayers } from './modules.registry'
+import { enabledModuleLayers, enabledModuleNuxtModules } from './modules.registry'
 import { LOCALES } from './app/project/project.config'
 
 export default defineNuxtConfig({
@@ -51,7 +51,8 @@ export default defineNuxtConfig({
     '@nuxtjs/i18n',
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt',
-    'nuxt-charts',
+    // The enabled application modules' own Nuxt modules (modules.json `nuxtModules`).
+    ...enabledModuleNuxtModules,
     '@nuxt/eslint',
     '@nuxt/image',
   ],
