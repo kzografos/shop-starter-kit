@@ -28,9 +28,9 @@ test('positive: real tree — baseline boundaries hold and output is determinist
   assert.deepEqual(r.backend.fileCycles, [], 'no file-level runtime cycle')
   assert.deepEqual(r.backend.folderCycles, [['core/auth', 'core/users']], 'the one known unit cycle (guards contract)')
   assert.deepEqual(r.backend.events.publishers.map((p) => p.event), ['user.authenticated'])
-  // Frontend: no Core→Shop code edge; Core→Project edges are the documented brand residue.
-  assert.equal(r.frontend.forbidden.filter((e) => e.toLayer === 'SHOP').length, 0, JSON.stringify(r.frontend.forbidden.filter((e) => e.toLayer === 'SHOP')))
-  assert.ok(r.frontend.forbidden.every((e) => e.fromLayer === 'CORE' && e.toLayer === 'PROJECT'))
+  // Frontend: no forbidden edge of any runtime kind — Core→Shop and, since P1
+  // was closed (E6a–E6c), Core→Project.
+  assert.deepEqual(r.frontend.forbidden, [], JSON.stringify(r.frontend.forbidden))
   assert.ok(r.frontend.coreToShopViaRegistry.length >= 4, 'app.config contributions are reported as registry edges')
   assert.deepEqual(r.frontend.fileCycles, [])
   // Limitations are reported, not hidden.
@@ -53,6 +53,9 @@ test('negative: synthetic tree — forbidden edges, DI, auto-component and a cyc
     w('app/modules/ecommerce/components/cart/CartButton.global.vue', '<template><button>x</button></template>\n')
     w('app/pages/login.vue', '<template><div /></template>\n<script setup lang="ts">\nconst cart = useCartStore()\n</script>\n')
     w('app/modules/ecommerce/stores/cart.ts', 'export const useCartStore = () => ({})\n')
+    // frontend: Core footer renders a Project component through the template
+    w('app/components/layout/AppFooter.vue', '<template><footer><ProjectBrandLockup /></footer></template>\n')
+    w('app/project/components/ProjectBrandLockup.vue', '<template><span>brand</span></template>\n')
     w('app/utils/x.ts', "// useCartStore() mentioned in a comment must not count\nexport const x = 1\n")
     w('types/index.ts', 'export interface Profile { id: string }\n')
 
@@ -71,6 +74,7 @@ test('negative: synthetic tree — forbidden edges, DI, auto-component and a cyc
     const fe = r.frontend.forbidden.map((e) => `${e.from}>${e.to}:${e.kind}`)
     assert.ok(fe.includes('layouts/default.vue>modules/ecommerce/components/cart/CartButton.global.vue:auto-component'), fe.join(', '))
     assert.ok(fe.includes('pages/login.vue>modules/ecommerce/stores/cart.ts:auto-import'))
+    assert.ok(fe.includes('components/layout/AppFooter.vue>project/components/ProjectBrandLockup.vue:auto-component'), 'Core→Project is a forbidden edge')
     assert.ok(!r.frontend.edgeList.some((e) => e.from === 'utils/x.ts'), 'identifiers inside comments are ignored')
     assert.equal(r.frontend.packageComponentUses, 1, 'UIcon counted as a package component, not unresolved')
 
