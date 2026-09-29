@@ -5,12 +5,20 @@ export interface NotificationView {
   title: string
   body: string
   to: string | null
+  /** How urgent the row looks where a view shows it (the staff inbox icon); omitted = `warning`. */
+  tone?: 'warning' | 'danger'
+  /** Label of the row's action button where a view offers one (the staff inbox); shown only with `to`. */
+  actionLabel?: string
 }
 
-/** What a presenter may use: translation and locale-aware paths, nothing else. */
+/**
+ * What a presenter may use: translation, locale-aware paths and, where the
+ * caller passes it, the active locale code — nothing else.
+ */
 export interface NotificationPresenterContext {
   t: (key: string, values?: Record<string, unknown>) => string
   localePath: (path: string) => string
+  locale?: string
 }
 
 export type NotificationPresenter = (n: Notification, ctx: NotificationPresenterContext) => NotificationView
@@ -22,7 +30,7 @@ const presenters = new Map<string, NotificationPresenter>()
 /**
  * Registers how rows of one `type` are phrased. The module that produces the
  * rows owns the presenter (its `meta` shape, its wording keys, its route);
- * Core's bell, panel and history page only call `describeNotification()`.
+ * Core's bell, panel, history page and staff inbox only call `describeNotification()`.
  * Registering a type twice keeps the last presenter — a project layer may
  * override a module's wording.
  */

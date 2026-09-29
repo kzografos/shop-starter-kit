@@ -31,26 +31,26 @@
     <!-- List -->
     <div v-else class="ac-card" style="padding: 0; overflow: hidden;">
       <div
-        v-for="n in items"
+        v-for="{ n, view } in rows"
         :key="n.id"
         class="ac-notif-row"
         :class="{ unread: !n.is_read }"
       >
-        <div class="ac-notif-icon" :class="n.type === 'out_of_stock' ? 'out' : 'low'">
-          <svg v-if="n.type === 'out_of_stock'" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M15 9l-6 6M9 9l6 6" /></svg>
+        <div class="ac-notif-icon" :class="view.tone === 'danger' ? 'out' : 'low'">
+          <svg v-if="view.tone === 'danger'" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M15 9l-6 6M9 9l6 6" /></svg>
           <svg v-else viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01" /><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /></svg>
         </div>
         <div style="flex: 1; min-width: 0;">
           <div style="font-weight: 600; font-size: 14px;">
-            {{ n.type === 'out_of_stock' ? $t('admin.out_of_stock_title') : $t('admin.low_stock_title') }}
+            {{ view.title }}
           </div>
           <div class="ac-muted" style="font-size: 13px; margin-top: 2px;">
-            {{ message(n) }}
+            {{ view.body }}
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 14px; flex-shrink: 0;">
-          <button v-if="n.product_id" class="ac-link-name" style="background: none; border: none; cursor: pointer; font: inherit; font-size: 13px;" @click="viewProduct(n)">
-            {{ $t('admin.view_product') }}
+          <button v-if="view.to && view.actionLabel" class="ac-link-name" style="background: none; border: none; cursor: pointer; font: inherit; font-size: 13px;" @click="openAction(n, view)">
+            {{ view.actionLabel }}
           </button>
           <span class="ac-muted" style="font-size: 12px; white-space: nowrap;">{{ timeAgo(n.created_at) }}</span>
           <button
@@ -82,6 +82,7 @@
 
 <script setup lang="ts">
 import type { Notification, NotificationList } from '~~/types'
+import { describeNotification, type NotificationView } from '#core/utils/notification-presenters'
 
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
@@ -90,12 +91,13 @@ const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const { unread, refreshCount } = useAdminNotifications()
 
-// Rows are the shared wire shape (types/index.ts): `type` arrives lowercased
-// ('low_stock' | 'out_of_stock'), keys in snake_case.
+// Rows are the shared wire shape (types/index.ts): `type` arrives lowercased,
+// keys in snake_case. Core names no row type: how a row reads — title,
+// message, icon tone, action — is the presenter its producing module
+// registered, and a type nobody registered gets the generic line and the
+// default (warning) icon.
 type Notif = Notification
 type NotifResponse = NotificationList
-interface NotifMeta { name_el?: string; name_en?: string }
-const stockMeta = (n: Notif): NotifMeta => (n.meta ?? {}) as NotifMeta
 
 const page = ref(1)
 const unreadOnly = ref(false)
@@ -111,22 +113,15 @@ const { data, pending, refresh } = useAsyncData('admin-notifications', () =>
 const items = computed(() => data.value?.items ?? [])
 const total = computed(() => data.value?.total ?? 0)
 const totalPages = computed(() => data.value?.total_pages ?? 1)
+const rows = computed(() => items.value.map((n) => ({
+  n,
+  view: describeNotification(n, { t, localePath, locale: locale.value }),
+})))
 
 // Keep the shared badge in sync with each fetch.
 watch(() => data.value?.unread, (v) => { if (typeof v === 'number') unread.value = v })
 
 function setFilter(v: boolean) { unreadOnly.value = v; page.value = 1 }
-
-function productName(n: Notif) {
-  const meta = stockMeta(n)
-  const name = locale.value === 'el' ? meta.name_el : meta.name_en
-  return name || meta.name_en || meta.name_el || '—'
-}
-function message(n: Notif) {
-  return n.type === 'out_of_stock'
-    ? t('admin.out_of_stock_msg', { name: productName(n) })
-    : t('admin.low_stock_msg', { name: productName(n), stock: n.stock ?? 0 })
-}
 
 const rtf = computed(() => new Intl.RelativeTimeFormat(locale.value, { numeric: 'auto' }))
 function timeAgo(iso: string) {
@@ -157,8 +152,11 @@ async function markAll() {
   }
 }
 
-function viewProduct(n: Notif) {
+// A row's action opens what the row is about (its presenter's `to`, already
+// locale-prefixed) and marks the row read on the way.
+function openAction(n: Notif, view: NotificationView) {
+  if (!view.to) return
   if (!n.is_read) markOne(n)
-  navigateTo(localePath(`/admin/products?edit=${n.product_id}`))
+  navigateTo(view.to)
 }
 </script>
