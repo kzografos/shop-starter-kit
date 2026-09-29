@@ -36,23 +36,17 @@
         <div class="flex items-center gap-3">
           <!-- Locale toggle -->
           <div class="flex items-center gap-2">
-            <button
-              class="transition-opacity duration-150 hover:opacity-100 flex items-center"
-              :class="locale === 'el' ? 'opacity-100' : 'opacity-35'"
-              aria-label="Ελληνικά"
-              @click="setLocale('el')"
-            >
-              <span class="fi fi-cy fis rounded-sm w-5 h-5" />
-            </button>
-            <span class="text-[--color-border-warm] text-xs">|</span>
-            <button
-              class="transition-opacity duration-150 hover:opacity-100 flex items-center"
-              :class="locale === 'en' ? 'opacity-100' : 'opacity-35'"
-              aria-label="English"
-              @click="setLocale('en')"
-            >
-              <span class="fi fi-gb fis rounded-sm w-5 h-5" />
-            </button>
+            <template v-for="(l, i) in localeOptions" :key="l.code">
+              <span v-if="i > 0" class="text-[--color-border-warm] text-xs">|</span>
+              <button
+                class="transition-opacity duration-150 hover:opacity-100 flex items-center"
+                :class="locale === l.code ? 'opacity-100' : 'opacity-35'"
+                :aria-label="l.name"
+                @click="setLocale(l.code)"
+              >
+                <span :class="`fi fi-${l.flag} fis rounded-sm w-5 h-5`" />
+              </button>
+            </template>
           </div>
 
           <!-- Account dropdown (logged in) — desktop only; mobile uses the hamburger menu -->
@@ -258,21 +252,16 @@
             <span class="text-xs text-[--color-bark-light] font-medium">{{
               $t('header.language')
             }}</span>
-            <button
-              class="transition-opacity hover:opacity-100"
-              :class="locale === 'el' ? 'opacity-100' : 'opacity-35'"
-              @click="switchLocale('el')"
-            >
-              <span class="fi fi-cy fis rounded-sm w-5 h-5" />
-            </button>
-            <span class="text-[--color-border-warm] text-xs">|</span>
-            <button
-              class="transition-opacity hover:opacity-100"
-              :class="locale === 'en' ? 'opacity-100' : 'opacity-35'"
-              @click="switchLocale('en')"
-            >
-              <span class="fi fi-gb fis rounded-sm w-5 h-5" />
-            </button>
+            <template v-for="(l, i) in localeOptions" :key="l.code">
+              <span v-if="i > 0" class="text-[--color-border-warm] text-xs">|</span>
+              <button
+                class="transition-opacity hover:opacity-100"
+                :class="locale === l.code ? 'opacity-100' : 'opacity-35'"
+                @click="switchLocale(l.code)"
+              >
+                <span :class="`fi fi-${l.flag} fis rounded-sm w-5 h-5`" />
+              </button>
+            </template>
           </div>
         </div>
       </div>
@@ -281,8 +270,15 @@
 </template>
 
 <script setup lang="ts">
-const { locale, setLocale, t } = useI18n()
+const { locale, locales, setLocale, t } = useI18n()
 const localePath = useLocalePath()
+
+// The language switchers' entries, in the project's LOCALES order as
+// @nuxtjs/i18n hands them to Core. `flag` is a custom locale property the i18n
+// types leave `unknown`; LocaleContribution makes it required at the source.
+const localeOptions = computed(() =>
+  locales.value.map((l) => ({ code: l.code, name: l.name, flag: l.flag as string })),
+)
 const authStore = useAuthStore()
 const appConfig = useAppConfig()
 const brand = computed(() => appConfig.brand)
@@ -327,7 +323,7 @@ onMounted(() => {
   onUnmounted(() => document.removeEventListener('click', onClickOutside))
 })
 
-function switchLocale(lang: 'el' | 'en') {
+function switchLocale(lang: typeof locale.value) {
   setLocale(lang)
 }
 

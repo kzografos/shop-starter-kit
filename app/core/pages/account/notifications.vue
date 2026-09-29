@@ -152,7 +152,7 @@ definePageMeta({ middleware: 'auth' })
 const NuxtLink = resolveComponent('NuxtLink')
 const route = useRoute()
 const router = useRouter()
-const { t, locale } = useI18n()
+const { t, localeProperties } = useI18n()
 const toast = useToast()
 const { fetchPage, markRead, markAllRead, describe } = useCustomerNotifications()
 
@@ -222,6 +222,6 @@ function onOpen(n: Notification) {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(locale.value === 'el' ? 'el-GR' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+  return new Date(iso).toLocaleString(localeProperties.value.language, { dateStyle: 'medium', timeStyle: 'short' })
 }
 </script>

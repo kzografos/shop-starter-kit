@@ -1,3 +1,5 @@
+import type { LocaleContribution } from '#core/types/contributions'
+
 // Single source of truth for the shop's real business details.
 // Used by the footer, contact page, WhatsApp button, and SEO structured data.
 export const BUSINESS = {
@@ -64,12 +66,14 @@ export const REGION = {
 // The languages this shop is served in, and the one served without a URL
 // prefix (C3d). Build-time: the root nuxt.config.ts reads them for
 // @nuxtjs/i18n, which keeps the mechanism (strategy, detection, langDir).
-// `file` names the root message file for that locale. `as const`: the i18n
-// module types locale codes as a literal union.
+// `file` names the root message file for that locale; `name`, `language` and
+// `flag` are what Core's language switcher and date formatting read back from
+// @nuxtjs/i18n (LocaleContribution, every field required). `as const`: the
+// i18n module types locale codes as a literal union.
 export const LOCALES = {
   locales: [
-    { code: 'el', name: 'Ελληνικά', file: 'el.json', language: 'el-GR' },
-    { code: 'en', name: 'English', file: 'en.json', language: 'en-GB' },
-  ],
+    { code: 'el', name: 'Ελληνικά', file: 'el.json', language: 'el-GR', flag: 'cy' },
+    { code: 'en', name: 'English', file: 'en.json', language: 'en-GB', flag: 'gb' },
+  ] as const satisfies readonly LocaleContribution[],
   defaultLocale: 'el',
 } as const

@@ -105,7 +105,7 @@
 import type { Notification } from '~~/types'
 
 const NuxtLink = resolveComponent('NuxtLink')
-const { locale } = useI18n()
+const { localeProperties } = useI18n()
 const { isLoggedIn } = storeToRefs(useAuthStore())
 const { items, unread, loaded, loading, error, load, refreshCount, markRead, markAllRead, describe, reset } = useCustomerNotifications()
 
@@ -140,7 +140,7 @@ function onOpen(n: Notification) {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(locale.value === 'el' ? 'el-GR' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+  return new Date(iso).toLocaleString(localeProperties.value.language, { dateStyle: 'medium', timeStyle: 'short' })
 }
 
 onMounted(() => {

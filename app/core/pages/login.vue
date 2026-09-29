@@ -4,23 +4,17 @@
   >
     <!-- Language switcher -->
     <div class="absolute top-4 right-6 z-10 flex items-center gap-2">
-      <button
-        class="transition-opacity duration-150 hover:opacity-100 flex items-center"
-        :class="currentLocale === 'el' ? 'opacity-100' : 'opacity-35'"
-        aria-label="Ελληνικά"
-        @click="setLocale('el')"
-      >
-        <span class="fi fi-cy fis rounded-sm w-5 h-5" />
-      </button>
-      <span class="text-[--color-border-warm] text-xs">|</span>
-      <button
-        class="transition-opacity duration-150 hover:opacity-100 flex items-center"
-        :class="currentLocale === 'en' ? 'opacity-100' : 'opacity-35'"
-        aria-label="English"
-        @click="setLocale('en')"
-      >
-        <span class="fi fi-gb fis rounded-sm w-5 h-5" />
-      </button>
+      <template v-for="(l, i) in localeOptions" :key="l.code">
+        <span v-if="i > 0" class="text-[--color-border-warm] text-xs">|</span>
+        <button
+          class="transition-opacity duration-150 hover:opacity-100 flex items-center"
+          :class="currentLocale === l.code ? 'opacity-100' : 'opacity-35'"
+          :aria-label="l.name"
+          @click="setLocale(l.code)"
+        >
+          <span :class="`fi fi-${l.flag} fis rounded-sm w-5 h-5`" />
+        </button>
+      </template>
     </div>
 
     <!-- Left panel: desktop only -->
@@ -219,7 +213,12 @@ const loginFeatures = computed(() =>
   [...(useAppConfig().loginFeatures ?? [])].sort((a, b) => a.order - b.order),
 )
 
-const { t, locale: currentLocale, setLocale } = useI18n()
+const { t, locale: currentLocale, locales, setLocale } = useI18n()
+// The language switcher's entries, as in AppHeader: the project's LOCALES
+// through @nuxtjs/i18n, `flag` required by LocaleContribution.
+const localeOptions = computed(() =>
+  locales.value.map((l) => ({ code: l.code, name: l.name, flag: l.flag as string })),
+)
 const api = useApi()
 const authStore = useAuthStore()
 const localePath = useLocalePath()

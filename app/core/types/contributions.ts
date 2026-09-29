@@ -85,6 +85,26 @@ export interface RegionContribution {
   currency: string
 }
 
+/**
+ * One language the project is served in: an entry of the project layer's
+ * `LOCALES`, which the project `satisfies` against this contract. The root
+ * nuxt.config.ts hands the entries to @nuxtjs/i18n, and Core reads them back
+ * through `useI18n()` (`locales`, `localeProperties`) — never from the
+ * project — so every field here is required: Core has no fallback for them.
+ */
+export interface LocaleContribution {
+  /** Locale code, the URL prefix of every locale but the default (`'el'`). */
+  code: string
+  /** The language's own name, the language switcher's label (`'Ελληνικά'`). */
+  name: string
+  /** The root message file for this locale (`'el.json'`). */
+  file: string
+  /** BCP 47 language tag Core formats dates with (`'el-GR'`). */
+  language: string
+  /** flag-icons country code of the switcher's flag (`'cy'` → `fi fi-cy`). */
+  flag: string
+}
+
 export interface GlobalWidgetContribution {
   component: string
   order: number

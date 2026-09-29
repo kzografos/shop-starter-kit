@@ -66,7 +66,7 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const api = useApi()
-const { locale } = useI18n()
+const { localeProperties } = useI18n()
 const search = ref('')
 const page = ref(1)
 
@@ -112,7 +112,7 @@ const visiblePages = computed(() => {
 })
 
 function formatDate(d: string) {
-  return new Date(d).toLocaleDateString(locale.value === 'el' ? 'el-GR' : 'en-GB', {
+  return new Date(d).toLocaleDateString(localeProperties.value.language, {
     day: '2-digit', month: 'short', year: 'numeric',
   })
 }
