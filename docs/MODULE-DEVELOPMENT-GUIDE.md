@@ -7,7 +7,7 @@
 
 ## 1. What a module is
 
-An optional, self-contained unit of domain functionality that a project enables in `project.config.ts`. It owns its backend code, its Nuxt layer, its schema file, its i18n, its env requirements, and every registry entry it needs. Core never names it; Core learns about it only through registries.
+An optional, self-contained unit of domain functionality that a project enables in `modules.json` (§3.1). It owns its backend code, its Nuxt layer, its schema file, its i18n, its env requirements, and every registry entry it needs. Core never names it; Core learns about it only through registries.
 
 A module is **not**: a shared runtime package, a plugin loaded at runtime, or a place to put client-specific branding.
 
@@ -66,17 +66,26 @@ Everything below lives inside the module. Core reads it; Core is never edited to
 
 ### 3.1 Module Registry entry
 
-```ts
-// backend/src/modules/<id>/index.ts (shape illustrative)
-export const module = defineModule({
-  id: 'ecommerce',
-  nest: EcommerceModule,           // Nest module class
-  env: ecommerceEnvSchema,         // Joi fragment, merged only when enabled
-  registry: ecommerceRegistry,     // capabilities, roles, settings, admin sections, events
-})
+`modules.json` at the repository root is the registry: one descriptor per module (`ModuleDescriptor` in `modules.registry.ts`), and a project decides what runs with each module's `enabled` flag. A module is compiled in or absent — there is no runtime toggle.
+
+```json
+{
+  "id": "ecommerce",
+  "enabled": true,
+  "nuxtLayer": "./app/modules/ecommerce",
+  "backendDir": "modules/ecommerce",
+  "prismaSchema": "ecommerce.prisma",
+  "nuxtModules": ["nuxt-charts"]
+}
 ```
 
-Frontend side: the layer path (`app/modules/<id>`) is added to `extends` by the root config when the id appears in `project.config.modules`.
+- `id` — stable module id; `enabled` — compiled in when true, a disabled module contributes nothing.
+- `nuxtLayer` — the module's Nuxt layer. The root `nuxt.config.ts` reads the registry through `modules.registry.ts`: `enabledModuleLayers` go into `extends` between Core and the project (E8a).
+- `nuxtModules` (optional) — Nuxt modules only this module needs. `enabledModuleNuxtModules` adds the enabled modules' ones to the root `modules` list, so a disabled module's Nuxt modules are not installed (`4dde6de`).
+- `backendDir` — the module's folder under `backend/src/`. `npm run modules:generate` writes the enabled ids into the generated `backend/src/modules.enabled.ts`; `backend/src/modules.composition.ts` maps each id to its Nest module (`MODULE_CLASSES`, E9a) and `backend/src/seed.ts` to its seed (`MODULE_SEEDS`, E9e5).
+- `prismaSchema` (optional) — the module's schema file under `backend/prisma/`. The `User` back-relations its models need go in `backend/src/<backendDir>/prisma/User.relations.fragment`, which `npm run prisma:compose` writes into the generated region of `User` in `core.prisma` (E9e2).
+
+Checks, all part of `cd backend && npm run verify` and of CI: `verify:modules` (the generated ids match `modules.json`), `verify:registry` (every module directory is registered), `verify:schema` (the composed schema matches the registered modules), `verify:prisma-core-only` (Core stands alone with no module registered) and `verify:composition` (the Nest composition with the module enabled and disabled). The CI frontend job also builds the frontend with every module disabled (`352d547`).
 
 ### 3.2 Permission Registry contributions
 
@@ -98,7 +107,7 @@ export const MY_SETTINGS: readonly SettingDefinition[] = [
 
 - `public: true` exposes the key on `GET /settings`; use it only for values the storefront must display (prices, thresholds). Secrets are never settings.
 - `default` is the one authoritative default: `SettingsService.getAll()` applies it when no row exists, so nothing is seeded. Never overwrite a stored row.
-- `min`/`max`/`editable`/`type` are enforced by Core on `PATCH /admin/settings`; the admin form renders the card and fields from the definition (label/hint i18n keys, unit, min/step) — do not touch `app/pages/admin/settings/index.vue`.
+- `min`/`max`/`editable`/`type` are enforced by Core on `PATCH /admin/settings`; the admin form renders the card and fields from the definition (label/hint i18n keys, unit, min/step) — do not touch `app/core/pages/admin/settings/index.vue`.
 - The label/hint keys belong to the module: `<module>.settings.*`, defined in the module layer's own locale files (e-commerce: `ecommerce.settings.*`).
 - Read through the Core `SettingsService` (`getAll()`), or your own typed view like `PricingSettingsService.loadPricing()`; never `prisma.setting` directly.
 
@@ -117,18 +126,25 @@ adminSections: [
 
 ### 3.5 Navigation slot contributions (`app.config.ts` of the layer)
 
-Implemented in seam 9; contracts in `app/types/contributions.ts`. The Core shells (`AppHeader`, `layouts/default.vue`, `AccountSidebar`, `pages/account/index.vue`) read these lists with `useAppConfig()`, sort each by `order` and render them; they never import a module. Until layers exist the entries live in the root `app/app.config.ts`; they move into your layer's `app.config.ts` unchanged (Nuxt concatenates the arrays across layers).
+Implemented in seam 9; contracts in `app/core/types/contributions.ts`. The Core shells (`AppHeader`, `layouts/default.vue`, `AccountSidebar`, `pages/account/index.vue`) read these lists with `useAppConfig()`, sort each by `order` and render them; they never import a module. Until layers exist the entries live in the root `app/app.config.ts`; they move into your layer's `app.config.ts` unchanged (Nuxt concatenates the arrays across layers).
 
 - `navItems[]` — storefront header links `{ to, labelKey, order }`. `to` is unlocalised; the shell applies `localePath()`.
 - `headerActions[]` — components rendered in the header `{ component, order, area? }`. `area: 'actions'` (default) is the right-hand action cluster (e.g. `ShopCartButton`); `area: 'center'` is the flexible desktop zone between the nav and the actions (e.g. `ShopHeaderSearch`). The component owns its own wrapper and any route-based `v-if`.
 - `globalWidgets[]` — components mounted once in the default layout `{ component, order }` (e.g. `ShopCartDrawer`).
 - `accountItems[]` — account sidebar links `{ to, icon, labelKey, order }`, rendered after the Core dashboard link.
 - `accountCards[]` — dashboard blocks rendered below the welcome header `{ component, order }` (e.g. `ShopLoyaltyCard`, `ShopAccountStats`). Names carry the layer prefix (`Shop*`), so the string in `app.config` is the prefixed name.
-- `footerColumns[]` / `footerItems[]` — the footer's columns and their entries. A column is `{ id, labelKey, order }`; an item is `{ column, labelKey, order, to?, icon? }` — with `to` it renders as a link, without it as plain text (the shipping note), and `icon` is an optional leading icon name. Any layer may declare a column and any layer may add items to someone else's column (Core declares `account` and contributes `/account`; the shop adds `/account/orders` and `/account/loyalty` to it). `app/utils/footer-registry.ts` sorts columns and items by `order`, groups items by `column`, drops empty columns and sends an item naming an unknown column to the first one — the same fallback `groupAdminSections()` uses.
+- `footerColumns[]` / `footerItems[]` — the footer's columns and their entries. A column is `{ id, labelKey, order }`; an item is `{ column, labelKey, order, to?, icon? }` — with `to` it renders as a link, without it as plain text (the shipping note), and `icon` is an optional leading icon name. Any layer may declare a column and any layer may add items to someone else's column (Core declares `account` and contributes `/account`; the shop adds `/account/orders` and `/account/loyalty` to it). `app/core/utils/footer-registry.ts` sorts columns and items by `order`, groups items by `column`, drops empty columns and sends an item naming an unknown column to the first one — the same fallback `groupAdminSections()` uses.
+- `homeSections[]` / `homeBannerItems[]` — components the project's home page renders between its hero and its closing banner, and inline in that banner `{ component, order }` (e.g. `ShopHomeCategories`, `ShopHomeDeals`, `ShopBrandsMarquee`; `ShopHomeLoyaltyNote`).
+- `loginExtras[]` — components rendered below the Core login form `{ component, order }` (e.g. `ShopLoginExtras`, `d15f6e4`).
+- `loginFeatures[]` — lines of the login page's side-panel feature list `{ icon, labelKey, order }`; with no entry the list is not rendered (`fe900be`).
+- `adminCustomerColumns[]` — columns of the Core admin customer list `{ id, labelKey, field, order, numeric? }`; `field` is a dotted path on the row a user extension (§3.8a) supplies, and a missing value renders `—` (`7e4379d`).
+- `staffRoles[]` — the roles the Core staff page offers and describes `{ role, labelKey, descriptionKey, badge?, order }`; `role` is a preset your backend registers (§3.2), and Core contributes its owner (`88e07ac`).
 
 Declare each list with `satisfies <Contract>[]` so a wrong entry fails type-checking at the source.
 
 **`.global.vue` convention.** `component` is a **registered component name**, never an import path; the shells render it with `<component :is="name">`, which resolves only globally registered components. A contributed shell component must therefore carry the `.global.vue` suffix (`CartButton.global.vue` → name `CartButton`): Nuxt registers such files globally, as lazy chunks, with no `nuxt.config` change. The suffix is not part of the name, and the name still follows the layer's component prefix rule once prefixes exist (`ShopCartButton.global.vue`). Components that are only used by tag inside your own layer do not need the suffix.
+
+**Project contracts.** The project layer fills three singletons that Core and the modules read: `app.config.brand` (`BrandContribution`, the brand mark component), `app.config.project` (`ProjectIdentityContribution`: name, legal name, tagline, icons, share card, city/country, footer copy keys) and `app.config.region` (`RegionContribution`: the currency). They are checked with `satisfies` and deliberately not declared on `CustomAppConfig`, so a missing one fails typecheck where it is read. Its `LOCALES` (`app/project/project.config.ts`) `satisfies` `LocaleContribution` (`code`, `name`, `file`, `language`, `flag`, all required): the root `nuxt.config.ts` hands them to @nuxtjs/i18n, and every layer reads them back through `useI18n()` (`locales`, `localeProperties`) — never by importing the project (`9a126de`).
 
 ### 3.6 Events
 
@@ -165,7 +181,7 @@ this.registry.define({
 - Core applies extensions only where a user object is returned to a client, never per request in the JWT strategy — keep `extend()` cheap.
 - Field names are camelCase; the Core interceptor snake-cases them on the wire (`loyaltyPoints` → `loyalty_points`).
 - Do not use an extension to smuggle behaviour into Core (no writes, no side effects); it is a read-only projection.
-- **Reading it on the frontend:** Core's `Profile` type carries extensions as `[extension: string]: unknown` and names none of them. Declare your field's type next to your module's types (`LoyaltyProfileExtension { loyalty_points: number }`) and read it through a module composable (`useLoyalty()` → `loyaltyPointsOf(profile)`, `app/utils/loyalty.ts`), never by adding a computed to the Core auth store.
+- **Reading it on the frontend:** Core's `Profile` type carries extensions as `[extension: string]: unknown` and names none of them. Declare your field's type next to your module's types (`LoyaltyProfileExtension { loyalty_points: number }`) and read it through a module composable (`useLoyalty()` → `loyaltyPointsOf(profile)`, `app/modules/ecommerce/utils/loyalty.ts`), never by adding a computed to the Core auth store.
 - Role values Core writes (`OWNER_ROLE`, `MEMBER_ROLE`) live in `backend/src/core/users/roles.ts`; import them from there in `core/users/`, and from `core/auth/permissions` (which re-exports them) elsewhere. `core/users` never imports `core/auth` at runtime — boundary rule E.
 
 ### 3.9 Mail
@@ -179,7 +195,7 @@ this.registry.define({
 
 ### 3.10a Product images (reference implementation)
 
-The e-commerce module's product images are the worked example of a module owning per-entity media over the storage adapter (`backend/src/modules/ecommerce/products/products.service.ts`, `products-admin.controller.ts`, `dto/product-images.dto.ts`; admin UI in `app/components/admin/ProductDrawer.vue`).
+The e-commerce module's product images are the worked example of a module owning per-entity media over the storage adapter (`backend/src/modules/ecommerce/products/products.service.ts`, `products-admin.controller.ts`, `dto/product-images.dto.ts`; admin UI in `app/modules/ecommerce/components/admin/ShopProductDrawer.vue`).
 
 - **`Product.images String[]` is the single source of truth.** There is no image table. The array order is the display order and `images[0]` is the primary image — every storefront, cart and order view reads it that way. A reference is either an object key returned by `StorageAdapter.put()` or an absolute `http(s)` URL (seeded or imported); a product may not hold the same reference twice (`ArrayUnique` on every write, including the product upsert).
 - **Endpoints** (`/admin/products/:id/images`, guards `JwtAuthGuard` + `PermissionsGuard`; each returns the updated `{ images, image_urls }` and invalidates the product caches; unknown product → 404 `Product not found`):
@@ -261,17 +277,19 @@ Never `prisma.<A's model>` from B. Never write A's rows.
 - Pages that need auth use `definePageMeta({ middleware: 'auth' })`; admin pages `{ layout: 'admin', middleware: 'admin' }`. Do not add global middleware.
 - Currency, locale list and formatting options come from project config through Core composables; do not hardcode `EUR` or `el-GR`.
 - Do not edit Core components to add your link, button or drawer. If a slot you need does not exist, propose it as a Core change first.
-- **Notification wording is a contribution.** Core's bell, panel and history page render every row through `describeNotification()` (`app/utils/notification-presenters.ts`); a type nobody registered gets the generic line. If your module writes notification rows, register a presenter from a universal plugin in your layer:
+- **Notification wording is a contribution.** Core's bell, panel and history page render every row through `describeNotification()` (`app/core/utils/notification-presenters.ts`); a type nobody registered gets the generic line. If your module writes notification rows, register a presenter from a universal plugin in your layer:
 
 ```ts
 // plugins/<module>-notifications.ts
-import { registerNotificationPresenter } from '~/utils/notification-presenters'
+import { registerNotificationPresenter } from '#core/utils/notification-presenters'
 export default defineNuxtPlugin(() => {
   registerNotificationPresenter('order_status', (row, { t, localePath }) => ({ title: t('…'), body: t('…'), to: localePath('/account/orders/' + row.meta?.order_id) }))
 })
 ```
 
-  The presenter owns its `meta` shape and its i18n keys; it must not throw (a throw falls back to the generic line, so it would silently lose your wording). Reference: `app/utils/order-notification-presenter.ts`.
+  The presenter owns its `meta` shape and its i18n keys; it must not throw (a throw falls back to the generic line, so it would silently lose your wording). Reference: `app/modules/ecommerce/utils/order-notification-presenter.ts`.
+
+  The Core staff inbox (`/admin/notifications`) renders rows through the same registry. For it a presenter may also return `tone` (`'warning'` | `'danger'`, the row's icon; omitted = warning) and `actionLabel` (the row's action button, shown only together with `to`), and the inbox passes the active locale's code as `ctx.locale`. Reference: `app/modules/ecommerce/utils/stock-notification-presenter.ts` (`acc11d9`).
 
 ---
 

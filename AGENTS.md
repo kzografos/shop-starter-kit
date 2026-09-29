@@ -10,7 +10,7 @@ This repository is a **reusable, single-tenant starter system**: each client pro
 
 1. Read `docs/ARCHITECTURE-BLUEPRINT.md` (at least §2 Layers, §5 Rules summary, §11 Seams).
 2. Read `docs/DEPENDENCY-RULES.md` in full.
-3. Identify which layer the change belongs to: **Core**, **Module**, **Infrastructure**, or **Project**. The blueprint §2 and §10 map every current path to a layer; the target folders (`core/`, `modules/`, `infrastructure/`, `project/`) may not exist yet — the mapping still applies.
+3. Identify which layer the change belongs to: **Core**, **Module**, **Infrastructure**, or **Project**. The blueprint §2 and §10 map every current path to a layer; the layer folders exist: `app/core/`, `app/modules/<id>/` and `app/project/` on the frontend, `backend/src/core/`, `backend/src/modules/<id>/` and `backend/src/infrastructure/` on the backend.
 4. Do not modify production code before the owner layer is identified and the change is consistent with the rules below.
 5. Work through `docs/ARCHITECTURE-CHECKLIST.md` before finishing.
 

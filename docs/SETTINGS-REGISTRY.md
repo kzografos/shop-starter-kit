@@ -20,7 +20,7 @@ There are no Core settings, operational settings, feature flags or deprecated ke
 
 ## Contract
 
-[`backend/src/settings/setting-definition.ts`](../backend/src/settings/setting-definition.ts) (the authority) — mirrored on the wire in [`types/index.ts`](../types/index.ts) as `SettingDefinition` / `SettingGroup` / `AdminSettingsPayload` (snake_case):
+[`backend/src/core/settings/setting-definition.ts`](../backend/src/core/settings/setting-definition.ts) (the authority) — mirrored on the wire in [`types/index.ts`](../types/index.ts) as `SettingDefinition` / `SettingGroup` / `AdminSettingsPayload` (snake_case):
 
 ```ts
 interface SettingDefinition {
@@ -50,7 +50,7 @@ Kept out on purpose: booleans/enums/select options (no consumer), per-setting ca
 | `settings/settings.controller.ts` — `GET /settings` | Core | public subset (`public: true` only) |
 | `settings/settings-admin.controller.ts` — `GET`/`PATCH /admin/settings` (`manage:settings`) | Core | `{ groups, definitions, values }` / validated writes |
 | `orders/pricing-settings.ts` + `pricing-settings.service.ts` | orders (shop) | definitions, groups, defaults, constraints; `loadPricing()` typed view for the checkout |
-| `app/utils/settings-form.ts`, `app/pages/admin/settings/index.vue` | Core | render whatever the API describes |
+| `app/core/utils/settings-form.ts`, `app/core/pages/admin/settings/index.vue` | Core | render whatever the API describes |
 | i18n keys named by definitions | the contributing module, in its own namespace and its own locale files (e-commerce: `ecommerce.settings.*` in `app/modules/ecommerce/i18n/`, N6d) | labels, hints, group titles |
 
 Direction: orders → Core (registration through the exported `SettingsService`); Core imports nothing from orders. `verify-boundaries` stays at 0. The public controller moved from `orders/pricing-settings.controller.ts` to Core: same path, same response shape, now a registry rule instead of a list.

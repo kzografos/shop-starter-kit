@@ -50,7 +50,8 @@ Rules referenced are in [DEPENDENCY-RULES.md](DEPENDENCY-RULES.md); the layer mo
 Implemented gates — run them, do not just "consider" them:
 
 ```text
-[ ] Backend: `npm run verify` passes (typecheck → build → boundaries → routes → providers).
+[ ] Backend: `npm run verify` passes (modules → registry → schema → prisma-core-only → typecheck → build → test → boundaries → composition → routes → providers).
+[ ] Frontend: `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass; CI's frontend job also builds with every module disabled and checks the route table (Core and project routes present, no e-commerce route).
 [ ] Route snapshot: if `verify:routes` reports drift and the change is intentional, `npm run verify:routes:update` was run and the snapshot diff is in the PR and explained.
 [ ] Boundary baseline: no new violation; if a known violation was removed, its BASELINE entry in verify-boundaries.js was removed too.
 [ ] Behaviour preserved: route paths, response shapes and existing flows unchanged unless the task requires otherwise (and says so).
@@ -59,7 +60,6 @@ Implemented gates — run them, do not just "consider" them:
 Gates not yet implemented — state what was done instead:
 
 ```text
-[ ] Frontend typecheck (nuxi typecheck) — not available; stated as not run.
 [ ] Frontend lint (eslint) — `pnpm lint` currently fails (binary missing); stated as not run, or run via the store binary.
 [ ] Tests: critical Core behaviour touched (auth, permissions, settings, events, useApi) has a unit test or a stated reason it does not.
 [ ] Boundary check on the target layout (dependency-cruiser) — after the Phase 1 folder move.

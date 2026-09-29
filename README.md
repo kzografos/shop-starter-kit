@@ -48,7 +48,7 @@ Dependency direction (downward only):
 PROJECT → OPTIONAL MODULES → CORE → INFRASTRUCTURE
 ```
 
-The current folder layout predates the blueprint; the blueprint maps every existing path to its layer and describes the incremental move.
+The folder layout follows the blueprint's layers: `app/core/`, `app/modules/<id>/` and `app/project/` (Nuxt layers) on the frontend, `backend/src/core/`, `backend/src/modules/<id>/` and `backend/src/infrastructure/` on the backend; the blueprint maps every path to its layer.
 
 ---
 
