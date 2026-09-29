@@ -99,7 +99,7 @@
                 </NuxtLink>
                 <NuxtLink
                   v-if="isStaff"
-                  :to="localePath('/admin')"
+                  :to="adminPath"
                   class="flex items-center gap-3 px-4 py-2.5 text-sm text-[--color-bark] hover:bg-[--color-surface-page] transition-colors"
                   @click="userMenuOpen = false"
                 >
@@ -230,7 +230,7 @@
             </NuxtLink>
             <NuxtLink
               v-if="isLoggedIn && isStaff"
-              :to="localePath('/admin')"
+              :to="adminPath"
               class="flex items-center justify-between py-4 text-base font-medium text-[--color-bark] hover:text-terracotta transition-colors border-t border-[--color-border-soft]"
               @click="mobileMenuOpen = false"
             >
@@ -287,8 +287,13 @@ const authStore = useAuthStore()
 const appConfig = useAppConfig()
 const brand = computed(() => appConfig.brand)
 const { isLoggedIn, profile, isAdmin } = storeToRefs(authStore)
-const { isStaff } = usePermissions()
+const { isStaff, firstAllowedPath } = usePermissions()
 void isAdmin // kept for backward compat; admin link now uses isStaff
+
+// The admin link opens the first admin section this user may see (Admin
+// Registry), the same landing the admin middleware redirects to — Core names
+// no admin page, since which ones exist depends on the enabled modules.
+const adminPath = computed(() => localePath(firstAllowedPath()))
 
 const route = useRoute()
 const scrolled = ref(false)
