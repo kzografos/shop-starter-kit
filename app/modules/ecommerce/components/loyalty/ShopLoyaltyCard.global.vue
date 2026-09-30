@@ -7,7 +7,7 @@
           {{ $t('ecommerce.account.loyalty') }}
         </p>
         <p class="font-display text-5xl font-bold text-white mb-1">
-          {{ loyaltyPoints.toLocaleString() }}
+          {{ loyaltyPoints.toLocaleString(localeProperties.language) }}
         </p>
         <p class="text-sm text-white/60 mb-6">{{ $t('loyalty.points') }}</p>
 
@@ -24,7 +24,7 @@
             />
           </div>
           <p class="text-xs text-white/50 mt-2">
-            {{ Math.max(3000 - loyaltyPoints, 0).toLocaleString() }}
+            {{ Math.max(3000 - loyaltyPoints, 0).toLocaleString(localeProperties.language) }}
             {{ $t('ecommerce.account.points_until_reward') }}
           </p>
         </div>
@@ -43,5 +43,6 @@
 <script setup lang="ts">
 // Contributed to the account dashboard through app.config `accountCards` (registered globally).
 const { points: loyaltyPoints } = useLoyalty()
+const { localeProperties } = useI18n()
 const localePath = useLocalePath()
 </script>

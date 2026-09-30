@@ -16,7 +16,7 @@
       </div>
       <div class="text-center px-4">
         <p class="font-display text-2xl font-bold text-[--color-bark]">
-          {{ loyaltyPoints.toLocaleString() }}
+          {{ loyaltyPoints.toLocaleString(localeProperties.language) }}
         </p>
         <p class="text-xs text-[--color-bark-light] mt-1">{{ $t('loyalty.points') }}</p>
       </div>
@@ -30,6 +30,7 @@
 const api = useApi()
 const favouritesStore = useFavouritesStore()
 const { points: loyaltyPoints } = useLoyalty()
+const { localeProperties } = useI18n()
 const { ids } = storeToRefs(favouritesStore)
 
 const orderCount = ref<number | null>(null)
