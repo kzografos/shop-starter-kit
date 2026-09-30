@@ -38,6 +38,29 @@ jobs:
       - name: Verify architecture
         run: npm run verify
 
+      # The same chain with every application module switched off — the Core +
+      # project configuration: the zero-module composition, the disabled route
+      # snapshots, the tests and the providers must hold there too. The checkout
+      # is disposable, so modules.json is edited in place and never restored;
+      # modules:generate regenerates src/modules.enabled.ts from it.
+      - name: Disable every application module (CI checkout only)
+        working-directory: .
+        run: |
+          node -e "
+          const fs = require('fs')
+          const registry = JSON.parse(fs.readFileSync('modules.json', 'utf8'))
+          if (!registry.modules.some((m) => m.enabled)) {
+            console.error('modules.json enables no module: the disabled build would prove nothing')
+            process.exit(1)
+          }
+          for (const m of registry.modules) m.enabled = false
+          fs.writeFileSync('modules.json', JSON.stringify(registry, null, 2) + '\n')
+          for (const m of registry.modules) console.log(m.id + ': enabled=' + m.enabled)
+          "
+
+      - name: Verify architecture with every module disabled
+        run: npm run modules:generate && npm run verify
+
   frontend:
     name: frontend verify
     runs-on: ubuntu-latest
@@ -87,6 +110,11 @@ jobs:
           fs.writeFileSync('modules.json', JSON.stringify(registry, null, 2) + '\n')
           for (const m of registry.modules) console.log(m.id + ': enabled=' + m.enabled)
           "
+
+      # Core and the project must also typecheck on their own: the overlay in
+      # scripts/typecheck.mjs leaves only the disabled module layers out.
+      - name: Typecheck with every module disabled
+        run: pnpm typecheck
 
       # The route table proves the modules really left the build: Core and
       # project routes present (so a changed output format fails, not passes),
