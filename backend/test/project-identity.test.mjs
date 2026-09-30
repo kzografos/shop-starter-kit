@@ -143,13 +143,18 @@ test('the loaded project identity wins over the same keys in the environment', a
 })
 
 test('the checkout sends the project currency, lowercased, and the same minor-unit amounts', async () => {
+  const { ConfigService } = require('@nestjs/config')
   const { PaymentsService } = require('../dist/modules/ecommerce/payments/payments.service.js')
   const app = await composeApp()
   try {
-    // The composed service with only its database and provider replaced.
-    const payments = app.get(PaymentsService)
+    // The e-commerce service is composed only when its module is enabled, and
+    // this must hold either way, so it is built directly: with the composed
+    // application's own ConfigService (Core, always present) and only its
+    // database and provider replaced — createCheckoutSession uses nothing else.
+    // Constructor order: prisma, provider, mail, pricing, loyalty, orders,
+    // orderNotifications, analytics, config.
     let sent
-    payments.prisma = {
+    const prisma = {
       order: {
         findUnique: async () => ({
           id: 'ord-1', userId: 'u-1', paymentMethod: 'STRIPE', shippingCost: '5.00', loyaltyDiscount: '2.505',
@@ -162,7 +167,8 @@ test('the checkout sends the project currency, lowercased, and the same minor-un
         update: async () => ({}),
       },
     }
-    payments.provider = { isEnabled: true, assertEnabled() {}, createCheckout: async (input) => { sent = input; return { id: 'cs_1', url: 'https://pay.invalid/cs_1' } } }
+    const provider = { isEnabled: true, assertEnabled() {}, createCheckout: async (input) => { sent = input; return { id: 'cs_1', url: 'https://pay.invalid/cs_1' } } }
+    const payments = new PaymentsService(prisma, provider, undefined, undefined, undefined, undefined, undefined, undefined, app.get(ConfigService))
 
     await payments.createCheckoutSession('ord-1', 'u-1', 'https://site.invalid/ok', 'https://site.invalid/cancel')
     assert.equal(sent.currency, projectIdentity.PROJECT_CURRENCY.toLowerCase())
