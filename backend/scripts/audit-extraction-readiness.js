@@ -172,7 +172,14 @@ function scanBackend() {
     const s = fs.readFileSync(schema, 'utf8')
     for (const m of s.matchAll(/^model\s+([A-Za-z0-9_]+)/gm)) models.set(m[1][0].toLowerCase() + m[1].slice(1), path.basename(schema))
   }
-  const modelLayer = (schemaFile) => ({ 'core.prisma': 'CORE', 'ecommerce.prisma': 'SHOP', 'infrastructure.prisma': 'INFRASTRUCTURE' })[schemaFile] ?? 'UNMAPPED'
+  // Schema file → layer. The two base schemas are fixed; a module's schema is
+  // the `prismaSchema` its descriptor registers, enabled or not (E9b1).
+  const schemaLayers = {
+    ...Object.fromEntries(registry.readRegistry().filter((m) => m.prismaSchema).map((m) => [path.basename(m.prismaSchema), 'SHOP'])),
+    'core.prisma': 'CORE',
+    'infrastructure.prisma': 'INFRASTRUCTURE',
+  }
+  const modelLayer = (schemaFile) => schemaLayers[schemaFile] ?? 'UNMAPPED'
 
   const edges = [] // { from, to, kind: import|type|di|prisma|event, detail }
   const unresolved = []
