@@ -21,12 +21,15 @@ import { NotificationsModule } from './core/notifications/notifications.module'
 import { StaffModule } from './core/staff/staff.module'
 import { SettingsModule } from './core/settings/settings.module'
 import { enabledModules } from './modules.composition'
+import { projectIdentity } from './project.identity'
 
 @Module({
   imports: [
     // Core keys are required; provider keys are validated only when their
     // provider is present. See core/config/env.validation.ts.
-    ConfigModule.forRoot({ isGlobal: true, validationSchema: envValidationSchema }),
+    // BRAND_* come from the project (project.identity.ts, generated from
+    // app/project); loaded values win over environment variables of the same name.
+    ConfigModule.forRoot({ isGlobal: true, validationSchema: envValidationSchema, load: [() => projectIdentity] }),
     LoggerModule.forRoot({
       pinoHttp: {
         level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',

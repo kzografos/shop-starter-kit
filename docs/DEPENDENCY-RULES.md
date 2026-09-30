@@ -139,7 +139,7 @@ When a sub-domain is promoted to its own module, the convention becomes the rule
 
 ## 10. Enforcement mapping
 
-**Implemented and passing** (`backend`: `npm run verify` = modules → registry → schema → prisma-core-only → typecheck → build → test → boundaries → composition → routes → providers; CI: `.github/workflows/verify.yml` on pull requests and pushes to `main` — the `backend` job runs `npm run verify`, the `frontend` job lint, typecheck, unit tests, the build and a build with every module disabled):
+**Implemented and passing** (`backend`: `npm run verify` = modules → project → registry → schema → prisma-core-only → typecheck → build → test → boundaries → composition → routes → providers; CI: `.github/workflows/verify.yml` on pull requests and pushes to `main` — the `backend` job runs `npm run verify`, the `frontend` job lint, typecheck, unit tests, the build and a build with every module disabled):
 
 | Check | Script | What it enforces |
 |---|---|---|

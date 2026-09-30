@@ -50,7 +50,7 @@ Rules referenced are in [DEPENDENCY-RULES.md](DEPENDENCY-RULES.md); the layer mo
 Implemented gates — run them, do not just "consider" them:
 
 ```text
-[ ] Backend: `npm run verify` passes (modules → registry → schema → prisma-core-only → typecheck → build → test → boundaries → composition → routes → providers).
+[ ] Backend: `npm run verify` passes (modules → project → registry → schema → prisma-core-only → typecheck → build → test → boundaries → composition → routes → providers).
 [ ] Frontend: `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass; CI's frontend job also builds with every module disabled and checks the route table (Core and project routes present, no e-commerce route).
 [ ] Route snapshot: if `verify:routes` reports drift and the change is intentional, `npm run verify:routes:update` was run and the snapshot diff is in the PR and explained.
 [ ] Boundary baseline: no new violation; if a known violation was removed, its BASELINE entry in verify-boundaries.js was removed too.
