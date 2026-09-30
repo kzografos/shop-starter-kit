@@ -14,7 +14,7 @@ const BACKEND = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const GENERATOR = path.join(BACKEND, 'scripts', 'generate-modules-enabled.js')
 
 const registry = (enabled) => JSON.stringify({ modules: [{ id: 'ecommerce', enabled, backendDir: 'modules/ecommerce' }] }, null, 2) + '\n'
-const crlf = (s) => s.replace(/\n/g, '\r\n')
+const crlf = (s) => s.replace(/\r?\n/g, '\r\n')
 
 // A throw-away repository: the generator resolves modules.json and its target
 // from its own location, so a copy under <root>/backend/scripts reads
