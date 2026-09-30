@@ -8,7 +8,7 @@ export const useBusinessSchema = () => {
 
   const schema = {
     '@context': 'https://schema.org',
-    '@type': 'Store',
+    '@type': BUSINESS.schemaType,
     name: BUSINESS.legalName,
     description: BUSINESS.tagline,
     // Only advertise an image when a real logo asset is configured (avoids a 404).
@@ -17,7 +17,7 @@ export const useBusinessSchema = () => {
     // Only advertise a phone when one is configured — an empty telephone is
     // invalid structured data and can invalidate the whole Store entity.
     ...(BUSINESS.phone ? { telephone: BUSINESS.phone } : {}),
-    priceRange: '€€',
+    priceRange: BUSINESS.priceRange,
     currenciesAccepted: REGION.currency,
     address: {
       '@type': 'PostalAddress',

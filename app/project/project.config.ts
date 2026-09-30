@@ -54,6 +54,12 @@ export const BUSINESS = {
     { days: ['Wednesday'], opens: '09:00', closes: '14:00' },
     { days: ['Saturday'], opens: '09:00', closes: '15:00' },
   ],
+
+  // schema.org type of the business in the structured data (useBusinessSchema),
+  // e.g. 'Store', 'PetStore', 'Restaurant'.
+  schemaType: 'Store',
+  // schema.org priceRange — free text, e.g. '€€'.
+  priceRange: '€€',
 }
 
 // Regional settings (C3e). The currency every price is shown in; the core
