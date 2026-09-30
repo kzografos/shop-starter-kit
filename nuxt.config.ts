@@ -1,4 +1,18 @@
+import { enabledModuleLayers, enabledModuleNuxtModules } from './modules.registry'
+import { LOCALES } from './app/project/project.config'
+
 export default defineNuxtConfig({
+  // Nuxt layers (blueprint §3): Core, the enabled application modules and the
+  // project are layers under app/. Not under `layers/`, so they are listed
+  // explicitly — the module ones come from modules.json (E8a), so enabling or
+  // disabling a module is a registry edit rather than a config edit.
+  //
+  // The order is the composition's, not the registry's: earlier entries take
+  // precedence and layer plugins run in reverse order of this list, so Core
+  // first keeps its plugins running after the modules' and the project's — the
+  // position they have at the app root.
+  extends: ['./app/core', ...enabledModuleLayers, './app/project'],
+
   devtools: { enabled: false },
 
   app: {
@@ -37,7 +51,8 @@ export default defineNuxtConfig({
     '@nuxtjs/i18n',
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt',
-    'nuxt-charts',
+    // The enabled application modules' own Nuxt modules (modules.json `nuxtModules`).
+    ...enabledModuleNuxtModules,
     '@nuxt/eslint',
     '@nuxt/image',
   ],
@@ -55,36 +70,34 @@ export default defineNuxtConfig({
     },
   },
 
-  css: ['~/assets/css/brand.css', '~/assets/css/main.css', '~/assets/css/admin.css'],
+  css: ['~/assets/css/main.css', '~/assets/css/admin.css'],
 
-  components: [{ path: '~/components', pathPrefix: false }],
+  // Components and stores are declared by the layers that own them
+  // (app/core, app/modules/*, app/project); the app root holds neither since
+  // E7c/E7d.
 
+  // Which locales, and the default, are the project's (C3d); how they are
+  // routed and detected is the composition's.
   i18n: {
-    locales: [
-      { code: 'el', name: 'Ελληνικά', file: 'el.json' },
-      { code: 'en', name: 'English', file: 'en.json' },
-    ],
-    defaultLocale: 'el',
+    locales: [...LOCALES.locales],
+    defaultLocale: LOCALES.defaultLocale,
     langDir: '.',
     strategy: 'prefix_except_default',
     detectBrowserLanguage: false,
   },
 
+  // Public only: every secret lives with the backend (backend/.env), the
+  // frontend never talks to a provider directly.
   runtimeConfig: {
-    stripeSecretKey: process.env.STRIPE_SECRET_KEY,
-    stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-    resendApiKey: process.env.RESEND_API_KEY,
-    emailFrom: process.env.EMAIL_FROM || 'Sample Store <orders@example.com>',
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
-      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
     },
   },
 
   vite: {
     optimizeDeps: {
-      include: ['@vue/devtools-kit', '@vue/devtools-core', '@stripe/stripe-js'],
+      include: ['@vue/devtools-kit', '@vue/devtools-core'],
     },
   },
 

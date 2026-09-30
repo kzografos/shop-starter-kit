@@ -1,5 +1,14 @@
-node_modules
+# Bare `node_modules` matches only the root entry, so nested installs such as
+# app/node_modules were being copied into the build context and then into the
+# image by `COPY . .`. Deps come from the deps stage; never from the host.
+**/node_modules
 .nuxt
 .output
 .git
 *.log
+
+# Throwaway local artifacts — never belong in an image.
+tree.txt
+schema-dump.txt
+mkadmin.js
+COMMERCIAL-AUDIT.md

@@ -3,48 +3,33 @@ import { APP_GUARD } from '@nestjs/core'
 import { ConfigModule } from '@nestjs/config'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { LoggerModule } from 'nestjs-pino'
-import * as Joi from 'joi'
-import { PrismaModule } from './prisma/prisma.module'
-import { RedisModule } from './redis/redis.module'
-import { MailModule } from './mail/mail.module'
-import { HealthModule } from './health/health.module'
-import { AuthModule } from './auth/auth.module'
-import { UsersModule } from './users/users.module'
-import { ProductsModule } from './products/products.module'
-import { CategoriesModule } from './categories/categories.module'
-import { OrdersModule } from './orders/orders.module'
-import { PaymentsModule } from './payments/payments.module'
-import { FavouritesModule } from './favourites/favourites.module'
-import { NewsletterModule } from './newsletter/newsletter.module'
-import { ProfileModule } from './profile/profile.module'
-import { AdminModule } from './admin/admin.module'
-import { MinioModule } from './minio/minio.module'
-import { UploadsModule } from './uploads/uploads.module'
-import { NotificationsModule } from './notifications/notifications.module'
-import { AnalyticsModule } from './analytics/analytics.module'
-import { StaffModule } from './staff/staff.module'
+import { envValidationSchema } from './core/config/env.validation'
+import { PrismaModule } from './infrastructure/prisma/prisma.module'
+import { CoreEventModule } from './core/events/core-event.module'
+import { PermissionsModule } from './core/auth/permissions.module'
+import { RedisModule } from './infrastructure/redis/redis.module'
+import { MailModule } from './infrastructure/mail/mail.module'
+import { HealthModule } from './infrastructure/health/health.module'
+import { AuthModule } from './core/auth/auth.module'
+import { UsersModule } from './core/users/users.module'
+import { NewsletterModule } from './core/newsletter/newsletter.module'
+import { ProfileModule } from './core/profile/profile.module'
+import { StorageModule } from './infrastructure/storage/storage.module'
+import { PaymentsProviderModule } from './infrastructure/payments-provider/payments-provider.module'
+import { UploadsModule } from './core/uploads/uploads.module'
+import { NotificationsModule } from './core/notifications/notifications.module'
+import { StaffModule } from './core/staff/staff.module'
+import { SettingsModule } from './core/settings/settings.module'
+import { enabledModules } from './modules.composition'
+import { projectIdentity } from './project.identity'
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      validationSchema: Joi.object({
-        DATABASE_URL: Joi.string().required(),
-        REDIS_URL: Joi.string().required(),
-        JWT_SECRET: Joi.string().min(32).required(),
-        JWT_REFRESH_SECRET: Joi.string().min(32).required(),
-        STRIPE_SECRET_KEY: Joi.string().required(),
-        STRIPE_WEBHOOK_SECRET: Joi.string().required(),
-        MINIO_ENDPOINT: Joi.string().required(),
-        MINIO_PORT: Joi.number().default(9000),
-        MINIO_ROOT_USER: Joi.string().required(),
-        MINIO_ROOT_PASSWORD: Joi.string().required(),
-        MINIO_BUCKET: Joi.string().required(),
-        MINIO_PUBLIC_URL: Joi.string().required(),
-        PORT: Joi.number().default(3001),
-        NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
-      }),
-    }),
+    // Core keys are required; provider keys are validated only when their
+    // provider is present. See core/config/env.validation.ts.
+    // BRAND_* come from the project (project.identity.ts, generated from
+    // app/project); loaded values win over environment variables of the same name.
+    ConfigModule.forRoot({ isGlobal: true, validationSchema: envValidationSchema, load: [() => projectIdentity] }),
     LoggerModule.forRoot({
       pinoHttp: {
         level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
@@ -54,24 +39,24 @@ import { StaffModule } from './staff/staff.module'
     }),
     ThrottlerModule.forRoot({ throttlers: [{ ttl: 60000, limit: 100 }] }),
     PrismaModule,
+    CoreEventModule,
+    PermissionsModule,
     RedisModule,
     MailModule,
     HealthModule,
     AuthModule,
     UsersModule,
-    ProductsModule,
-    CategoriesModule,
-    OrdersModule,
-    PaymentsModule,
-    FavouritesModule,
     NewsletterModule,
     ProfileModule,
-    AdminModule,
-    MinioModule,
+    StorageModule,
+    PaymentsProviderModule,
     UploadsModule,
     NotificationsModule,
-    AnalyticsModule,
     StaffModule,
+    SettingsModule,
+    // The application modules modules.json enables (E9a). Core and
+    // infrastructure above are always composed; these are the optional ones.
+    ...enabledModules,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

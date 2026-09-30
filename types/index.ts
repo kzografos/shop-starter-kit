@@ -1,103 +1,75 @@
-export interface Category {
-  id: string
-  slug: string
-  name_el: string
-  name_en: string
-  parent_id: string | null
-  sort_order: number
-  created_at: string
-  children?: Category[]
-}
+// Core wire types (identity, settings, notifications). Module-owned types
+// live with their module — the shop's are in app/modules/ecommerce/types.
 
-export interface Product {
-  id: string
-  slug: string
-  name_el: string
-  name_en: string
-  description_el: string | null
-  description_en: string | null
-  price: number
-  compare_at_price: number | null
-  stock: number
-  is_active: boolean
-  category_id: string | null
-  brand: string | null
-  images: string[]
-  created_at: string
-  updated_at: string
-  category?: Category
-}
-
+/**
+ * GET /profile — Core columns plus whatever user extensions the backend's
+ * `UserExtensionsRegistry` merged in. Core names none of the extension fields;
+ * a module declares its own (e.g. `LoyaltyProfileExtension`) and reads it
+ * through its own composable.
+ */
 export interface Profile {
   id: string
   email: string
   full_name: string | null
   phone: string | null
-  loyalty_points: number
-  role: 'customer' | 'admin'
+  /** Core `customer` / `admin`, or a module-registered staff role (`accountant`, `stock_manager`, …). */
+  role: string
+  /** Capabilities resolved for the role by the backend registry. */
+  permissions: string[]
+  created_at: string
+  /** Module-registered user extension fields, snake_cased on the wire. */
+  [extension: string]: unknown
+}
+
+/** Settings Registry wire shapes (GET /admin/settings). Mirrors backend/src/settings/setting-definition.ts. */
+export interface SettingDefinition {
+  key: string
+  type: 'number' | 'string'
+  default: string
+  group: string
+  label_key: string
+  description_key?: string
+  order?: number
+  public?: boolean
+  editable?: boolean
+  min?: number
+  max?: number
+  step?: number
+  unit?: string
+}
+export interface SettingGroup {
+  id: string
+  label_key: string
+  description_key?: string
+  icon?: string
+  order: number
+}
+export interface AdminSettingsPayload {
+  groups: SettingGroup[]
+  definitions: SettingDefinition[]
+  values: Record<string, string>
+}
+
+export type NotificationType = 'low_stock' | 'out_of_stock' | 'order_status'
+
+/** A row of the signed-in user's notification feed (GET /notifications). */
+export interface Notification {
+  id: string
+  type: NotificationType
+  user_id: string | null
+  key: string | null
+  product_id: string | null
+  stock: number | null
+  meta: Record<string, unknown> | null
+  is_read: boolean
   created_at: string
 }
 
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'ready' | 'completed' | 'cancelled'
-export type FulfillmentType = 'shipping' | 'pickup'
-export type PaymentMethod = 'stripe' | 'cash_on_pickup' | 'card_on_pickup'
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
-
-export interface ShippingAddress {
-  full_name: string
-  address: string
-  city: string
-  postal_code: string
-  phone: string
-}
-
-export interface Order {
-  id: string
-  user_id: string
-  status: OrderStatus
-  fulfillment_type: FulfillmentType
-  payment_method: PaymentMethod
-  payment_status: PaymentStatus
-  stripe_payment_intent_id: string | null
-  subtotal: number
-  shipping_cost: number
-  loyalty_discount: number
+/** GET /notifications — one page of the feed plus its unread figure. */
+export interface NotificationList {
+  items: Notification[]
   total: number
-  shipping_address: ShippingAddress | null
-  notes: string | null
-  created_at: string
-  updated_at: string
-  items?: OrderItem[]
-}
-
-export interface OrderItem {
-  id: string
-  order_id: string
-  product_id: string
-  quantity: number
-  unit_price: number
-  product?: Product
-}
-
-export interface CartItem {
-  product: Product
-  quantity: number
-}
-
-export interface LoyaltyTransaction {
-  id: string
-  user_id: string
-  order_id: string | null
-  points_delta: number
-  type: 'earn' | 'redeem'
-  created_at: string
-}
-
-export interface CreateOrderPayload {
-  items: Array<{ product_id: string; quantity: number; unit_price: number }>
-  fulfillment_type: FulfillmentType
-  payment_method: PaymentMethod
-  shipping_address?: ShippingAddress
-  loyalty_points_to_redeem?: number
-  notes?: string
+  page: number
+  total_pages: number
+  unread: number
 }

@@ -1,0 +1,133 @@
+# Architecture verification (ARCHITECTURE-BLUEPRINT §12.1, DEPENDENCY-RULES §10).
+# Runs the same chain as `npm run verify` in backend/: typecheck → build → unit tests (incl. the extraction audit baseline) →
+# boundaries → routes → providers. No database, Redis or provider is needed;
+# the scripts stub their own environment.
+name: verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    name: backend verify
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches backend/Dockerfile (node:22-alpine) and the README prerequisite.
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies (lockfile)
+        run: npm ci
+
+      # The Prisma client is generated code; tsc and nest build need it present.
+      # @prisma/client's postinstall usually does this, but make it explicit so
+      # a cache hit or a postinstall skip cannot produce a misleading failure.
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Verify architecture
+        run: npm run verify
+
+      # The same chain with every application module switched off — the Core +
+      # project configuration: the zero-module composition, the disabled route
+      # snapshots, the tests and the providers must hold there too. The checkout
+      # is disposable, so modules.json is edited in place and never restored;
+      # modules:generate regenerates src/modules.enabled.ts from it.
+      - name: Disable every application module (CI checkout only)
+        working-directory: .
+        run: |
+          node -e "
+          const fs = require('fs')
+          const registry = JSON.parse(fs.readFileSync('modules.json', 'utf8'))
+          if (!registry.modules.some((m) => m.enabled)) {
+            console.error('modules.json enables no module: the disabled build would prove nothing')
+            process.exit(1)
+          }
+          for (const m of registry.modules) m.enabled = false
+          fs.writeFileSync('modules.json', JSON.stringify(registry, null, 2) + '\n')
+          for (const m of registry.modules) console.log(m.id + ': enabled=' + m.enabled)
+          "
+
+      - name: Verify architecture with every module disabled
+        run: npm run modules:generate && npm run verify
+
+  frontend:
+    name: frontend verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        # version comes from package.json#packageManager
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies (lockfile)
+        run: pnpm install --frozen-lockfile
+
+      # Lint, typecheck and build need no secrets: runtimeConfig has defaults
+      # for the two public values and nothing else is read at build time.
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # Plain node:test over the pure TypeScript helpers (no runner dependency).
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      # The same frontend with every application module switched off: Core and
+      # the project must build on their own (the backend proves the same in
+      # verify-module-composition). The checkout is disposable, so modules.json
+      # is edited in place and never restored.
+      - name: Disable every application module (CI checkout only)
+        run: |
+          node -e "
+          const fs = require('fs')
+          const registry = JSON.parse(fs.readFileSync('modules.json', 'utf8'))
+          if (!registry.modules.some((m) => m.enabled)) {
+            console.error('modules.json enables no module: the disabled build would prove nothing')
+            process.exit(1)
+          }
+          for (const m of registry.modules) m.enabled = false
+          fs.writeFileSync('modules.json', JSON.stringify(registry, null, 2) + '\n')
+          for (const m of registry.modules) console.log(m.id + ': enabled=' + m.enabled)
+          "
+
+      # Core and the project must also typecheck on their own: the overlay in
+      # scripts/typecheck.mjs leaves only the disabled module layers out.
+      - name: Typecheck with every module disabled
+        run: pnpm typecheck
+
+      # The route table proves the modules really left the build: Core and
+      # project routes present (so a changed output format fails, not passes),
+      # the e-commerce routes absent.
+      - name: Build with every module disabled
+        run: |
+          pnpm build
+          routes=.output/server/chunks/build/server.mjs
+          test -f "$routes" || { echo "::error::$routes not found: cannot read the route table"; exit 1; }
+          for name in login___el admin-notifications___el about___el; do
+            grep -q "name: \"$name\"" "$routes" || { echo "::error::route $name not found in $routes: Core/project did not build or the route table format changed"; exit 1; }
+          done
+          for name in products___el checkout___el admin-products___el; do
+            if grep -q "name: \"$name\"" "$routes"; then echo "::error::e-commerce route $name is still in the build: the modules were not disabled"; exit 1; fi
+          done
+          echo "route table: Core and project routes present, e-commerce routes absent"

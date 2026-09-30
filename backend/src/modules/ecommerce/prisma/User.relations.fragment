@@ -1,0 +1,4 @@
+orders              Order[]
+favourites          Favourite[]
+loyaltyTransactions LoyaltyTransaction[]
+loyaltyAccount      LoyaltyAccount?

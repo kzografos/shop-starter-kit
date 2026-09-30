@@ -1,0 +1,111 @@
+import type {
+  AccountCardContribution,
+  AccountItemContribution,
+  AdminCustomerColumnContribution,
+  AdminSectionContribution,
+  FooterColumnContribution,
+  FooterItemContribution,
+  GlobalWidgetContribution,
+  HeaderActionContribution,
+  HomeBannerItemContribution,
+  HomeSectionContribution,
+  LoginExtraContribution,
+  LoginFeatureContribution,
+  NavItemContribution,
+  StaffRoleContribution,
+} from '#core/types/contributions'
+
+// The shop's contributions to the Core registries (E8b, the deferred E5d).
+// Nuxt merges every layer's app.config with the root's — arrays concatenate —
+// and each registry orders its entries by `order`, so owning them here instead
+// of at the composition root changes who declares them, not what renders.
+// Disabling the module now removes its entries with it.
+export default defineAppConfig({
+  // Storefront nav.
+  navItems: [
+    { to: '/products', labelKey: 'ecommerce.nav.products', order: 10 },
+    { to: '/brands', labelKey: 'ecommerce.nav.brands', order: 20 },
+  ] satisfies NavItemContribution[],
+
+  // Header: search in the centre zone, the cart button in the action cluster.
+  headerActions: [
+    { component: 'ShopHeaderSearch', order: 10, area: 'center' },
+    { component: 'ShopCartButton', order: 10 },
+  ] satisfies HeaderActionContribution[],
+
+  // The cart drawer is mounted once by the default layout.
+  globalWidgets: [
+    { component: 'ShopCartDrawer', order: 10 },
+  ] satisfies GlobalWidgetContribution[],
+
+  // Home page sections (E8d2, E8d3), in the order the storefront shows them.
+  homeSections: [
+    { component: 'ShopHomeCategories', order: 10 },
+    { component: 'ShopHomeDeals', order: 20 },
+    { component: 'ShopBrandsMarquee', order: 30 },
+  ] satisfies HomeSectionContribution[],
+
+  // The loyalty promise in the home page's closing banner (E8d4): the shop runs
+  // the programme, so it owns both the line and its wording.
+  homeBannerItems: [
+    { component: 'ShopHomeLoyaltyNote', order: 10 },
+  ] satisfies HomeBannerItemContribution[],
+
+  // Account sidebar entries and dashboard cards.
+  accountItems: [
+    { to: '/account/orders', icon: '📦', labelKey: 'ecommerce.account.orders', order: 10 },
+    { to: '/account/favourites', icon: '❤️', labelKey: 'ecommerce.account.favourites', order: 20 },
+    { to: '/account/loyalty', icon: '⭐', labelKey: 'ecommerce.account.loyalty', order: 30 },
+  ] satisfies AccountItemContribution[],
+  accountCards: [
+    { component: 'ShopLoyaltyCard', order: 10 },
+    { component: 'ShopAccountStats', order: 20 },
+  ] satisfies AccountCardContribution[],
+
+  // Login page (B3): the loyalty note and the continue-to-products link below the form.
+  loginExtras: [
+    { component: 'ShopLoginExtras', order: 10 },
+  ] satisfies LoginExtraContribution[],
+
+  // Login page side panel (B3b): what signing in gives a shop customer.
+  loginFeatures: [
+    { icon: 'i-heroicons-shopping-bag', labelKey: 'ecommerce.login.feature_orders', order: 10 },
+    { icon: 'i-heroicons-star', labelKey: 'ecommerce.login.feature_points', order: 20 },
+    { icon: 'i-heroicons-arrow-path', labelKey: 'ecommerce.login.feature_reorder', order: 30 },
+  ] satisfies LoginFeatureContribution[],
+
+  // Footer (E6b): the shop's own column plus the two order/loyalty entries of
+  // the account column Core declares.
+  footerColumns: [
+    { id: 'shop', labelKey: 'ecommerce.footer.shop', order: 20 },
+  ] satisfies FooterColumnContribution[],
+  footerItems: [
+    { column: 'shop', to: '/products', labelKey: 'ecommerce.nav.products', order: 10 },
+    { column: 'account', to: '/account/orders', labelKey: 'ecommerce.account.orders', order: 20 },
+    { column: 'account', to: '/account/loyalty', labelKey: 'ecommerce.footer.loyalty', order: 30 },
+  ] satisfies FooterItemContribution[],
+
+  // Admin Registry (docs/ADMIN-REGISTRY.md): the shop's sections. The groups
+  // and the Core sections are contributed by app/core/app.config.ts (E7f).
+  adminSections: [
+    { id: 'dashboard', path: '/admin', labelKey: 'ecommerce.admin.dashboard', subtitleKey: 'ecommerce.admin.subtitle_dashboard', icon: 'dashboard', capability: 'view:finance', order: 0, activeMatch: 'exact' },
+    { id: 'analytics', path: '/admin/analytics', labelKey: 'ecommerce.admin.analytics', subtitleKey: 'ecommerce.admin.subtitle_analytics', icon: 'chart', capability: 'view:finance', order: 10 },
+    { id: 'products', path: '/admin/products', labelKey: 'ecommerce.admin.products', subtitleKey: 'ecommerce.admin.subtitle_products', icon: 'box', capability: 'view:catalog', order: 20 },
+    { id: 'categories', path: '/admin/categories', labelKey: 'ecommerce.admin.categories', subtitleKey: 'ecommerce.admin.subtitle_categories', icon: 'tag', capability: 'view:catalog', order: 30 },
+    { id: 'orders', path: '/admin/orders', labelKey: 'ecommerce.admin.orders', subtitleKey: 'ecommerce.admin.subtitle_orders', icon: 'cart', capability: 'view:orders', order: 40 },
+  ] satisfies AdminSectionContribution[],
+
+  // Admin customer list (B2): the order count and loyalty balance the orders
+  // and loyalty user extensions add to each /admin/customers row.
+  adminCustomerColumns: [
+    { id: 'orders', labelKey: 'ecommerce.admin.orders', field: '_count.orders', order: 10, numeric: true },
+    { id: 'loyalty', labelKey: 'ecommerce.admin.loyalty_points_short', field: 'loyalty_points', order: 20, numeric: true },
+  ] satisfies AdminCustomerColumnContribution[],
+
+  // Staff roles (B4): the presets EcommercePermissions registers on the
+  // backend, as the staff page names and describes them.
+  staffRoles: [
+    { role: 'accountant', labelKey: 'ecommerce.admin.role_accountant', descriptionKey: 'ecommerce.admin.role_accountant_desc', badge: 'sage', order: 20 },
+    { role: 'stock_manager', labelKey: 'ecommerce.admin.role_stock_manager', descriptionKey: 'ecommerce.admin.role_stock_manager_desc', badge: 'blue', order: 30 },
+  ] satisfies StaffRoleContribution[],
+})

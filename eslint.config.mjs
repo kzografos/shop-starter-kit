@@ -1,4 +1,6 @@
 import withNuxt from './.nuxt/eslint.config.mjs'
 export default withNuxt({
-  ignores: ['app/types/database.types.ts'],
+  // The backend is a separate npm project with its own toolchain (tsc, nest,
+  // scripts/verify-*.js); the Nuxt/Vue rules do not apply to it.
+  ignores: ['backend/**'],
 })

@@ -1,0 +1,106 @@
+// ─── Core (ARCHITECTURE-BLUEPRINT §9) ────────────────────────
+//
+// Identity, settings, subscribers, notifications. A Prisma model is a single
+// block, so the back-relation fields a module's models need on `User` cannot
+// live in the module's own schema file. Each module owns them as a fragment
+// (src/<backendDir>/prisma/User.relations.fragment), and
+// scripts/generate-prisma-schema.js writes them into the generated region
+// inside `User`. With no module registered the region is empty and this file
+// is a valid Core schema on its own. `User` carries no module scalar columns:
+// the loyalty balance is `LoyaltyAccount.points` (seam 2).
+// `role` is a plain string: values are lowercase (`customer`, `admin`, plus
+// module-registered staff roles) — see auth/permissions.ts.
+//
+// Multi-file schema: every *.prisma in this directory is one schema. Generator
+// and datasource live in this file only.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Settings ────────────────────────────────────────────────
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// ─── Users / Profiles ────────────────────────────────────────
+
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String    @unique
+  passwordHash  String?   @map("password_hash")
+  fullName      String?   @map("full_name")
+  phone         String?
+  googleId      String?   @unique @map("google_id")
+  provider      String    @default("local")
+  avatarUrl     String?   @map("avatar_url")
+  role          String    @default("customer")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  // <module-relations model="User"> generated from the registered modules' fragments — do not edit
+  // ecommerce
+  orders              Order[]
+  favourites          Favourite[]
+  loyaltyTransactions LoyaltyTransaction[]
+  loyaltyAccount      LoyaltyAccount?
+  // </module-relations>
+  notifications       Notification[]
+
+  @@map("users")
+}
+
+// ─── Newsletter ──────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("newsletter_subscribers")
+}
+
+// ─── Notifications (admin) ───────────────────────────────────
+
+// A notification is either staff-wide (userId null — the admin inbox, e.g.
+// stock alerts) or addressed to one user (userId set — the customer feed).
+// `key` is an optional idempotency key: producers that may fire twice for the
+// same fact give it a stable value and the unique index makes the second
+// create a no-op.
+model Notification {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type      NotificationType
+  userId    String?          @map("user_id") @db.Uuid
+  key       String?          @unique
+  productId String?          @map("product_id") @db.Uuid
+  stock     Int?
+  meta      Json?
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([productId])
+  @@index([userId])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  LOW_STOCK    @map("low_stock")
+  OUT_OF_STOCK @map("out_of_stock")
+  ORDER_STATUS @map("order_status")
+
+  @@map("notification_type")
+}
