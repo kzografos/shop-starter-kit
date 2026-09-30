@@ -14,7 +14,7 @@ export const ORDER_LIFECYCLE: readonly OrderStatus[] = ['pending', 'confirmed', 
 export type LifecycleStep = { status: OrderStatus; state: 'done' | 'current' | 'upcoming' | 'skipped' }
 
 export function useOrderPresentation() {
-  const { locale } = useI18n()
+  const { locale, localeProperties } = useI18n()
   const cartStore = useCartStore()
   const localePath = useLocalePath()
   const router = useRouter()
@@ -53,7 +53,7 @@ export function useOrderPresentation() {
   }
 
   function formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString(locale.value === 'el' ? 'el-GR' : 'en-GB')
+    return new Date(iso).toLocaleDateString(localeProperties.value.language)
   }
 
   async function repeatOrder(order: Order) {
