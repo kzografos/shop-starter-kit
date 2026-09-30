@@ -7,15 +7,17 @@
  * and the palette in app/project/assets/css/brand.css. The backend cannot import
  * either, for the reasons generate-modules-enabled.js gives (the Nest build
  * would pull the repo root into `rootDir`; the Docker build context is
- * `./backend`). So the values the mail layout reads are generated into a
- * committed constant, src/project.identity.ts, which the composition root hands
- * to ConfigModule (`load`). Loaded configuration wins over environment variables
- * of the same name, so BRAND_* in the environment no longer change anything.
+ * `./backend`). So the values the backend reads are generated into a committed
+ * constant, src/project.identity.ts, which the composition root hands to
+ * ConfigModule (`load`). Loaded configuration wins over environment variables of
+ * the same name, so these keys in the environment no longer change anything.
  *
- *   BRAND_NAME      ← BUSINESS.name
- *   BRAND_COLOR     ← brand.css --brand-primary (a literal hex: email clients
- *                     cannot read CSS variables)
- *   BRAND_LOGO_URL  ← BUSINESS.brand.logo, null → '' (the text header)
+ *   BRAND_NAME        ← BUSINESS.name
+ *   BRAND_COLOR       ← brand.css --brand-primary (a literal hex: email clients
+ *                       cannot read CSS variables)
+ *   BRAND_LOGO_URL    ← BUSINESS.brand.logo, null → '' (the text header)
+ *   PROJECT_CURRENCY  ← REGION.currency, as configured (three uppercase letters;
+ *                       the checkout lowercases it for the payment provider)
  *
  * project.config.ts is TypeScript and is read through Node's type stripping, as
  * the frontend tests read the app's TypeScript; the npm scripts pass the flag:
@@ -49,13 +51,17 @@ const rel = (file) => path.relative(REPO, file).split(path.sep).join('/')
 async function main() {
   for (const file of [PROJECT_CONFIG, BRAND_CSS]) if (!fs.existsSync(file)) fail(`${rel(file)} not found`)
 
-  const { BUSINESS } = await import(pathToFileURL(PROJECT_CONFIG).href)
+  const { BUSINESS, REGION } = await import(pathToFileURL(PROJECT_CONFIG).href)
   const where = rel(PROJECT_CONFIG)
   if (!BUSINESS || typeof BUSINESS !== 'object') fail(`${where} exports no BUSINESS object`)
   if (typeof BUSINESS.name !== 'string' || !BUSINESS.name.trim()) fail(`${where}: BUSINESS.name must be a non-empty string`)
   if (!BUSINESS.brand || !('logo' in BUSINESS.brand)) fail(`${where}: BUSINESS.brand.logo is missing`)
   const logo = BUSINESS.brand.logo
   if (logo !== null && typeof logo !== 'string') fail(`${where}: BUSINESS.brand.logo must be a string or null`)
+  if (!REGION || typeof REGION !== 'object') fail(`${where} exports no REGION object`)
+  if (typeof REGION.currency !== 'string' || !/^[A-Z]{3}$/.test(REGION.currency)) {
+    fail(`${where}: REGION.currency must be a three-letter uppercase currency code, got ${JSON.stringify(REGION.currency)}`)
+  }
 
   // `--brand-primary:` exactly — not `--brand-primary-dark`, not `var(--brand-primary)`.
   const primary = [...readText(BRAND_CSS).matchAll(/--brand-primary\s*:\s*([^;]+);/g)].map((m) => m[1].trim())
@@ -64,9 +70,9 @@ async function main() {
     fail(`${rel(BRAND_CSS)}: --brand-primary must be a literal hex colour (emails cannot read CSS variables), got "${primary[0]}"`)
   }
 
-  const identity = { BRAND_NAME: BUSINESS.name, BRAND_COLOR: primary[0], BRAND_LOGO_URL: logo ?? '' }
+  const identity = { BRAND_NAME: BUSINESS.name, BRAND_COLOR: primary[0], BRAND_LOGO_URL: logo ?? '', PROJECT_CURRENCY: REGION.currency }
   const contents = `// GENERATED FILE — DO NOT EDIT.
-// Source: app/project/project.config.ts (BUSINESS) and app/project/assets/css/brand.css
+// Source: app/project/project.config.ts (BUSINESS, REGION) and app/project/assets/css/brand.css
 // (--brand-primary). Regenerate with:
 //   npm run project:generate       (backend/scripts/generate-project-identity.js)
 // \`npm run verify:project\` fails if this file drifts from its sources.
@@ -74,6 +80,7 @@ export const projectIdentity = {
   BRAND_NAME: ${JSON.stringify(identity.BRAND_NAME)},
   BRAND_COLOR: ${JSON.stringify(identity.BRAND_COLOR)},
   BRAND_LOGO_URL: ${JSON.stringify(identity.BRAND_LOGO_URL)},
+  PROJECT_CURRENCY: ${JSON.stringify(identity.PROJECT_CURRENCY)},
 } as const
 `
   const summary = Object.entries(identity).map(([k, v]) => `${k} ${JSON.stringify(v)}`).join(', ')

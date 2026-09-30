@@ -58,7 +58,8 @@ export const BUSINESS = {
 
 // Regional settings (C3e). The currency every price is shown in; the core
 // and the modules receive it through `app.config.region`, never from here.
-// The backend charges in its own configured currency — keep the two equal.
+// The backend checkout currency is generated from REGION.currency into
+// backend/src/project.identity.ts (PROJECT_CURRENCY) and loaded from there.
 export const REGION = {
   currency: 'EUR',
 }

@@ -1,7 +1,8 @@
-// Project identity (Phase 3.1). The committed src/project.identity.ts matches
-// its sources, a stale copy or a missing source value fails loudly, and the
-// values the composition root loads win over BRAND_* in the environment — the
-// @nestjs/config 4.x precedence this design relies on.
+// Project identity (Phase 3.1, 3.2). The committed src/project.identity.ts
+// matches its sources, a stale copy or a missing source value fails loudly, the
+// values the composition root loads win over the same keys in the environment —
+// the @nestjs/config 4.x precedence this design relies on — and the checkout
+// sends the project currency.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
@@ -36,7 +37,9 @@ function fixture({ config, css, target }) {
 }
 const withFixture = (spec, fn) => { const f = fixture(spec); try { fn(f) } finally { rmSync(f.root, { recursive: true, force: true }) } }
 
-const CONFIG = "export const BUSINESS = { name: 'Fixture Shop', brand: { logo: null as string | null } }\n"
+const business = "export const BUSINESS = { name: 'Fixture Shop', brand: { logo: null as string | null } }\n"
+const withCurrency = (currency) => `${business}export const REGION = { currency: ${JSON.stringify(currency)} }\n`
+const CONFIG = withCurrency('EUR')
 const CSS = ':root {\n  --brand-primary: #123456; /* accent */\n  --brand-primary-dark: #000000;\n}\n'
 
 test('the committed project identity matches project.config.ts and brand.css', () => {
@@ -53,7 +56,7 @@ test('a stale generated file fails --check and is left untouched; regenerating i
 
     assert.equal(run(f.script).status, 0)
     const generated = readFileSync(f.target, 'utf8')
-    assert.match(generated, /BRAND_NAME: "Fixture Shop",\n {2}BRAND_COLOR: "#123456",\n {2}BRAND_LOGO_URL: "",/)
+    assert.match(generated, /BRAND_NAME: "Fixture Shop",\n {2}BRAND_COLOR: "#123456",\n {2}BRAND_LOGO_URL: "",\n {2}PROJECT_CURRENCY: "EUR",/)
     assert.equal(run(f.script, '--check').status, 0)
     assert.equal(run(f.script).status, 0)
     assert.equal(readFileSync(f.target, 'utf8'), generated, 'same sources, same bytes')
@@ -69,6 +72,31 @@ test('a missing BUSINESS.name fails loudly and writes nothing', () => {
   })
 })
 
+test('REGION.currency must be three uppercase letters; its minor-unit rules are not the generator\'s concern', () => {
+  const cases = [
+    [business, /exports no REGION object/],
+    [`${business}export const REGION = {}\n`, /REGION\.currency must be a three-letter uppercase currency code, got undefined/],
+    [withCurrency(''), /got ""/],
+    [withCurrency('eur'), /got "eur"/],
+    [withCurrency('EU'), /got "EU"/],
+    [withCurrency('EURO'), /got "EURO"/],
+  ]
+  for (const [config, message] of cases) {
+    withFixture({ config, css: CSS }, (f) => {
+      const r = run(f.script)
+      assert.equal(r.status, 1, config)
+      assert.match(r.stderr, message)
+      assert.equal(existsSync(f.target), false)
+    })
+  }
+  // A zero-decimal currency is emitted as configured: amounts are the
+  // payments domain's concern, not this generator's.
+  withFixture({ config: withCurrency('JPY'), css: CSS }, (f) => {
+    assert.equal(run(f.script).status, 0)
+    assert.match(readFileSync(f.target, 'utf8'), /PROJECT_CURRENCY: "JPY",/)
+  })
+})
+
 test('a missing --brand-primary fails loudly and writes nothing', () => {
   withFixture({ config: CONFIG, css: ':root {\n  --brand-primary-dark: #000000;\n}\n' }, (f) => {
     const r = run(f.script)
@@ -78,9 +106,12 @@ test('a missing --brand-primary fails loudly and writes nothing', () => {
   })
 })
 
-test('the loaded project identity wins over BRAND_* in the environment', async () => {
-  // The stub environment of verify-providers: Core keys satisfy the schema, no
-  // provider is configured, Redis is lazy — the app composes and connects to nothing.
+// The composed application from dist/, under the stub environment of
+// verify-providers (Core keys satisfy the schema, no provider is configured,
+// Redis is lazy — nothing connects), with a competing value in the environment
+// for every loaded key. ConfigModule validates at import time, so the
+// environment is set before app.module is first required.
+async function composeApp() {
   Object.assign(process.env, {
     NODE_ENV: 'test',
     DATABASE_URL: 'postgresql://verify:verify@127.0.0.1:5432/verify',
@@ -89,19 +120,56 @@ test('the loaded project identity wins over BRAND_* in the environment', async (
     JWT_REFRESH_SECRET: 'verify-only-refresh-not-for-use-0123456789',
     MINIO_ENDPOINT: '', STRIPE_SECRET_KEY: '', GOOGLE_CLIENT_ID: '', MAIL_TRANSPORT: 'resend', RESEND_API_KEY: '',
     BRAND_NAME: 'From The Environment', BRAND_COLOR: '#000000', BRAND_LOGO_URL: 'https://env.invalid/logo.png',
+    PROJECT_CURRENCY: 'USD',
   })
   const { NestFactory } = require('@nestjs/core')
-  const { ConfigService } = require('@nestjs/config')
   const { AppModule } = require('../dist/app.module.js')
-  const { MailService } = require('../dist/infrastructure/mail/mail.service.js')
-  const { projectIdentity } = require('../dist/project.identity.js')
+  return NestFactory.create(AppModule, { logger: false, abortOnError: false })
+}
+const { projectIdentity } = require('../dist/project.identity.js')
 
-  const app = await NestFactory.create(AppModule, { logger: false, abortOnError: false })
+test('the loaded project identity wins over the same keys in the environment', async () => {
+  const { ConfigService } = require('@nestjs/config')
+  const { MailService } = require('../dist/infrastructure/mail/mail.service.js')
+  const app = await composeApp()
   try {
     const config = app.get(ConfigService)
-    for (const key of ['BRAND_NAME', 'BRAND_COLOR', 'BRAND_LOGO_URL']) assert.equal(config.get(key), projectIdentity[key], key)
+    for (const key of ['BRAND_NAME', 'BRAND_COLOR', 'BRAND_LOGO_URL', 'PROJECT_CURRENCY']) assert.equal(config.get(key), projectIdentity[key], key)
     const { name, color, logoUrl } = app.get(MailService).brand
     assert.deepEqual({ name, color, logoUrl }, { name: projectIdentity.BRAND_NAME, color: projectIdentity.BRAND_COLOR, logoUrl: projectIdentity.BRAND_LOGO_URL })
+  } finally {
+    await app.close()
+  }
+})
+
+test('the checkout sends the project currency, lowercased, and the same minor-unit amounts', async () => {
+  const { PaymentsService } = require('../dist/modules/ecommerce/payments/payments.service.js')
+  const app = await composeApp()
+  try {
+    // The composed service with only its database and provider replaced.
+    const payments = app.get(PaymentsService)
+    let sent
+    payments.prisma = {
+      order: {
+        findUnique: async () => ({
+          id: 'ord-1', userId: 'u-1', paymentMethod: 'STRIPE', shippingCost: '5.00', loyaltyDiscount: '2.505',
+          items: [
+            { unitPrice: '12.345', quantity: 2, product: { nameEn: 'Alpha' } },
+            { unitPrice: '0.1', quantity: 3, product: { nameEn: 'Beta' } },
+            { unitPrice: '19.99', quantity: 1, product: null },
+          ],
+        }),
+        update: async () => ({}),
+      },
+    }
+    payments.provider = { isEnabled: true, assertEnabled() {}, createCheckout: async (input) => { sent = input; return { id: 'cs_1', url: 'https://pay.invalid/cs_1' } } }
+
+    await payments.createCheckoutSession('ord-1', 'u-1', 'https://site.invalid/ok', 'https://site.invalid/cancel')
+    assert.equal(sent.currency, projectIdentity.PROJECT_CURRENCY.toLowerCase())
+    assert.deepEqual(sent.lines.map((l) => [l.name, l.unitAmountMinor, l.quantity]), [
+      ['Alpha', 1235, 2], ['Beta', 10, 3], ['Product', 1999, 1], ['Shipping', 500, 1],
+    ])
+    assert.equal(sent.discountMinor, 251)
   } finally {
     await app.close()
   }

@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, ConflictException, Logger } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service'
 import { MailService } from '../../../infrastructure/mail/mail.service'
@@ -30,6 +31,7 @@ export class PaymentsService {
     private orders: OrdersService,
     private orderNotifications: OrderNotificationsService,
     private analytics: AnalyticsService,
+    private config: ConfigService,
   ) {}
 
   get isEnabled(): boolean {
@@ -69,7 +71,9 @@ export class PaymentsService {
       lines,
       discountMinor: Number(order.loyaltyDiscount) > 0 ? Math.round(Number(order.loyaltyDiscount) * 100) : 0,
       discountLabel: 'Loyalty Points Discount',
-      currency: 'eur',
+      // The project's currency (REGION.currency, loaded as PROJECT_CURRENCY);
+      // the provider contract takes it lowercase.
+      currency: this.config.getOrThrow<string>('PROJECT_CURRENCY').toLowerCase(),
       successUrl,
       cancelUrl,
     })
