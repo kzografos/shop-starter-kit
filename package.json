@@ -11,7 +11,7 @@
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "nuxt typecheck",
+    "typecheck": "node scripts/typecheck.mjs",
     "test": "node --experimental-strip-types --test \"tests/**/*.test.mjs\"",
     "format": "prettier --write ."
   },
