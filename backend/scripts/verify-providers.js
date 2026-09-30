@@ -23,6 +23,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const { spawnSync } = require('node:child_process')
 const assert = require('node:assert')
+const registry = require('./lib/modules-registry')
 
 const BACKEND = path.resolve(__dirname, '..')
 const DIST = path.join(BACKEND, 'dist')
@@ -100,18 +101,24 @@ async function runScenario(name) {
 
   const get = (rel, cls) => app.get(require(path.join(DIST, rel))[cls])
   const minio = get('infrastructure/storage/minio-storage.adapter.js', 'MinioStorageAdapter')
-  const payments = get('modules/ecommerce/payments/payments.service.js', 'PaymentsService')
+  // Payments is reached through a module's service, so it is probed only when
+  // the build composes that module; otherwise the probe is skipped, never the
+  // lookup's error swallowed.
+  const PAYMENTS = 'modules/ecommerce/payments/payments.service.js'
+  const paymentsOwner = composedOwner(PAYMENTS)
+  const payments = paymentsOwner.composed ? get(PAYMENTS, 'PaymentsService') : null
+  const skipPayments = () => console.log(`   payments probe skipped: module "${paymentsOwner.id}" is not composed`)
   const mail = get('infrastructure/mail/mail.service.js', 'MailService')
   const { GoogleStrategy } = require(path.join(DIST, 'core/auth/strategies/google.strategy.js'))
   const google = app.get(GoogleStrategy)
   const guard = get('core/auth/guards/google-auth.guard.js', 'GoogleAuthGuard')
   const uploads = get('core/uploads/uploads.service.js', 'UploadsService')
 
-  console.log(`   booted; storage=${minio.isEnabled} payments=${payments.isEnabled} mail=${mail.isEnabled} google=${google ? google.constructor.name : null}`)
+  console.log(`   booted; storage=${minio.isEnabled} payments=${payments ? payments.isEnabled : 'skipped'} mail=${mail.isEnabled} google=${google ? google.constructor.name : null}`)
 
   if (name === 'core-only') {
     assert.strictEqual(minio.isEnabled, false, 'storage must be disabled')
-    assert.strictEqual(payments.isEnabled, false, 'payments must be disabled')
+    if (payments) assert.strictEqual(payments.isEnabled, false, 'payments must be disabled')
     assert.strictEqual(mail.isEnabled, false, 'mail must be disabled')
     assert.strictEqual(google, null, 'google strategy must not be registered')
     await expect503(() => minio.presign('key', 60), 'storage.presign')
@@ -120,15 +127,17 @@ async function runScenario(name) {
       () => uploads.uploadImage({ size: 12, buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0]), mimetype: 'image/jpeg', originalname: 'a.jpg' }),
       'uploads.uploadImage',
     )
-    await expect503(() => payments.verifySession('cs_verify', null), 'payments.verifySession')
-    await expect503(() => payments.handleWebhook(Buffer.from(''), 'sig'), 'payments.handleWebhook')
+    if (payments) {
+      await expect503(() => payments.verifySession('cs_verify', null), 'payments.verifySession')
+      await expect503(() => payments.handleWebhook(Buffer.from(''), 'sig'), 'payments.handleWebhook')
+    } else skipPayments()
     await expect503(async () => guard.canActivate({}), 'GoogleAuthGuard.canActivate')
     await mail.sendPasswordReset('verify@example.invalid', 'token') // resolves; send error is logged
     console.log('   mail.sendPasswordReset → resolved (send failure logged, not thrown)')
   }
   if (name === 'full') {
     assert.strictEqual(minio.isEnabled, true, 'storage must be enabled')
-    assert.strictEqual(payments.isEnabled, true, 'payments must be enabled')
+    if (payments) assert.strictEqual(payments.isEnabled, true, 'payments must be enabled')
     assert.strictEqual(mail.isEnabled, true, 'mail (smtp) must be enabled')
     assert(google instanceof GoogleStrategy, 'google strategy must be registered')
     assert.strictEqual(google.name, 'google')
@@ -136,9 +145,21 @@ async function runScenario(name) {
   if (name === 'resend') {
     assert.strictEqual(mail.isEnabled, true, 'mail (resend) must be enabled')
     assert.strictEqual(minio.isEnabled, false)
-    assert.strictEqual(payments.isEnabled, false)
+    if (payments) assert.strictEqual(payments.isEnabled, false)
   }
   await app.close()
+}
+
+// The registered module that owns a dist-relative file — the descriptor whose
+// backendDir contains it, as the registry declares ownership — and whether the
+// build composes it: the ids dist/modules.enabled.js carries, as
+// verify-module-composition reads them. A file no descriptor owns is an error
+// in this script, not a reason to skip.
+function composedOwner(rel) {
+  const owner = registry.readRegistry().find((m) => m.backendDir && rel.startsWith(`${m.backendDir.replace(/\/+$/, '')}/`))
+  if (!owner) throw new Error(`${rel} belongs to no registered module`)
+  const { enabledModuleIds } = require(path.join(DIST, 'modules.enabled.js'))
+  return { id: owner.id, composed: enabledModuleIds.includes(owner.id) }
 }
 
 // ── Parent: orchestrate ─────────────────────────────────────────
