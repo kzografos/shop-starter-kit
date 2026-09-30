@@ -19,6 +19,12 @@
  * Together they are the whole live inventory; every route belongs to exactly
  * one of them.
  *
+ * A module switched off in modules.json must serve no route — any live route it
+ * owns fails the composition invariants below — and its snapshot is not
+ * compared: it stays the enabled module's contract, untouched (`--update` writes
+ * nothing for a module with no live route), and is compared again once the
+ * module is switched back on.
+ *
  *   node scripts/verify-routes.js             compare with the snapshots (exit 1 on drift)
  *   node scripts/verify-routes.js --update    rewrite every partition's snapshot
  *   node scripts/verify-routes.js --print     print the whole inventory only
@@ -306,7 +312,7 @@ function compare(label, file, actual, owner, expectedId) {
   }
 
   const targets = [{ label: 'core', file: CORE_SNAPSHOT, id: undefined, rows: core }]
-  for (const p of partitions) targets.push({ label: p.id, file: moduleSnapshot(p.id), id: p.id, rows: p.rows })
+  for (const p of partitions) targets.push({ label: p.id, file: moduleSnapshot(p.id), id: p.id, rows: p.rows, enabled: p.enabled })
 
   if (UPDATE) {
     fs.mkdirSync(SNAPSHOT_DIR, { recursive: true })
@@ -327,6 +333,14 @@ function compare(label, file, actual, owner, expectedId) {
   let ok = true
   const summary = []
   for (const t of targets) {
+    // A disabled module serving nothing: its snapshot pins the enabled module,
+    // not this configuration, so there is nothing to compare it with. Only the
+    // zero-route case is skipped; a disabled module with a live route never
+    // gets here — the composition invariants above exit first.
+    if (t.id !== undefined && !t.enabled && t.rows.length === 0) {
+      summary.push(`${t.label} 0 [disabled: snapshot not compared]`)
+      continue
+    }
     // Fail closed: a module that serves routes without a snapshot is unverified,
     // and a missing file must never be read as an empty expectation.
     if (t.id !== undefined && t.rows.length === 0 && !fs.existsSync(t.file)) {
