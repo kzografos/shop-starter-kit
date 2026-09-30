@@ -45,7 +45,11 @@ ${list}] as const
 export type EnabledModuleId = (typeof enabledModuleIds)[number]
 `
 
-const current = fs.existsSync(TARGET) ? fs.readFileSync(TARGET, 'utf8') : null
+// A BOM from a Windows editor, and CRLF from a checkout under core.autocrlf.
+// Only the committed file is read this way: `contents` above is always LF.
+const readText = (file) => fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n')
+
+const current = fs.existsSync(TARGET) ? readText(TARGET) : null
 
 if (check) {
   if (current === contents) {
