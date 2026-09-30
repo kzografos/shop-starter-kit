@@ -34,11 +34,11 @@ export class MailService {
 
   constructor(private config: ConfigService) {
     this.from = config.get('EMAIL_FROM', 'Sample Store <orders@example.com>')
-    this.brandName = config.get('BRAND_NAME', 'Sample Store')
+    this.brandName = config.getOrThrow<string>('BRAND_NAME')
     // BRAND_COLOR is a literal hex — email clients can't read CSS vars, so this
     // intentionally duplicates the app's brand.css --brand-primary.
-    this.brandColor = config.get('BRAND_COLOR', '#c97b5a')
-    this.brandLogoUrl = config.get('BRAND_LOGO_URL', '')
+    this.brandColor = config.getOrThrow<string>('BRAND_COLOR')
+    this.brandLogoUrl = config.getOrThrow<string>('BRAND_LOGO_URL')
     // Reuse NUXT_URL as the site/base URL; SITE_URL can override it.
     this.siteUrl = config.get('SITE_URL', config.get('NUXT_URL', 'http://localhost:3000'))
     // Default 'resend' when unset → prod-safe. The kit ships MAIL_TRANSPORT=smtp
