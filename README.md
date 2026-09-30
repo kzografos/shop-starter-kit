@@ -199,6 +199,58 @@ git clone https://github.com/your-org/shop-starter-kit.git
 cd shop-starter-kit
 ```
 
+### Customize for a new project
+
+The files a new project edits today. This is not a complete cloning guide, and not every project-specific value is centralized yet — see *Known current limitations* below.
+
+**Project configuration** — `app/project/project.config.ts`:
+
+- `BUSINESS` — name, legal name and tagline; brand assets (`brand.logo`, `brand.favicon`, `brand.appleTouchIcon`, `brand.ogImage`); contact details (`phone`, `phoneDisplay`, `whatsapp`), `address`, `geo`, `timezone` and opening hours (`displayHours`, `schemaHours`); the structured-data values `schemaType` and `priceRange`.
+- `REGION` — `currency`: the storefront formats prices with it and the backend checkout charges in it.
+- `LOCALES` — the languages served and the default one.
+
+**Branding**
+
+- `app/project/assets/css/brand.css` — the palette. `--brand-primary` is the storefront accent and the email colour (a literal hex).
+- `app/project/public/` — `favicon.svg`, `apple-touch-icon.png`, `og-image.png` and the placeholder images in `images/`.
+
+**Project pages and copy**
+
+- `app/project/pages/` — `index.vue`, `about.vue`, `contact.vue`.
+- `app/project/i18n/el.json`, `app/project/i18n/en.json` — the project's own texts.
+- `app/project/components/` — the brand lockup and wordmark, and the WhatsApp button.
+
+**Modules** — `modules.json` lists the application modules and whether each is enabled. The frontend reads it directly; the backend reads the generated `backend/src/modules.enabled.ts`, so after changing it run:
+
+```bash
+cd backend && npm run modules:generate
+```
+
+**Backend project identity** — the backend cannot read `app/project/`, so the values it uses (`BUSINESS.name`, `BUSINESS.brand.logo`, `REGION.currency`, `--brand-primary`) are generated into `backend/src/project.identity.ts`. That file is committed and is what the backend build and its Docker image use, so after changing `project.config.ts` or `brand.css` regenerate and check it, then commit the result:
+
+```bash
+cd backend
+npm run project:generate
+npm run verify:project
+```
+
+**Verify** — the backend gate includes both generated-file checks; the frontend gates run from the repository root:
+
+```bash
+cd backend && npm run verify
+```
+
+```bash
+pnpm lint && pnpm typecheck && pnpm test && pnpm build
+```
+
+**Known current limitations**
+
+- Languages: only `el` and `en` are supported today — product and category data carry `name_el` / `name_en`, and every layer ships `el.json` / `en.json`, so adding or replacing a language needs code and data changes.
+- Brand colour: some copies of the default accent (`#c97b5a`) are still hard-coded — in `app/assets/css/admin.css`, a few Ecommerce admin pages and components, the admin charts and the Ecommerce product placeholder image — so changing `--brand-primary` does not recolour those yet.
+- Currency: the admin settings show `€` as the unit of the shipping amounts, several Ecommerce and project texts contain `€`, and the checkout converts amounts to minor units by ×100, so only two-decimal currencies are handled correctly.
+- Docker: container names (`shopkit_*`) and host ports are fixed in `docker-compose.yml` and `docker-compose.prod.yml`, so two stacks cannot run side by side on one machine.
+
 ### 2. Set up environment variables
 
 ```bash
