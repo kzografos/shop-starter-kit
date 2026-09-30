@@ -16,6 +16,13 @@
  *   disabled  a temporary build artifact that enables nothing: those modules
  *             and controllers must be gone, and everything else untouched
  *
+ * When modules.json registers modules but enables none (the Core + Project
+ * configuration — blueprint §2: Core is what boots when no module is enabled),
+ * the real build already is the disabled state, so it is composed once and
+ * judged directly: it enables no id, everything the composition root imports
+ * is composed, and no Nest module, controller or provider that a registered
+ * module declares is in the container.
+ *
  * Ownership always comes from the declaration site (E9c1/E9d2a) — the classes a
  * module's own `*.module.js` files declare. No class-name heuristic decides
  * anything: `PaymentsModule` is the shop's and `PaymentsProviderModule` is
@@ -32,7 +39,7 @@
  * restores the exact bytes in a `finally` and on exit, and verifies the hash.
  *
  *   node scripts/verify-module-composition.js
- *   node scripts/verify-module-composition.js --scenario enabled|disabled   (internal: child mode)
+ *   node scripts/verify-module-composition.js --scenario enabled|disabled|core-only   (internal: child mode)
  *
  * Requires a prior `nest build`. Runs after `npm run build` in `npm run verify`.
  */
@@ -92,9 +99,13 @@ async function probe() {
   const modules = []
   const controllers = []
   const routesByController = {}
+  const providerClasses = new Set()
   let routes = 0
   for (const mod of app.get(ModulesContainer).values()) {
     if (mod.metatype && mod.metatype.name) modules.push(mod.metatype.name)
+    for (const wrapper of [...mod.providers.values(), ...mod.injectables.values()]) {
+      if (typeof wrapper.metatype === 'function') providerClasses.add(wrapper.metatype)
+    }
     for (const wrapper of mod.controllers.values()) {
       const C = wrapper.metatype
       const instance = wrapper.instance
@@ -114,10 +125,27 @@ async function probe() {
     .map((i) => (i && i.module ? i.module.name : i && i.name) || null)
     .filter(Boolean)
 
+  // Where each composed provider class is declared: the compiled dist/ files
+  // that export it. Classes no dist/ file exports (Nest's own, factories) are
+  // not the application's and are left out.
+  const exportedBy = new Map()
+  for (const [file, cached] of Object.entries(require.cache)) {
+    if (!file.startsWith(DIST + path.sep) || !cached || !cached.exports) continue
+    const rel = path.relative(DIST, file).split(path.sep).join('/')
+    for (const value of Object.values(cached.exports)) {
+      if (typeof value === 'function') exportedBy.set(value, [...(exportedBy.get(value) ?? []), rel])
+    }
+  }
+  const providers = [...providerClasses]
+    .filter((c) => exportedBy.has(c))
+    .map((c) => ({ name: c.name, files: exportedBy.get(c).sort() }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+
   return {
     enabledModuleIds: [...enabledModuleIds],
     modules: modules.sort(),
     controllers: controllers.sort(),
+    providers,
     routes,
     routesByController,
     staticImports: staticImports.sort(),
@@ -186,12 +214,50 @@ const found = (needed, present) => needed.filter((n) => present.includes(n))
   const declared = registry.readRegistry().map((m) => ({
     id: m.id,
     enabled: Boolean(m.enabled),
+    backendDir: m.backendDir,
     modules: m.backendDir ? registry.declaredModules({ backendDir: m.backendDir }) : [],
     controllers: m.backendDir ? registry.declaredControllers({ backendDir: m.backendDir }) : [],
   }))
   if (!declared.length) fail('modules.json registers no module — nothing to prove')
   const enabledDescriptors = declared.filter((m) => m.enabled)
-  if (!enabledDescriptors.length) fail('no registered module is enabled — refusing to pass vacuously')
+
+  // ── Core + Project: every registered module switched off ───────
+  // Not vacuous: the registered modules' declared classes must be absent, and
+  // Core must still compose. Nothing is compared against the disabled artifact —
+  // this build already enables nothing.
+  if (!enabledDescriptors.length) {
+    const core = runScenario('core-only')
+    if (core.enabledModuleIds.length) fail('modules.json enables no module, but the build composes:', core.enabledModuleIds)
+    if (!core.modules.length || !core.controllers.length || !core.routes) {
+      fail('the Core composition produced no modules, controllers or routes — refusing to pass vacuously')
+    }
+    const lostCore = missing(core.staticImports, core.modules)
+    if (lostCore.length) fail('modules the composition root imports are not composed:', lostCore)
+
+    const registeredModules = [...new Set(declared.flatMap((m) => m.modules))].sort()
+    const registeredControllers = [...new Set(declared.flatMap((m) => m.controllers))].sort()
+    if (!registeredModules.length) fail('the registered modules declare no Nest module — their absence cannot be proven')
+    const leakedModules = found(registeredModules, core.modules)
+    if (leakedModules.length) fail('these module classes are composed although no module is enabled:', leakedModules)
+    const leakedControllers = found(registeredControllers, core.controllers)
+    if (leakedControllers.length) fail('these module controllers are composed although no module is enabled:', leakedControllers)
+    // A provider is a registered module's when every dist/ file exporting it
+    // lies under that module's backendDir; Core and infrastructure cannot
+    // re-export module code (verify:boundaries), so one export elsewhere means
+    // the class is theirs.
+    const underRegisteredDir = (file) => declared.some((m) => m.backendDir && file.startsWith(m.backendDir + '/'))
+    const leakedProviders = core.providers.filter((p) => p.files.every(underRegisteredDir))
+    if (leakedProviders.length) {
+      fail('these module providers are composed although no module is enabled:', leakedProviders.map((p) => `${p.name} (${p.files.join(', ')})`))
+    }
+
+    console.log('verify-module-composition: Core composition OK — no registered module is enabled')
+    console.log(`  registered modules: ${declared.length} (all disabled: ${declared.map((m) => m.id).join(', ')})`)
+    console.log(`  absent: ${registeredModules.length} Nest modules, ${registeredControllers.length} controllers, and every provider they declare`)
+    console.log(`  core/infrastructure composed: ${core.modules.length} modules, ${core.controllers.length} controllers, ${core.providers.length} application providers, ${core.routes} routes`)
+    console.log('verify-module-composition: OK — the registry controls Nest composition')
+    process.exit(0)
+  }
 
   // ── 1. enabled: the real registry ─────────────────────────────
   const on = runScenario('enabled')
