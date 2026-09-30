@@ -179,7 +179,7 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const api = useApi()
-const { t, locale } = useI18n()
+const { t, locale, localeProperties } = useI18n()
 const localePath = useLocalePath()
 const { currencySymbol } = useCurrency()
 
@@ -208,8 +208,8 @@ const { data, pending } = useAsyncData<Overview | null>('admin-analytics', () =>
 
 const DONUT_COLORS = ['#C97B5A', '#A8B89A', '#D4A24C', '#5A8FC9', '#6BAE7E', '#B57BA6', '#D67E6B']
 
-const money = (n: number) => `${currencySymbol.value}${Math.round(n).toLocaleString('el-GR')}`
-const num = (n: number) => Math.round(n).toLocaleString('el-GR')
+const money = (n: number) => `${currencySymbol.value}${Math.round(n).toLocaleString(localeProperties.value.language)}`
+const num = (n: number) => Math.round(n).toLocaleString(localeProperties.value.language)
 
 // ── KPI cards ──
 const kpiCards = computed(() => {

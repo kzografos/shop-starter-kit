@@ -6,7 +6,7 @@
         <div class="ac-stat-label">Συνολικά Έσοδα<AdminInfo>{{ $t('ecommerce.admin.revenue_info') }}</AdminInfo></div>
         <div class="ac-stat-value">
           <template v-if="loading"><span style="opacity: 0.3">—</span></template>
-          <template v-else>{{ currencySymbol }}{{ Math.round(kpi.totalRevenue).toLocaleString('el-GR') }}</template>
+          <template v-else>{{ currencySymbol }}{{ Math.round(kpi.totalRevenue).toLocaleString(localeProperties.language) }}</template>
         </div>
         <div>
           <span class="ac-trend-sub">όλων των εποχών</span>
@@ -20,7 +20,7 @@
         <div class="ac-stat-label">Έσοδα Μήνα<AdminInfo>{{ $t('ecommerce.admin.revenue_info') }}</AdminInfo></div>
         <div class="ac-stat-value">
           <template v-if="loading"><span style="opacity: 0.3">—</span></template>
-          <template v-else>{{ currencySymbol }}{{ Math.round(kpi.monthRevenue).toLocaleString('el-GR') }}</template>
+          <template v-else>{{ currencySymbol }}{{ Math.round(kpi.monthRevenue).toLocaleString(localeProperties.language) }}</template>
         </div>
         <div v-if="!loading">
           <span class="ac-trend" :class="kpi.monthRevenueChange >= 0 ? 'up' : 'down'">
@@ -39,7 +39,7 @@
         <div class="ac-stat-label">Πελάτες</div>
         <div class="ac-stat-value">
           <template v-if="loading"><span style="opacity: 0.3">—</span></template>
-          <template v-else>{{ kpi.totalCustomers.toLocaleString('el-GR') }}</template>
+          <template v-else>{{ kpi.totalCustomers.toLocaleString(localeProperties.language) }}</template>
         </div>
         <div>
           <span class="ac-trend-sub">συνολικά εγγεγραμμένοι</span>
@@ -241,6 +241,7 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const api = useApi()
 const localePath = useLocalePath()
+const { localeProperties } = useI18n()
 const { currencySymbol } = useCurrency()
 
 const loading = ref(true)

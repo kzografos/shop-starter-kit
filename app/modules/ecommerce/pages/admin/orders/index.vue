@@ -42,7 +42,7 @@
               {{ order.id.slice(0, 8).toUpperCase() }}
             </td>
             <td class="ac-muted ac-nowrap">
-              {{ new Date(order.created_at).toLocaleDateString('el-GR') }}
+              {{ new Date(order.created_at).toLocaleDateString(localeProperties.language) }}
             </td>
             <td>
               <span
@@ -93,7 +93,7 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const api = useApi()
-const { t } = useI18n()
+const { t, localeProperties } = useI18n()
 const toast = useToast()
 const { currencySymbol } = useCurrency()
 
