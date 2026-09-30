@@ -234,7 +234,7 @@ npm run project:generate
 npm run verify:project
 ```
 
-**Verify** — the backend gate includes both generated-file checks; the frontend gates run from the repository root:
+**Verify** — needs installed dependencies and a generated Prisma Client (`cd backend && npm run db:generate`; see *Option B → Step 2* below). The backend gate includes both generated-file checks; the frontend gates run from the repository root:
 
 ```bash
 cd backend && npm run verify
@@ -313,7 +313,12 @@ pnpm install
 
 # Backend
 cd backend && npm install && cd ..
+
+# Backend — generate the Prisma Client
+cd backend && npm run db:generate && cd ..
 ```
+
+`npm run db:generate` generates the Prisma Client from `backend/prisma/`; `npm install` does not. Run it after installing backend dependencies and after any schema change. It does not need a running database.
 
 **Step 3 — Run database migrations:**
 
@@ -346,7 +351,7 @@ npm run start:dev
 
 ### Verification (what CI runs)
 
-Both halves have a gate; run them before pushing.
+Both halves have a gate; run them before pushing. The backend gate needs a generated Prisma Client: CI's backend job runs `npx prisma generate` after `npm ci`; locally, `cd backend && npm run db:generate` is the same step.
 
 ```bash
 # backend — typecheck → build → architecture boundaries → route inventory → provider matrix
